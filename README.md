@@ -2,9 +2,21 @@
 
 Análisis de minería de trayectorias laborales sobre el dataset **JobHop v2** (`aida-ugent/JobHop`, Hugging Face), que contiene trayectorias profesionales reconstruidas a partir de hojas de vida (resúmenes curriculares) no estructuradas.
 
+> **Nota sobre el origen:** los datos principales de JobHop provienen de **Flandes, Bélgica** (conjunto internacional), no de Colombia. El país no es el objetivo del proyecto: el objetivo son las **trayectorias laborales**. El Observatorio Laboral para la Educación (OLE) colombiano puede quedar como contexto o fuente complementaria, no como parte obligatoria.
+
 ## Objetivo
 
-Descubrir patrones en las trayectorias laborales de las personas después de su formación:
+Analizar qué ocurre con la trayectoria laboral de una persona después de terminar su formación: si sus primeros empleos están relacionados con lo que estudió, si cambia de área y qué patrones de transición laboral aparecen.
+
+**Pregunta de investigación (versión sencilla):**
+
+> ¿Qué patrones aparecen en la trayectoria laboral de las personas después de terminar su formación, especialmente en relación con si sus empleos corresponden o no con lo que estudiaron?
+
+**Pregunta de investigación (versión técnica):**
+
+> ¿Qué patrones de transición ocupacional pueden identificarse en trayectorias laborales posteriores a la formación académica?
+
+Preguntas que guían el análisis:
 
 - ¿Qué ocupaciones suelen venir después de otras?
 - ¿Qué trabajos son los primeros empleos más comunes?
