@@ -24,8 +24,7 @@ Preguntas que guían el análisis:
 - ¿Cuántos cambios de ocupación son habituales?
 - ¿Existen caminos profesionales muy frecuentes o poco comunes?
 
-> No se asume de antemano que trabajar en el área estudiada produce una mejor trayectoria.
-> Esa sería una hipótesis; el objetivo es descubrir y evaluar los patrones presentes en los datos.
+> No se asume de antemano que trabajar en el área estudiada produce una mejor trayectoria. Esa sería una hipótesis; el objetivo es descubrir y evaluar los patrones presentes en los datos.
 
 ## Fuentes de datos
 
@@ -60,79 +59,153 @@ Una misma `resume_id` puede tener varias filas: cada una es una experiencia labo
 ### 2. ESCO — fuente de enriquecimiento (significado de la ocupación)
 
 - Fuente oficial (descarga): https://esco.ec.europa.eu/es/use-esco/download
-- **Versión incorporada:** ESCO v1.2.1 (clasificación en inglés, archivos CSV en
-  `ESCO dataset - v1.2.1 - classification - en - csv/`).
-- **Por qué se agrega:** JobHop trae códigos de ocupación (`matched_code`), pero se necesita
-  información interpretable sobre esas ocupaciones. ESCO relaciona los códigos con nombre,
-  descripción, clasificación ocupacional, grupos ocupacionales, relación con ISCO y
-  competencias.
-- No se agrega "por tener dos bases de datos", sino para **enriquecer las experiencias
-  laborales de JobHop y hacer posible un análisis más significativo de las transiciones**.
+- **Versión incorporada:** ESCO v1.2.1 (clasificación en inglés), archivos CSV en `data/original/ESCO/`.
+- **Por qué se agrega:** JobHop trae códigos de ocupación (`matched_code`), pero se necesita información interpretable sobre esas ocupaciones. ESCO relaciona los códigos con nombre, descripción, clasificación ocupacional, grupos ocupacionales, relación con ISCO y competencias.
+- No se agrega "por tener dos bases de datos", sino para **enriquecer las experiencias laborales de JobHop y hacer posible un análisis más significativo de las transiciones**.
 
-> **Estado del cruce:** la base ESCO ya está descargada e incorporada al repositorio, pero el
-> **cruce/enriquecimiento de ESCO con JobHop todavía está pendiente**. Antes de implementarlo
-> hay que verificar que la versión de ESCO usada sea compatible con la versión que emplea
-> JobHop v2.
+> **Estado del cruce (verificado):** `matched_code` cruza **directamente** con `occupations.code`: 2.966 de 2.983 códigos únicos (99,4%), que cubren ≈92% de las filas. Los 17 restantes incluyen `unknown` y códigos mapeables al menos a nivel de grupo ISCO-08 (primeros 4 dígitos).
+
+> **Sobre las URIs de ESCO:** los identificadores tipo `http://data.europa.eu/esco/...` son *identificadores* (Linked Data), no el contenido. El análisis no necesita resolverlos: los CSV ya traen los atributos (`preferredLabel`, `description`, `altLabels`, etc.) y las relaciones se cruzan por esos identificadores.
 
 ### 3. OLE Colombia — fuente contextual (opcional)
 
-El **Observatorio Laboral para la Educación (OLE)** del Ministerio de Educación:
-https://ole.mineducacion.gov.co/
+El **Observatorio Laboral para la Educación (OLE)** del Ministerio de Educación: https://ole.mineducacion.gov.co/
 
-Proporciona información agregada del contexto colombiano (graduados, programas académicos,
-vinculación laboral, ingresos, seguimiento de cohortes e indicadores laborales). Solo se
-considera como **contexto o fuente complementaria**; no es obligatorio ni se usa para
-reconstruir trayectorias individuales (limitaciones de granularidad y protección de datos).
-**No se puede unir a JobHop a nivel individual.**
+Proporciona información agregada del contexto colombiano (graduados, programas académicos, vinculación laboral, ingresos, seguimiento de cohortes e indicadores laborales). Solo se considera como **contexto o fuente complementaria**; no es obligatorio ni se usa para reconstruir trayectorias individuales (limitaciones de granularidad y protección de datos). **No se puede unir a JobHop a nivel individual.**
 
-## Dataset (JobHop v2)
+## Estructura del proyecto
+
+```text
+MineriaProtect/
+├── data/
+│   ├── original/                  # Fuentes (NUNCA se modifican)
+│   │   ├── JobHop_v2_train.parquet
+│   │   └── ESCO/                  # 19 archivos de la taxonomía ESCO v1.2.1
+│   └── limpio/                    # Versiones limpias (derivados, se sobrescriben)
+│       ├── JobHop_v2_train_limpio.parquet   # generado en un proceso anterior
+│       └── ESCO/                  # 19 archivos *_limpio.csv
+├── script/
+│   ├── limpiar_datos.py           # Proceso de limpieza (fuente única)
+│   ├── Lectura.ipynb              # Cuaderno de limpieza (reproduce el script)
+│   └── tablas.ipynb               # Cuaderno visual de los archivos limpios
+├── README.md
+└── .gitignore
+```
+
+Reglas de oro del proyecto:
+
+- **Los archivos originales nunca se modifican**: solo se leen.
+- **No se vuelve a limpiar una versión limpia/derivada.** `JobHop_v2_train.parquet` ya generó su limpio en un proceso anterior, por eso queda **excluido** del proceso automático.
+- El proceso de limpieza es **idempotente**: re-ejecutarlo sobrescribe los archivos limpios con contenido idéntico (no genera duplicados).
+
+## Datasets
+
+### JobHop v2 (`aida-ugent/JobHop`)
 
 | Archivo | Descripción |
 | ------- | ----------- |
-| `JobHop_v2_train.parquet` | Dataset original (1.594.827 filas) |
-| `JobHop_v2_train_limpio.parquet` | Dataset limpio (1.506.445 filas): sin nulos en `start_date`, fecha de fin rellenada con "Present" y sin duplicados |
+| `data/original/JobHop_v2_train.parquet` | Dataset original (1.594.827 filas) |
+| `data/limpio/JobHop_v2_train_limpio.parquet` | Dataset limpio (1.506.445 filas) — derivado previo, no se re-limpió |
 
-## Metodología: KDD
+Limpieza aplicada en el proceso anterior (documentada en `Lectura.ipynb`, no re-ejecutada): `end_date` nulo → `Present`; filas sin `start_date` eliminadas; duplicados exactos eliminados; orden por persona y trimestre real (`Q1 2000` → clave `(2000, 1)`).
 
-1. **Selección** — JobHop v2 y ESCO.
-2. **Preprocesamiento** — nulos, duplicados, fechas, códigos desconocidos, inconsistencias.
-3. **Transformación** — encadenar las experiencias de cada `resume_id` en una secuencia
-   temporal de ocupaciones; luego enriquecer con ESCO.
-4. **Minería** — técnicas candidatas: minería de secuencias, análisis de transiciones,
-   clustering de trayectorias y detección de trayectorias atípicas.
-5. **Interpretación y evaluación** — ¿son los patrones frecuentes, consistentes, interpretables
-   y útiles para responder la pregunta de investigación?
-6. **Conocimiento** — caracterización de los principales patrones de transición ocupacional.
+### Taxonomía ESCO v1.2.1 (19 CSV)
 
-> La técnica definitiva se seleccionará después de explorar la estructura final de los datos.
+| Archivo | Originales | Limpias | Operación clave |
+| ------- | ---------- | ------- | --------------- |
+| `occupations_en.csv` | 3.043 | 3.039 | −4 filas por `code` duplicado (idénticas salvo `modifiedDate`) |
+| `skills_en.csv` | 13.960 | 13.939 | −21 filas por `conceptUri` duplicado |
+| `skillGroups_en.csv` | 640 | 640 | — |
+| `ISCOGroups_en.csv` | 619 | 619 | columna `altLabels` 100% nula eliminada (8 → 7 columnas) |
+| `occupationSkillRelations_en.csv` | 126.051 | 126.051 | conserva 59 filas con `skillType` nulo (relación 1:N válida) |
+| `broaderRelationsOccPillar_en.csv` | 3.648 | 3.648 | relación 1:N conservada |
+| `broaderRelationsSkillPillar_en.csv` | 20.819 | 20.819 | relación 1:N conservada |
+| `skillSkillRelations_en.csv` | 5.818 | 5.818 | relación 1:N conservada |
+| `greenShareOcc_en.csv` | 3.590 | 3.590 | `greenShare` → `float` |
+| `conceptSchemes_en.csv` | 20 | 20 | — |
+| `dictionary_en.csv` | 160 | 160 | — |
+| `digCompSkillsCollection_en.csv` | 25 | 25 | — |
+| `digitalSkillsCollection_en.csv` | 1.284 | 1.284 | — |
+| `greenSkillsCollection_en.csv` | 629 | 629 | — |
+| `languageSkillsCollection_en.csv` | 359 | 359 | — |
+| `researchOccupationsCollection_en.csv` | 122 | 122 | — |
+| `researchSkillsCollection_en.csv` | 40 | 40 | — |
+| `skillsHierarchy_en.csv` | 640 | 640 | — |
+| `transversalSkillsCollection_en.csv` | 95 | 95 | — |
+
+## Proceso de limpieza
+
+Reglas generales (aplicadas por `script/limpiar_datos.py` y reproducidas en `script/Lectura.ipynb`):
+
+1. Los CSV se leen **como texto** (`dtype=str`) para no perder ceros a la izquierda en los códigos (p. ej. código ISCO `0110` ≠ `110`).
+2. Se eliminan las **columnas 100% nulas** (columna sin información no sirve para cruzar).
+3. Se normalizan textos: `strip()` (quita espacios que romperían comparaciones en cruces).
+4. Se eliminan **duplicados exactos de fila completa** (en la práctica 0; regla defensiva).
+5. **Duplicados por llave** (datos de dos publicaciones de ESCO fusionadas):
+   - `occupations_en`: −4 filas por `code`.
+   - `skills_en`: −21 filas por `conceptUri`.
+   - En ambos casos las filas duplicadas son idénticas salvo `modifiedDate` (se conserva la primera).
+6. Las **tablas de relaciones 1:N** (ocupación → habilidad) conservan todas sus filas: NO se deduplica por clave para no romper relaciones legítimas.
+7. `ISCOGroups_en`: `altLabels` está 100% nula → se elimina (de 8 a 7 columnas).
+8. `greenShareOcc_en`: `greenShare` se convierte a número (`float`).
+9. Cada archivo pasa por **validación antes/después**: filas, columnas, nulos críticos, duplicados y las transformaciones aplicadas.
+
+Idempotencia verificada: ejecutar el proceso dos veces produce **archivos byte a byte idénticos** (no se generan duplicados).
+
+## Cómo ejecutar
+
+- Proceso completo en consola:
+
+  ```bash
+  python script/limpiar_datos.py
+  ```
+
+- Reproducir y **documentar** el mismo proceso:
+
+  `script/Lectura.ipynb` (Kernel → Restart & Run All)
+
+- Ver **visualmente** cómo quedaron los archivos limpios (tablas con muestra de 3 filas y resumen por archivo):
+
+  `script/tablas.ipynb` (Kernel → Restart & Run All)
+
+Los cuadernos detectan la raíz del proyecto aunque se abran desde la carpeta `script/`.
 
 ## Notebooks
 
 | Notebook | Contenido |
 | -------- | --------- |
-| `Lectura..ipynb` | Lectura del dataset original, limpieza de datos y guardado de la versión limpia |
+| `script/Lectura.ipynb` | Limpieza: inspección → limpieza → validación de cada archivo. Reproduce exactamente `limpiar_datos.py` (trazabilidad código → ejecución → datos limpios). |
+| `script/tablas.ipynb` | Visual: lee solo `data/limpio/` y muestra el resumen de los 20 archivos limpios + una tabla con 3 filas de muestra por archivo. |
+
+## Metodología: KDD
+
+1. **Selección** — JobHop v2 y ESCO.
+2. **Preprocesamiento** — nulos, duplicados, fechas, códigos desconocidos, inconsistencias.
+3. **Transformación** — encadenar las experiencias de cada `resume_id` en una secuencia temporal de ocupaciones; luego enriquecer con ESCO.
+4. **Minería** — técnicas candidatas: minería de secuencias, análisis de transiciones, clustering de trayectorias y detección de trayectorias atípicas.
+5. **Interpretación y evaluación** — ¿son los patrones frecuentes, consistentes, interpretables y útiles para responder la pregunta de investigación?
+6. **Conocimiento** — caracterización de los principales patrones de transición ocupacional.
+
+> La técnica definitiva se seleccionará después de explorar la estructura final de los datos.
 
 ## Limitaciones
 
 - **JobHop no representa Colombia** (los datos provienen de Flandes, Bélgica).
-- **Sin causalidad:** se buscan asociaciones y patrones, no demostrar que una característica
-  causa una trayectoria.
+- **Sin causalidad:** se buscan asociaciones y patrones, no demostrar que una característica causa una trayectoria.
 - **ESCO no es un dataset de trayectorias:** solo enriquece/interpreta las ocupaciones.
 - **OLE no es una unión individual** con JobHop.
 - **La técnica de minería aún no está definida definitivamente.**
+- Los códigos de ESCO ajenos a la versión 1.2.1 y el valor `unknown` de `matched_code` requieren manejo explícito en el cruce.
 
 ## Estado actual y siguientes pasos
 
-**Estado actual:** JobHop v2 ya fue seleccionado, leído y limpiado (`Lectura..ipynb`).
-La base de ESCO v1.2.1 ya fue descargada e incorporada al repositorio, pero su cruce con
-JobHop aún está pendiente. El proyecto se encuentra en la fase de preparación y diseño.
+**Estado actual:** fuentes seleccionadas (JobHop v2 + ESCO v1.2.1), datos limpios y documentados. El cruce `matched_code` ↔ `occupations.code` fue verificado preliminarmente (99,4% de códigos cruzan directo). Pendiente: implementar el cruce/enriquecimiento, transformar las trayectorias en secuencias y seleccionar la técnica de minería.
 
 **Siguientes pasos planificados:**
-1. Verificar la compatibilidad de la versión de ESCO con la usada por JobHop v2.
-2. Implementar el cruce/enriquecimiento de las ocupaciones con ESCO.
-3. Aplicar el preprocesamiento y transformar las experiencias en secuencias temporales.
-4. Explorar la estructura de las trayectorias y seleccionar la técnica de minería.
-5. Evaluar, interpretar y documentar los patrones encontrados.
+1. Implementar el cruce/enriquecimiento de las ocupaciones con ESCO.
+2. Aplicar transformaciones y convertir las experiencias en secuencias temporales por persona.
+3. Explorar la estructura de las trayectorias y seleccionar la técnica de minería.
+4. Evaluar, interpretar y documentar los patrones encontrados.
 
 ## Referencias
 
