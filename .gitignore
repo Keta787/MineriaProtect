@@ -2,3 +2,7 @@
 __pycache__/
 *.pyc
 .DS_Store
+
+# Empleos integrados: se versiona solo el parquet (los CSV superan el limite de GitHub)
+data/limpio/empleos.csv
+data/integrado/empleos.csv
