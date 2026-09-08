@@ -21,11 +21,11 @@ Clasificacion `emparejado` (precedencia estricta):
     4. cualquier otro caso            -> 'descartado' (debe ser 0)
 
 Validaciones obligatorias (contrato CIERRE_DISENO.md V1-V7) + comparacion
-contra la referencia `data/limpio/empleos.csv` si existe.
+contra la referencia `cruce/salida/empleos_ref.csv` si existe.
 
 Salida:
-    data/integrado/empleos.csv
-    data/integrado/empleos.parquet
+    cruce/salida/empleos.csv
+    cruce/salida/empleos.parquet
 
 Uso:
     python script/cruzar_datos.py
@@ -45,12 +45,12 @@ except AttributeError:
     pass
 
 RAIZ = Path(__file__).resolve().parent.parent
-LIM = RAIZ / "data" / "limpio"
-OUT = RAIZ / "data" / "integrado"
+LIM = RAIZ / "dataset"
+OUT = RAIZ / "cruce" / "salida"
 JH = LIM / "JobHop_v2_train_limpio.parquet"
 OCC = LIM / "ESCO" / "occupations_en_limpio.csv"
 ISCO = LIM / "ESCO" / "ISCOGroups_en_limpio.csv"
-REF = LIM / "empleos.csv"  # referencia producida antes (si existe)
+REF = OUT / "empleos_ref.csv"  # referencia local (no versionada) para validar el cruce
 
 
 def carga_csv(p: Path) -> pd.DataFrame:
@@ -176,7 +176,7 @@ def main() -> None:
 
         t_gen, t_ref = to_tuples(gen), to_tuples(ref)
         iguales = t_gen == t_ref
-        print("\n=== COMPARACION CONTRA REFERENCIA data/limpio/empleos.csv ===")
+        print("\n=== COMPARACION CONTRA REFERENCIA cruce/salida/empleos_ref.csv ===")
         print("  mismos registros exactos:", iguales)
         if not iguales:
             print("  solo en generado:", len(t_gen - t_ref))

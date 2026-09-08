@@ -54,14 +54,14 @@ except Exception:  # consola sin IPython instalado
 # ---------------------------------------------------------------------------
 RAIZ = Path(__file__).resolve().parent.parent
 ORIGEN = RAIZ / "data" / "original"
-DESTINO = RAIZ / "data" / "limpio"
+DESTINO = RAIZ / "dataset"
 
 # Extensiones que se procesan automaticamente
 EXT_CSV = ".csv"
 EXT_PARQUET = ".parquet"
 
-# Archivos que NO se vuelven a limpiar (ya tienen su version limpia en data/limpio/).
-# JobHop_v2_train.parquet ya genero data/limpio/JobHop_v2_train_limpio.parquet.
+# Archivos que NO se vuelven a limpiar (ya tienen su version limpia en dataset/).
+# JobHop_v2_train.parquet ya genero dataset/JobHop_v2_train_limpio.parquet.
 ARCHIVOS_EXCLUIDOS = {"JobHop_v2_train.parquet"}
 
 

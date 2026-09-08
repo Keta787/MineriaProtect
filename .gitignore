@@ -3,6 +3,10 @@ __pycache__/
 *.pyc
 .DS_Store
 
-# Empleos integrados: se versiona solo el parquet (los CSV superan el limite de GitHub)
-data/limpio/empleos.csv
-data/integrado/empleos.csv
+# Fuentes originales y carpetas antiguas: se conservan en disco e historial, no se versionan
+data/original/
+data/limpio/
+data/integrado/
+
+# Salida del cruce: solo se versiona el parquet; CSV grandes fuera
+cruce/salida/*.csv
