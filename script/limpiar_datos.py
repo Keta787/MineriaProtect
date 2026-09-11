@@ -9,7 +9,14 @@ Flujo:
         -> INSPECCION (filas, columnas, tipos, nulos, duplicados, muestras TOP/BOTTOM)
         -> LIMPIEZA (reglas especificas por archivo, documentadas)
         -> VALIDACION (resumen antes/despues)
-        -> DATOS LIMPIOS (data/limpio/)
+        -> DATOS LIMPIOS (data/limpia/)
+
+Alcance actual (3 datasets gestionados):
+    - JobHop_v2_train.parquet          -> ya limpio (data/limpia/), EXCLUIDO aqui.
+    - ESCO occupations_en.csv          -> limpia aqui.
+    - ESCO ISCOGroups_en.csv           -> limpia aqui.
+    Otros CSV de ESCO fueron descartados del repo; sus ramas siguen en el codigo
+    por trazabilidad, pero no se ejecutan (no hay archivos para ellas).
 
 Reglas generales:
     - NUNCA se modifican los archivos originales: solo se leen.
@@ -54,14 +61,14 @@ except Exception:  # consola sin IPython instalado
 # ---------------------------------------------------------------------------
 RAIZ = Path(__file__).resolve().parent.parent
 ORIGEN = RAIZ / "data" / "original"
-DESTINO = RAIZ / "dataset"
+DESTINO = RAIZ / "data" / "limpia"
 
 # Extensiones que se procesan automaticamente
 EXT_CSV = ".csv"
 EXT_PARQUET = ".parquet"
 
-# Archivos que NO se vuelven a limpiar (ya tienen su version limpia en dataset/).
-# JobHop_v2_train.parquet ya genero dataset/JobHop_v2_train_limpio.parquet.
+# Archivos que NO se vuelven a limpiar (ya tienen su version limpia en data/limpia/).
+# JobHop_v2_train.parquet ya genero data/limpia/JobHop_v2_train_limpio.parquet.
 ARCHIVOS_EXCLUIDOS = {"JobHop_v2_train.parquet"}
 
 

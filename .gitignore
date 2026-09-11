@@ -3,10 +3,8 @@ __pycache__/
 *.pyc
 .DS_Store
 
-# Fuentes originales y carpetas antiguas: se conservan en disco e historial, no se versionan
+# Fuentes originales: se conservan en disco e historial, no se versionan
 data/original/
-data/limpio/
-data/integrado/
 
 # Salida del cruce: solo se versiona el parquet; CSV grandes fuera
-cruce/salida/*.csv
+data/cruce/*.csv
