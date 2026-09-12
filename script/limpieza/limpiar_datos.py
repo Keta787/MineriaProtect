@@ -27,7 +27,7 @@ Reglas generales:
       filas: NO se eliminan filas solo porque un codigo se repita muchas veces.
 
 Como ejecutar:
-    python script/limpiar_datos.py
+    python script/limpieza/limpiar_datos.py
 
 Requisitos:
     pandas, pyarrow
@@ -59,7 +59,15 @@ except Exception:  # consola sin IPython instalado
 # ---------------------------------------------------------------------------
 # Rutas
 # ---------------------------------------------------------------------------
-RAIZ = Path(__file__).resolve().parent.parent
+def _raiz_proyecto() -> Path:
+    """Raiz del repo: busca hacia arriba la carpeta `data/` desde este archivo."""
+    p = Path(__file__).resolve().parent
+    while not (p / "data").exists() and p != p.parent:
+        p = p.parent
+    return p
+
+
+RAIZ = _raiz_proyecto()
 ORIGEN = RAIZ / "data" / "original"
 DESTINO = RAIZ / "data" / "limpia"
 

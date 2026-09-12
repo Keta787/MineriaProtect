@@ -77,18 +77,29 @@ Proporciona información agregada del contexto colombiano (graduados, programas 
 
 ```text
 MineriaProtect/
-├── data/                          # todos los datos bajo una sola raíz
+├── data/
 │   ├── original/                  # Fuentes (NUNCA se modifican)
 │   │   ├── JobHop_v2_train.parquet
 │   │   └── ESCO/                  # occupations_en.csv + ISCOGroups_en.csv (los 2 en uso)
-│   ├── limpia/                    # Versiones limpias (derivados, se sobrescriben)
-│   │   ├── JobHop_v2_train_limpio.parquet   # generado en un proceso anterior (verificado)
+│   ├── limpia/                    # Versiones limpias de fuentes (derivados, se sobrescriben)
+│   │   ├── JobHop_v2_train_limpio.parquet
 │   │   └── ESCO/                  # *_limpio.csv de los 2 ESCO en uso
-│   └── cruce/                     # integrado: empleos.parquet (versionado) + *.csv ignorados
-├── md/                            # documentación: README.md, AUDITORIA_RAMA_PRUEBA.md, contexto_sesion3.md
+│   └── cruce/                     # integrado: empleos.parquet + empleos_limpio.parquet
+├── libros/                        # cuadernos (sesión 1-3)
+│   ├── Lectura.ipynb              # limpieza de fuentes (reproduce limpiar_datos.py)
+│   ├── Diagnostico_Limpieza_Empleos.ipynb   # limpieza del integrado (bloque 4)
+│   └── presentacion.ipynb         # en construcción
+├── md/                            # documentación
+│   ├── AUDITORIA_RAMA_PRUEBA.md   # auditoría y trazabilidad por rama
+│   ├── BUENAS_PRACTICAS_CODIGO.md # estándar de código del proyecto
+│   └── contexto_sesion3.md        # contexto académico sesión 3
 ├── script/
-│   ├── limpiar_datos.py           # Proceso de limpieza (fuente única)
-│   └── Lectura.ipynb              # Cuaderno de limpieza (reproduce el script)
+│   ├── filtro/                    # (futuro) filtros y visualización de trayectorias
+│   ├── limpieza/
+│   │   ├── limpiar_datos.py       # limpieza de fuentes (ESCO + JobHop limpio)
+│   │   └── limpiar_empleos.py     # limpieza formal del integrado (bloque 4)
+│   └── requirements/
+│       └── requirements.txt       # dependencias (pandas, pyarrow)
 └── .gitignore
 ```
 
@@ -96,7 +107,9 @@ Reglas de oro del proyecto:
 
 - **Los archivos originales nunca se modifican**: solo se leen.
 - **No se vuelve a limpiar una versión limpia/derivada.** `JobHop_v2_train.parquet` ya generó su limpio en un proceso anterior, por eso queda **excluido** del proceso automático.
-- El proceso de limpieza es **idempotente**: re-ejecutarlo sobrescribe los archivos limpios con contenido idéntico (no genera duplicados).
+- El proceso de limpieza es **idempotente**: re-ejecutarlo sobrescribe los archivos de salida con contenido equivalente (no genera duplicados).
+- **Salida única en parquet.** El integrado y su limpio solo existen en formato Parquet (ver **Decisiones**).
+- Cada decisión de negocio del pipeline vive en un único punto de configuración o está documentada en la bitácora impresa por el propio script.
 
 ## Datasets
 
@@ -107,7 +120,7 @@ Reglas de oro del proyecto:
 | `data/original/JobHop_v2_train.parquet` | Dataset original (1.594.827 filas) |
 | `data/limpia/JobHop_v2_train_limpio.parquet` | Dataset limpio (1.506.445 filas) — derivado previo, no se re-limpió |
 
-Limpieza aplicada en el proceso anterior (derivado previo; verificado en `Lectura.ipynb`, no re-ejecutada): `end_date` nulo → `Present`; filas sin `start_date` eliminadas; duplicados exactos eliminados; orden por persona y trimestre real (`Q1 2000` → clave `(2000, 1)`).
+Limpieza aplicada en el proceso anterior (derivado previo; verificado en `libros/Lectura.ipynb`, no re-ejecutada): `end_date` nulo → `Present`; filas sin `start_date` eliminadas; duplicados exactos eliminados; orden por persona y trimestre real (`Q1 2000` → clave `(2000, 1)`).
 
 ### Taxonomía ESCO v1.2.1 (2 CSV en uso)
 
@@ -116,13 +129,22 @@ Limpieza aplicada en el proceso anterior (derivado previo; verificado en `Lectur
 | `occupations_en.csv` | 3.043 | 3.039 | −4 filas por `code` duplicado (idénticas salvo `modifiedDate`) |
 | `ISCOGroups_en.csv` | 619 | 619 | columna `altLabels` 100% nula eliminada (8 → 7 columnas) |
 
-Solo se conservan los archivos que usa la integración (`occupations` e `ISCOGroups`). El resto de la
-taxonomía ESCO (skills, relaciones skill-ocupación, greenShare, colecciones, etc.) fue **descartado**
-del repo en el recorte a 3 datasets; su historial queda en git.
+Solo se conservan los archivos que usa la integración (`occupations` e `ISCOGroups`). El resto de la taxonomía ESCO (skills, relaciones skill-ocupación, greenShare, colecciones, etc.) fue **descartado** del repo en el recorte a 3 datasets; su historial queda en git.
+
+### Integrado de empleos (cruce con ESCO)
+
+| Archivo | Descripción |
+| ------- | ----------- |
+| `data/cruce/empleos.parquet` | Integrado original (1.506.445 × 11; inmutable) |
+| `data/cruce/empleos_limpio.parquet` | Integrado limpio (1.506.434 × 14) — salida del bloque 4 |
+
+Limpieza formal aplicada (`script/limpieza/limpiar_empleos.py`): diagnóstico con asserts por fase, banderas `es_unknown_ocupacion`, `es_rescatado` y `es_vigente`, re-categorización de `'None'` → `'No reportado'`, eliminación de 11 filas con fechas futuras, duración trimestral **inclusiva** y validación contra criterios explícitos. Ver `md/AUDITORIA_RAMA_PRUEBA.md` §13.
 
 ## Proceso de limpieza
 
-Reglas generales (aplicadas por `script/limpiar_datos.py` y reproducidas en `script/Lectura.ipynb`):
+### Fuentes (`script/limpieza/limpiar_datos.py`)
+
+Reglas generales (reproducidas en `libros/Lectura.ipynb`):
 
 1. Los CSV se leen **como texto** (`dtype=str`) para no perder ceros a la izquierda en los códigos (p. ej. código ISCO `0110` ≠ `110`).
 2. Se eliminan las **columnas 100% nulas** (columna sin información no sirve para cruzar).
@@ -135,27 +157,39 @@ Reglas generales (aplicadas por `script/limpiar_datos.py` y reproducidas en `scr
 
 `JobHop_v2_train.parquet` está **excluido** del proceso automático: ya tiene su versión limpia (derivado previo).
 
-Idempotencia verificada: ejecutar el proceso dos veces produce **archivos byte a byte idénticos** (no se generan duplicados).
+Idempotencia verificada: ejecutar el proceso dos veces produce **archivos byte a byte idénticos**.
+
+### Integrado (`script/limpieza/limpiar_empleos.py`)
+
+Pipeline formal del curso en 7 fases: **diagnóstico → duplicados → categorías/banderas → faltantes → outliers → limpieza → validación**. Cada fase emite la bitácora (qué cambió, cuántos, con qué criterio) y cierra con asserts que comparan contra las cantidades verificadas de la fuente. Reproducido en `libros/Diagnostico_Limpieza_Empleos.ipynb`.
 
 ## Cómo ejecutar
 
-- Proceso completo en consola:
+```bash
+python -m pip install -r script/requirements/requirements.txt
 
-  ```bash
-  python script/limpiar_datos.py
-  ```
+python script/limpieza/limpiar_datos.py     # fuentes → data/limpia/
+python script/limpieza/limpiar_empleos.py   # integrado → data/cruce/empleos_limpio.parquet
+```
 
-- Reproducir y **documentar** el mismo proceso:
+Los scripts resuelven la raíz del proyecto buscando hacia arriba la carpeta `data/`, así que se pueden ejecutar desde cualquier directorio dentro del repo.
 
-  `script/Lectura.ipynb` (Kernel → Restart & Run All)
-
-Los cuadernos detectan la raíz del proyecto aunque se abran desde la carpeta `script/`.
-
-## Notebooks
+## Notebooks (`libros/`)
 
 | Notebook | Contenido |
 | -------- | --------- |
-| `script/Lectura.ipynb` | Limpieza: inspección → limpieza → validación de cada archivo. Reproduce exactamente `limpiar_datos.py` (trazabilidad código → ejecución → datos limpios). |
+| `libros/Lectura.ipynb` | Limpieza de fuentes: inspección → limpieza → validación de cada archivo. Reproduce `limpiar_datos.py`. |
+| `libros/Diagnostico_Limpieza_Empleos.ipynb` | Diagnóstico y limpieza formal del integrado (bloque 4). Reproduce `limpiar_empleos.py` con evidencia impresa. |
+| `libros/presentacion.ipynb` | En construcción (filtros/visualización de trayectorias; pendiente). |
+
+## Decisiones documentadas
+
+- **Salida única en parquet** en el bloque 4: el integrado y su limpio solo se almacenan como `.parquet` (`pandas` + `pyarrow`); no se generan CSV intermedios en `data/cruce/` (los CSV están excluidos del repo vía `.gitignore`).
+- **Prints como entregable:** en estos scripts/notebooks, la bitácora impresa (diagnóstico, decisiones, validación) es parte de la documentación del curso; los prints son intencionales, no residuos de depuración (ver excepción C2 en `md/BUENAS_PRACTICAS_CODIGO.md`).
+- **Duración trimestral inclusiva:** una experiencia del mismo trimestre de inicio/fin dura 1 trimestre (`end − start + 1`), consistente con las estadísticas reportadas en la auditoría.
+- **Claves cortas con `keep='first'`:** las filas extra de combinaciones repetidas se cuentan conservando la primera ocurrencia (74.357 / 9.601); no se eliminan por ser pluriempleo legítimo.
+- **11 filas futuras:** se elimina 1 fila con inicio posterior a 2026 y 11 filas con fin posterior a 2026 (MCAR, < 1 %); una de ellas se cuenta en ambos criterios.
+- Convenciones aplicadas al estándar del proyecto: ver `md/BUENAS_PRACTICAS_CODIGO.md`.
 
 ## Metodología: KDD
 
@@ -175,17 +209,16 @@ Los cuadernos detectan la raíz del proyecto aunque se abran desde la carpeta `s
 - **ESCO no es un dataset de trayectorias:** solo enriquece/interpreta las ocupaciones.
 - **OLE no es una unión individual** con JobHop.
 - **La técnica de minería aún no está definida definitivamente.**
-- Los códigos de ESCO ajenos a la versión 1.2.1 y el valor `unknown` de `matched_code` requieren manejo explícito en el cruce.
+- Los códigos de ESCO ajenos a la versión 1.2.1 y el valor `unknown` de `matched_code` requieren manejo explícito en el cruce (resuelto con banderas en el bloque 4).
 
 ## Estado actual y siguientes pasos
 
-**Estado actual:** fuentes seleccionadas (JobHop v2 + ESCO v1.2.1), los 3 datasets documentados y limpios, e integración aplicada y versionada en `data/cruce/empleos.parquet` (cruce `matched_code` ↔ `occupations.code`: 99,4% de códigos cruzan directo; 1.506.445 filas / 284.247 personas). Pendiente: la limpieza formal del integrado y la selección de la técnica de minería.
+**Estado actual:** fuentes seleccionadas (JobHop v2 + ESCO v1.2.1), los 3 datasets documentados y limpios, integración aplicada y versionada en `data/cruce/empleos.parquet` (99,4% de códigos cruzan directo; 1.506.445 filas / 284.247 personas) **y limpieza formal del integrado completada** en `data/cruce/empleos_limpio.parquet` (1.506.434 × 14, todas las validaciones en verde). Pendiente: la selección de la técnica de minería.
 
 **Siguientes pasos planificados:**
-1. Aplicar la limpieza del integrado `empleos` (diagnóstico, banderas, outliers, bitácora).
-2. Convertir las experiencias en secuencias temporales por persona.
-3. Explorar la estructura de las trayectorias y seleccionar la técnica de minería.
-4. Evaluar, interpretar y documentar los patrones encontrados.
+1. Convertir las experiencias en secuencias temporales por persona (`script/filtro/`).
+2. Explorar la estructura de las trayectorias y seleccionar la técnica de minería.
+3. Evaluar, interpretar y documentar los patrones encontrados.
 
 ## Referencias
 
@@ -198,5 +231,4 @@ Los cuadernos detectan la raíz del proyecto aunque se abran desde la carpeta `s
 ## Requisitos
 
 - Python 3
-- `pandas`
-- `pyarrow`
+- `pandas>=2` y `pyarrow>=14` (ver `script/requirements/requirements.txt`)

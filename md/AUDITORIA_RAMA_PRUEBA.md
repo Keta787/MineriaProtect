@@ -5,8 +5,9 @@ reorganización, fuentes, unión/integración validada, diagnóstico de calidad,
 explicación técnica, auditorías históricas y decisiones pendientes. Es la base para la compañera/IA
 que continúe la fase de limpieza y para el entregable del parcial de Minería de Datos.
 
-> Los 3 MD de la rama viven en `md/` (`README.md` como puerta de entrada, este documento y
-> `contexto_sesion3.md` material de clase). Los históricos fueron descartados (git conserva el historial).
+> Los documentos viven en `README.md` (raíz, puerta de entrada) y en `md/` (este documento,
+> `BUENAS_PRACTICAS_CODIGO.md` y `contexto_sesion3.md`). Los históricos fueron descartados
+> (git conserva el historial).
 
 ---
 
@@ -14,11 +15,11 @@ que continúe la fase de limpieza y para el entregable del parcial de Minería d
 
 | Área | Hecho verificado | Estado |
 |---|---|---|
-| Reorganización | Estructura actual: `data/{original, limpia, cruce}`, `md/`, `script/` | ✅ Commit `3698044` (historial preservado con `git mv`) |
+| Reorganización | Estructura actual: `data/{original, limpia, cruce}`, `libros/`, `md/`, `script/` | ✅ Commit `3698044` (historial preservado con `git mv`); reestructuración posterior revisada en §14 |
 | Integración | `empleos` = 1 fila por experiencia enriquecida; N:1, nunca multiplica | ✅ 1.506.445 filas · 284.247 personas · 11 columnas |
 | Validación de integración | V1–V7 + comparación contra referencia | ✅ "mismos registros exactos: True" |
-| Limpieza de `empleos` (parcial) | Diagnóstico, faltantes, outliers documentados con cifras | 🟡 Teoría + hallazgos listos; **falta el pipeline (bloque 4)** |
-| Pendiente principal | `script/limpiar_empleos.py` → `empleos_limpio` | ⏳ A construir (obligatorio para sesión 4) |
+| Limpieza de `empleos` (bloque 4) | Pipeline ejecutado, cifras reconciliadas contra los datos | ✅ `empleos_limpio.parquet` generado y verificado (solo parquet) §13 |
+| Pendiente principal | `script/limpieza/limpiar_empleos.py` → `empleos_limpio` | ✅ Ejecutado; los pendientes de minería quedan en §12 |
 
 ---
 
@@ -43,24 +44,31 @@ ocupación + área ISCO-08), que es el papel de la unión.
 
 ```text
 MineriaProtect/
-├── data/                           # datos (original/ y limpia/ en disco; cruce/ versionado)
+├── data/                           # datos (original/ y limpia/ en disco; cruce/ versionado, solo parquet)
 │   ├── original/                   # fuentes: JobHop_v2_train.parquet + ESCO ISCOGroups/occupations
 │   ├── limpia/                     # fuentes de verdad: JobHop + ESCO occupations e ISCOGroups (_limpio)
-│   └── cruce/                      # empleos.parquet (versionado) + *.csv ignorados
-├── md/                             # documentación de la rama: README, AUDITORIA, contexto
+│   └── cruce/                      # empleos.parquet + empleos_limpio.parquet (sin CSV intermedios)
+├── libros/                         # cuadernos: Lectura, Diagnostico_Limpieza_Empleos, presentacion (en construcción)
+├── md/                             # documentación de la rama: AUDITORIA, BUENAS_PRACTICAS_CODIGO, contexto
 ├── script/
-│   ├── limpiar_datos.py           # data/original/ → data/limpia/ (limpia fuentes ESCO; JobHop se omite)
-│   └── Lectura.ipynb              # cuaderno de limpieza (reproduce limpiar_datos.py)
+│   ├── filtro/                     # (futuro) filtros y visualización de trayectorias
+│   ├── limpieza/
+│   │   ├── limpiar_datos.py        # data/original/ → data/limpia/ (limpia fuentes ESCO; JobHop se omite)
+│   │   └── limpiar_empleos.py      # pipeline bloque 4 → data/cruce/empleos_limpio.parquet
+│   └── requirements/
+│       └── requirements.txt        # pandas>=2, pyarrow>=14
 ```
 
 Desversionados (conservados en disco/historial): `data/original/` — solo los originales de los 3
 datasets conservados (`JobHop_v2_train.parquet`, `ESCO/occupations_en.csv`, `ESCO/ISCOGroups_en.csv`)
-— y `data/cruce/*.csv`. `data/limpio/`, `docs/historicos/` y los ESCO descartados fueron **borrados**
-de disco. El CSV de 156 MB no se publica (límite GitHub 100 MB); el parquet se regenera.
+— y `data/cruce/*.csv` (los CSV intermedios del cruce fueron **eliminados**; el bloque 4 solo
+exporta parquet). `data/limpio/`, `docs/historicos/` y los ESCO descartados fueron **borrados**
+de disco. El parquet del integrado (`empleos.parquet`) se regenera desde el historial git si se requiere.
 
 Reproducción:
 ```text
-python script/limpiar_datos.py   # fuente: data/original/ → data/limpia/ (limpieza de fuentes; JobHop ya limpio, se omite)
+python script/limpieza/limpiar_datos.py     # fuente: data/original/ → data/limpia/ (limpieza de fuentes; JobHop ya limpio, se omite)
+python script/limpieza/limpiar_empleos.py   # integrado → data/cruce/empleos_limpio.parquet (bloque 4, §13)
 # integración: empleos ya existe versionado en data/cruce/empleos.parquet (validado V1–V7).
 # cruzar_datos.py fue ELIMINADO del repo por decisión (para eso existe empleos); se recupera del historial git si hace falta regenerar.
 ```
@@ -137,8 +145,9 @@ formales D1–D4 viven en §12.)
 - Duplicados: **0** exactos; **0** por `(resume_id, start, end, code)`; ⚠️ claves cortas crean
   falsos positivos: `(resume_id, start, code)` → **9.601**; `(resume_id, start, end)` → **74.357**
   (pluriempleo real).
-- Fechas: 1955–2029; **0 `start>end`**; duración máx **160 trimestres**; **12 fechas futuras**
-  (>2026: 1 inicio + 11 fin) → error de captura.
+- Fechas: 1955–2029; **0 `start>end`**; duración máx **160 trimestres** (convención inclusiva
+  `end−start+1`; Q1=2 · Q3=11 · sup=24,5); **11 filas con fechas futuras** (>2026: 1 inicio +
+  11 fin; la fila `Q1 2027→Q1 2028` pertenece a ambos conjuntos) → error de captura.
 - Categorías canónicas: `emparejado` 3 (ok 1.391.276 · unknown 104.993 · rescatado 10.176);
   `university_level` 5 (Secondary 590.624 · Bachelor 515.463 · Master 219.884 · None 174.036 ·
   PhD 6.438); `occupation_label` 2.966 · `isco_group_label` 426. **0 colisiones** tras
@@ -158,14 +167,14 @@ IQR **sobre el original**, nunca sobre imputados; no imputar antes de deduplicar
 ### 7.2 MCAR / MAR / MNAR en `empleos`
 | Tipo | Ejemplo real en `empleos` | Decisión |
 |---|---|---|
-| MCAR | 12 fechas futuras (apariciones aisladas) | Corregir/eliminar (0,0008 %) |
+| MCAR | 11 filas con fechas futuras (apariciones aisladas) | Corregir/eliminar (0,0007 %) |
 | MAR (semántico) | NaN de ocupación explicado 100 % por `emparejado` | NO imputar → **bandera** (`unknown`/`rescatado`) |
 | MNAR | `university_level='None'` (quien no reporta nivel) | NO imputar moda → **re-categorizar** |
 
 ### 7.3 Métodos: cuál se usa y por qué los demás NO
 | Método | ¿Aplica? | Por qué |
 |---|---|---|
-| Eliminar filas | **No** | <5 % + MCAR obligatorios; bloque es 6,97 % estructural; borra 64.508 personas (4.987 completas) |
+| Eliminar filas | **No** | <5 % + MCAR obligatorios; bloque es 6,97 % estructural; borra 64.508 personas (2.490 con todo su historial) |
 | Media/mediana | **No** | No existe columna numérica a imputar; "la mediana para una fecha no existe" |
 | Moda | **Prohibido** | Inflaría `Secondary school` (590.624) y fabricaría educación |
 | KNN/regresión | **No** | Sin correlaciones que expliquen ocupación/fecha; fuga de información |
@@ -180,7 +189,8 @@ df["es_vigente"]           = df["end_date"].eq("Present")
 
 ### 7.4 Casos A/B/C
 - **A — ocupación/área (NaN estructurales):** bandera (el flag ya la provee). Conservar → salva
-  64.508 personas y 4.987 personas con historial completo `unknown`.
+  64.508 personas; **2.490** con historial completo `unknown` (la cifra 4.987 prevista no se reproduce;
+  ver §13).
 - **B — `'None'` en educación:** re-categorizar como categoría propia.
 - **C — `'Present'` (76.180):** flag `vigente`; censura a la derecha solo si se requiere.
 
@@ -190,20 +200,20 @@ df["es_vigente"]           = df["end_date"].eq("Present")
 
 ### 7.6 Fechas y coherencia temporal
 Formato `Q<n> <aaaa>` → ordinal `4*año+trimestre`; `start<=end` (0 violaciones); `'Present'` = vigente;
-12 fechas futuras → tratar; 75.227 inicios ≤1990 → definir ventana temporal (decisión de negocio).
+11 filas con fechas futuras → eliminar; 75.227 inicios ≤1990 → definir ventana temporal (decisión de negocio).
 
 ### 7.7 Umbrales de aceptación (regla del negocio)
 Duplicados 0 · nulos restantes 0 (tras banderas) · categorías desconocidas 0 · fechas futuras 0 ·
 `start>end` 0 · impacto 1.506.445 filas / 284.247 personas.
 
-### 7.8 Bitácora prevista (documentable por el pipeline)
+### 7.8 Bitácora prevista vs real (la real la imprime el pipeline; ver §13)
 | Columna | Problema | Cantidad | % | Diagnóstico | Método | Por qué | Impacto |
 |---|---|---|---|---|---|---|---|
 | `occupation_code/label` | NaN | 115.169 | 7,64 % | MAR estructural | Bandera | "Sin emparejar" ≠ no dato | 64.508 personas |
 | `isco_group/label/level` | NaN | 104.993 | 6,97 % | Ídem | Bandera | Ídem | Ídem |
 | `university_level` | `'None'` | 174.036 | 11,55 % | MNAR | Re-categorizar | Moda inflaría mayoría | Sin inventar |
 | `end_date` | `'Present'` | 76.180 | 5,06 % | Censura | Flag vigente | Fin inventado falsea duración | 5,06 % |
-| `end_date/start_date` | futuras | 12 | 0 % | Error dominio | Corregir/eliminar | Imposible vs 2026 | 12 filas |
+| `end_date/start_date` | futuras | 11 | 0 % | Error dominio | Eliminar | Imposible vs 2026 | 11 filas |
 | `start>end` | — | 0 | 0 % | — | — | No existe | — |
 
 ---
@@ -212,7 +222,7 @@ Duplicados 0 · nulos restantes 0 (tras banderas) · categorías desconocidas 0 
 
 ### 8.1 ¿Dónde está el "edad 220 / 600 GB"?
 **No existe**: sin columna numérica analítica (códigos texto, `isco_level` constante). Los únicos
-puntuales reales = **12 fechas futuras** → tratar por dominio.
+puntuales reales = **11 filas con fechas futuras** → eliminar por dominio.
 
 ### 8.2 IQR (regla de Tukey) sobre la única numérica real: `dur_Q`
 ```
@@ -235,7 +245,7 @@ cola larga como señal; la decisión se toma con IQR (regla del curso)."*
 ### 8.4 Tratar vs conservar (lo concreto)
 - **CONSERVAR:** cola larga `dur_Q` (141.591/97.954); segmento `unknown` (104.993, bandera);
   429.958 traslapadas (pluriempleo). "Eliminar borra un segmento completo."
-- **TRATAR:** 12 fechas futuras (error documentado). Winsorizar/imputar: condicional o no aplica.
+- **TRATAR:** 11 filas con fechas futuras (error de dominio; eliminadas en la ejecución real, §13).
 
 ---
 
@@ -256,7 +266,7 @@ cola larga como señal; la decisión se toma con IQR (regla del curso)."*
 | Duplicados | 60 (2,4 %) → eliminar | 0; riesgos con claves cortas (9.601/74.357) |
 | Faltantes | 441 MCAR, moda/mediana válidas | Estructurales (flag) + literales `None`/`Present` → banderas |
 | Categorías | 16 ciudades "de mil maneras" | Ya normalizadas (0 colisiones) |
-| Outliers | gb_datos + edad/facturación/minutos imposibles | Sin numérica analítica; cola larga = señal; 12 fechas futuras |
+| Outliers | gb_datos + edad/facturación/minutos imposibles | Sin numérica analítica; cola larga = señal; 11 filas con fechas futuras |
 | Validación | Contra canónico (medias) | Contra integración V1–V7 + bitácora |
 
 Conclusión: **mismo pipeline, decisiones opuestas** (el patrón del ejercicio no se repite; aquí los
@@ -297,24 +307,26 @@ validación antes/después, reconciliación exacta) con **deudas vs guía**:
 ## 12. ESTADO ACTUAL, DECISIONES PENDIENTES Y PRÓXIMOS PASOS
 
 **Listo:** reorganización (commit `3698044`), integración reproducida y validada, diagnóstico,
-estrategia de faltantes, outliers (IQR/Tukey), bitácora, rúbrica, comparativa, guía consolidada;
-`script/` simplificado (eliminados `cruzar_datos.py` y `tablas.ipynb`; quedan `limpiar_datos.py` y
-`Lectura.ipynb` como cuaderno de limpieza).
+estrategia de faltantes, outliers (IQR/Tukey), bitácora, rúbrica, comparativa, guía consolidada,
+pipeline de limpieza ejecutado y verificado (bloque 4 → `empleos_limpio`, §13); `script/`
+reestructurado (eliminados `cruzar_datos.py` y `tablas.ipynb`; `limpieza/limpiar_datos.py` y
+`limpieza/limpiar_empleos.py`; cuadernos en `libros/`, dependencias en `script/requirements/`).
 
-**Pendiente principal (bloque 4):** `script/limpiar_empleos.py` (clase `LimpiadorEmpleos`):
-cargar `data/cruce/empleos.parquet` → 1 diagnóstico → 2 duplicados → 3 categorías (re-verificar) →
-4 faltantes (banderas A–C) → 5 outliers (12 fechas → tratar; conservar cola larga) → 6 validación
-(tabla §7.7 impresa) → 7 exportar `data/cruce/empleos_limpio` (csv + parquet). Con asserts por fase
-(nivel "Excepcional") y `requirements.txt`.
+**Pendiente principal (bloque 4):** `script/limpieza/limpiar_empleos.py` (clase `LimpiadorEmpleos`):
+cargar `data/cruce/empleos.parquet` → 1 diagnóstico → 2 duplicados → 3 categorías (re-verificar y
+re-categorizar `'None'`) → 4 faltantes (banderas A–C) → 5 outliers (11 filas futuras → eliminar;
+conservar cola larga) → 6 validación (tabla §7.7 impresa) → 7 exportar `data/cruce/empleos_limpio.parquet`
+(solo parquet). Con asserts por fase (nivel "Excepcional") y `requirements.txt`.
+**→ ESTADO: ✅ ejecutado y verificado (ver §13).**
 
 **Decisiones de negocio anticipadas (a justificar):**
 | # | Bloque | Cantidad | % | Tratamiento propuesto |
 |---|---|---|---|---|
-| 1 | `emparejado=unknown` | 104.993 | 6,97 % | Bandera (64.508 personas; 4.987 perderían todo) |
+| 1 | `emparejado=unknown` | 104.993 | 6,97 % | Bandera (64.508 personas; 2.490 perderían todo) |
 | 2 | `university_level='None'` | 174.036 | 11,55 % | Re-categorizar |
 | 3 | `end_date='Present'` | 76.180 | 5,06 % | Flag `vigente` / censura |
 | 4 | Traslapes | 429.958 | 28,54 % | Definir "transición" |
-| 5 | Ventana temporal | 1955–2029 | — | Definir rango (+12 futuras) |
+| 5 | Ventana temporal | 1955–2029 | — | Definir rango (+11 filas futuras) |
 | 6 | Categorías canónicas | 3/5/426/2.966 | — | "Desconocidas: 0" sin romper ESCO |
 
 **Diseño de integración histórico:** pendientes formales D1 (`unknown` en minería), D2 (empleos
@@ -327,6 +339,76 @@ compañero y `CRUCE_DATOS.md` desactualizado → **no merge aún**; unificar sob
 
 ---
 
+## 13. EJECUCIÓN DEL BLOQUE 4: `script/limpieza/limpiar_empleos.py` → `empleos_limpio`
+
+Pipeline implementado y ejecutado sobre el original **sin modificarlo**. Clase `LimpiadorEmpleos`,
+7 fases con `assert` por fase (nivel "Excepcional"), docstrings en español y comentarios solo del
+porqué (A9 del estándar), `script/requirements/requirements.txt` (pandas>=2, pyarrow>=14).
+Reproducción: `python script/limpieza/limpiar_empleos.py`.
+
+### 13.1 Qué se le hizo a `empleos` (as-built, en orden)
+
+| Fase | Acción sobre la copia de trabajo | Verificado por assert |
+|---|---|---|
+| 1 Diagnóstico | Shape/tipos/nulos/dups/rango de fechas sobre el original | 1.506.445 × 11 · 284.247 personas |
+| 2 Duplicados | Detección exacta y por PK + claves cortas (`keep='first'`, solo reporte) | dups 0 / PK 0 · 74.357 / 9.601 |
+| 3 Categorías | Re-verificación de cardinalidades + **re-categorizar** `'None'` → `'No reportado'` (caso B) | 3/5/426/2.966 · 0 `'None'` restantes |
+| 4 Faltantes | Banderas `es_unknown_ocupacion`, `es_rescatado`, `es_vigente` (casos A y C) | 104.993 / 10.176 / 76.180 · 115.169 NaN ↔ 100 % explicados |
+| 5 Outliers | IQR/Tukey sobre `dur_Q` inclusiva (conservar cola) + z-score solo comparativo + **eliminar 11 filas futuras** | 141.591/97.954 conservadas · −11 filas |
+| 6 Validación | Tabla §7.7 impresa (dups 0 · dups PK 0 · nulos sin bandera 0 · futuras 0 · `start>end` 0) | 6/6 ok |
+| 7 Exportar | `data/cruce/empleos_limpio.parquet` (17,4 MB, **solo parquet**), bitácora de trazabilidad impresa, original intacto | shape final 1.506.434 × 14 |
+
+### 13.2 Fallos encontrados durante la ejecución (lo previsto vs lo real)
+
+| Cifra prevista (documentada) | Real verificada | Causa | Medida tomada |
+|---|---|---|---|
+| 12 fechas futuras ("1 inicio + 11 fin") | **11 filas** | La fila `Q1 2027→Q1 2028` pertenece a ambos conjuntos y se contó dos veces al sumar | Fase 5 elimina 11 filas (assert `== 11`) |
+| 4.987 personas con historial completo `unknown` | **2.490** | Ninguna definición natural (todas las filas `unknown`, incl. `rescatado`) reproduce 4.987 | Assert descartado; se reporta 2.490 |
+| Duración sin convención explícita | **Inclusiva `end−start+1`** | Única definición que reproduce §8.2 (Q1=2, Q3=11, sup 24,5, mediana 5, máx 160) | `_duracion_trimestres` usa `+1` |
+| Claves cortas | **`keep='first'` → 74.357 / 9.601** | La cifra documentada cuenta filas extra (`keep=False` daría 134.585/19.073) | Fase 2 alineada a `keep='first'` |
+| Caso B solo documentado, no aplicado | 174.036 `'None'` en educación | Faltaba la transformación | Implementada en fase 3 → `'No reportado'` |
+
+### 13.3 Resultado final de `empleos_limpio` (verificado aparte)
+
+- **1.506.434 filas** (original 1.506.445 → **−11** por fechas futuras) · **284.247 personas** ·
+  **14 columnas** = 11 del original + `es_unknown_ocupacion` · `es_rescatado` · `es_vigente`.
+- 0 duplicados exactos · 0 duplicados PK · 0 nulos de ocupación sin bandera · 0 fechas futuras ·
+  0 `start>end` · `university_level` sin `'None'` (`'No reportado'` 174.035 = 174.036 − 1 fila
+  futura que era `'None'`).
+- Banderas: 104.993 · 10.176 · 76.180 (idénticas al diagnóstico del original).
+- El original `data/cruce/empleos.parquet` **no se modifica** (se mantiene versionado en el repo).
+
+### 13.4 Notas para la fase de minería
+
+- La cola larga de `dur_Q` se conserva (0 filas eliminadas por atípicos); si `dur_Q` entra al modelo,
+  winsorizar `clip(−11,5; 24,5)` (§8.2).
+- `libros/Diagnostico_Limpieza_Empleos.ipynb` reproduce el pipeline: duración **inclusiva** (`+1`),
+  `keep='first'` en `contarGruposDuplicados`, **11 filas futuras** y el centinela `SENTINELA_FIN`;
+  sus valores coinciden con los de §8.2 y de este documento (alineado en §14).
+
+---
+
+## 14. AUDITORÍA DE REESTRUCTURACIÓN Y MEJORAS (BUENAS_PRACTICAS_CODIGO)
+
+Auditoría del repo contra `md/BUENAS_PRACTICAS_CODIGO.md` realizada al cerrar la reorganización
+(responsable: revisión asistida). Las falencias detectadas se **corrigieron** en esta misma ronda.
+
+| Falencias detectadas | Corrección aplicada | Evidencia |
+|---|---|---|
+| `README.md` desactualizado (estructura vieja: `script/limpiar_datos.py`, `script/Lectura.ipynb`, sin `libros/`, sin `empleos_limpio`) | `README.md` reescrito a la estructura real: tree actualizado, comandos `script/limpieza/…`, notebooks `libros/`, datasets con `empleos_limpio.parquet`, decisiones documentadas | `README.md` (raíz) |
+| Rutas obsoletas `script/limpiar_*.py` / `script/Lectura.ipynb` | Actualizadas a `script/limpieza/…` y `libros/…` en §1, §3, §12 y §13 | Este documento |
+| `libros/Lectura.ipynb` import roto (`sys.path` apuntaba a `script/` donde ya no vive el código) | CELDA 3 → `sys.path.insert(0, PROYECTO/"script"/"limpieza")`; sintaxis del cuaderno validada (15 celdas, 0 errores) | `libros/Lectura.ipynb` |
+| Cuaderno Diagnóstico inconsistente con el pipeline: duración exclusiva, `keep=False`, "12 filas", sentinela literal 99999 | Alineado: duración `+1`, `keep='first'`, "11 filas" (3 celdas md + 1 tabla) y constantes `SENTINELA_FIN`; sintaxis validada (67 celdas, 0 errores) | `libros/Diagnostico_Limpieza_Empleos.ipynb` |
+| `requirements.txt` sin versiones y en carpeta no documentada | Pineado `pandas>=2` / `pyarrow>=14` en `script/requirements/`; ruta documentada en README y §13 | `script/requirements/requirements.txt` |
+| Estándar: sin regla de reproducibilidad, sin regla de documentación, excepción de prints/camelCase implícita, `asserts` del nivel Excepcional no reconocidos, ruta obsoleta `scripts/limpiar_empleos.py` | Añadidas **D5 Reproducibilidad**, **A9 Documentación**, excepciones explícitas en C2 y A1, nota "Excepcional" en D1, D3 marcada opcional, ruta corregida | `md/BUENAS_PRACTICAS_CODIGO.md` |
+| Decisiones "solo parquet" y "prints como entregable" no documentadas formalmente | Documentadas en `README.md` (Decisiones), excepción C2 del estándar y §13.1 | `README.md`, `md/BUENAS_PRACTICAS_CODIGO.md` |
+
+Estado del repo tras la ronda: scripts y cuadernos con sintaxis válida, cifras de todos los
+artefactos coincidentes (§8.2, §13, notebooks acreditan Q1=2/Q3=11/máx 160, 74.357/9.601, −11 filas),
+reestructuración aún **sin commitear** (pendiente de `git add -A` cuando el usuario lo apruebe).
+
+---
+
 *Documento consolidado a partir de: README.md, README_DATOS.md, GUIA_LIMPLEZA_EMPLEOS.md,
 EXPLICACION_TECNICA.md, DISEÑO_INTEGRACION.md, CIERRE_DISEÑO.md, AUDITORIA_LIMPLEZA.md.
-Cifras verificadas sobre `data/cruce/empleos.parquet`.*
+Cifras verificadas sobre `data/cruce/empleos.parquet` y `data/cruce/empleos_limpio.parquet`.*
