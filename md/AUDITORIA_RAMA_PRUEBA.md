@@ -48,10 +48,12 @@ MineriaProtect/
 │   ├── original/                   # fuentes: JobHop_v2_train.parquet + ESCO ISCOGroups/occupations
 │   ├── limpia/                     # fuentes de verdad: JobHop + ESCO occupations e ISCOGroups (_limpio)
 │   └── cruce/                      # empleos.parquet + empleos_limpio.parquet (sin CSV intermedios)
-├── libros/                         # cuadernos: Lectura, Diagnostico_Limpieza_Empleos, presentacion (en construcción)
+├── libros/                         # cuadernos: Lectura, Diagnostico_Limpieza_Empleos, presentacion (análisis, §15)
 ├── md/                             # documentación de la rama: AUDITORIA, BUENAS_PRACTICAS_CODIGO, contexto
 ├── script/
-│   ├── filtro/                     # (futuro) filtros y visualización de trayectorias
+│   ├── filtro/                     # análisis reutilizable de presentacion.ipynb (§15)
+│   │   ├── filtros.py              # selección por nivel/grupo ISCO/ocupación/periodo/vigencia
+│   │   └── indicadores.py          # dur_Q (inclusiva), IQR, transiciones, brechas, crosstabs, banderas
 │   ├── limpieza/
 │   │   ├── limpiar_datos.py        # data/original/ → data/limpia/ (limpia fuentes ESCO; JobHop se omite)
 │   │   └── limpiar_empleos.py      # pipeline bloque 4 → data/cruce/empleos_limpio.parquet
@@ -404,8 +406,35 @@ Auditoría del repo contra `md/BUENAS_PRACTICAS_CODIGO.md` realizada al cerrar l
 | Decisiones "solo parquet" y "prints como entregable" no documentadas formalmente | Documentadas en `README.md` (Decisiones), excepción C2 del estándar y §13.1 | `README.md`, `md/BUENAS_PRACTICAS_CODIGO.md` |
 
 Estado del repo tras la ronda: scripts y cuadernos con sintaxis válida, cifras de todos los
-artefactos coincidentes (§8.2, §13, notebooks acreditan Q1=2/Q3=11/máx 160, 74.357/9.601, −11 filas),
-reestructuración aún **sin commitear** (pendiente de `git add -A` cuando el usuario lo apruebe).
+artefactos coincidentes (§8.2, §13, notebooks acreditan Q1=2/Q3=11/máx 160, 74.357/9.601, −11 filas).
+La reorganización de esta ronda quedó commitada en `dce93d5` (rama `prueba`, origin).
+El libro de análisis se agrega después en §15.
+
+---
+
+## 15. LIBRO DE ANÁLISIS: `libros/presentacion.ipynb` Y `script/filtro/`
+
+Entregable de análisis/mini investigación sobre `data/cruce/empleos_limpio.parquet` (solo
+lectura; `dur_Q` se **recalcula** con la fórmula inclusiva, no se agrega al parquet). La rúbrica
+de la sesión 3 tiene prioridad sobre el estándar del repo; el libro cumple Funcionalidad
+(exec de las 30 celdas de código pasa sin errores), Justificación técnica (IQR de Tukey sobre
+datos observados, gaps = proxy de desempleo, censura `Present` y `unknown` sin imputar),
+Documentación (bloque 5 con DATO/INTERPRETACIÓN/LIMITACIÓN, todo calculado en vivo) y
+Reproducibilidad (rutas relativas, sin aleatoriedad → sin semillas). Nivel Excepcional:
+funciones reutilizables + asserts de línea base contra §8.2/§13.
+
+| Artefacto | Descripción |
+|---|---|
+| `script/filtro/filtros.py` | Selecciones vectorizadas (nivel, grupo ISCO, ocupación, periodo, vigencia, sin-área) que devuelven copias; asserts de invariantes y reporte de excluidos. |
+| `script/filtro/indicadores.py` | `dur_Q` inclusiva, `distribucion_duracion`, duración por grupo/nivel, `top_valores`, `crosstab_nivel_grupo`, transiciones consecutivas y primera→segunda (dedupe de 74.357 repetidas exactas), brechas sin empleo (running `cummax+shift`, proxy de desempleo) y traslapes (mismo método que el diagnóstico). |
+| `libros/presentacion.ipynb` | 44 celdas (14 md + 30 code); 5 bloques: Conocer (línea base + asserts), Exploración por preguntas, Relaciones (nivel↔ISCO, ISCO↔duración, transiciones, brechas, traslapes), Mini investigación (4 preguntas: concentración por nivel, duración por nivel, linealidad, desempleo proxy) y Hallazgos con formato DATO/INTERPRETACIÓN/LIMITACIÓN. |
+
+Cifras verificadas en la ejecución (30/30 celdas OK): línea base 1.506.434×14 · 284.247 personas ·
+flags 104.993/10.176/76.180 · `No reportado` 174.035 · inicios Q1 1955–Q4 2020 · duración mediana
+5 trimestres (IQR 2–11) · 18,3 % de transiciones conservan grupo ISCO · 60,1 % de personas con al
+menos una brecha (mediana 3 trimestres, máx 151) · 82 % de personas con ≥1 traslape (pluriempleo o
+dato impreciso; método igual al del diagnóstico). La reestructuración de la ronda §14 quedó
+commitada en `dce93d5` (rama `prueba`, origin).
 
 ---
 

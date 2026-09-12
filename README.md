@@ -88,13 +88,15 @@ MineriaProtect/
 ├── libros/                        # cuadernos (sesión 1-3)
 │   ├── Lectura.ipynb              # limpieza de fuentes (reproduce limpiar_datos.py)
 │   ├── Diagnostico_Limpieza_Empleos.ipynb   # limpieza del integrado (bloque 4)
-│   └── presentacion.ipynb         # en construcción
+│   └── presentacion.ipynb         # análisis y mini investigación (bloque sesión 3)
 ├── md/                            # documentación
 │   ├── AUDITORIA_RAMA_PRUEBA.md   # auditoría y trazabilidad por rama
 │   ├── BUENAS_PRACTICAS_CODIGO.md # estándar de código del proyecto
 │   └── contexto_sesion3.md        # contexto académico sesión 3
 ├── script/
-│   ├── filtro/                    # (futuro) filtros y visualización de trayectorias
+│   ├── filtro/                    # análisis reutilizable (presentacion.ipynb)
+│   │   ├── filtros.py             # selección por nivel/grupo ISCO/periodo/vigencia
+│   │   └── indicadores.py         # duración, transiciones, brechas, crosstabs
 │   ├── limpieza/
 │   │   ├── limpiar_datos.py       # limpieza de fuentes (ESCO + JobHop limpio)
 │   │   └── limpiar_empleos.py     # limpieza formal del integrado (bloque 4)
@@ -180,7 +182,7 @@ Los scripts resuelven la raíz del proyecto buscando hacia arriba la carpeta `da
 | -------- | --------- |
 | `libros/Lectura.ipynb` | Limpieza de fuentes: inspección → limpieza → validación de cada archivo. Reproduce `limpiar_datos.py`. |
 | `libros/Diagnostico_Limpieza_Empleos.ipynb` | Diagnóstico y limpieza formal del integrado (bloque 4). Reproduce `limpiar_empleos.py` con evidencia impresa. |
-| `libros/presentacion.ipynb` | En construcción (filtros/visualización de trayectorias; pendiente). |
+| `libros/presentacion.ipynb` | Análisis y mini investigación sobre `empleos_limpio.parquet`: 5 bloques (Conocer → Exploración → Relaciones → Mini investigación → Hallazgos con DATO/INTERPRETACIÓN/LIMITACIÓN), todo calculado en vivo con `script/filtro/`. Importar: *Kernel → Restart & Run All*. |
 
 ## Decisiones documentadas
 
