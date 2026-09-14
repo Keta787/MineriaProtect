@@ -22,3 +22,6 @@ contexto_sesion*.md
 
 # Metodología KDD/CRISP-DM (solo en disco, no se versiona; igual que contextos)
 METODOLOGIA_KDD_CRISPDM.md
+
+# Versión local de Python (solo en disco; la referencia queda en requirements.txt)
+.python-version
