@@ -1,4 +1,10 @@
-# Requisitos del proyecto validados con Python 3.14.7 (ver .python-version junto a este archivo).
+# Entorno validado con Python 3.14.7 (version completa en .python-version).
+# Los cuadernos 1.0/2.0/3.0 se ejecutan in-situ con nbclient: se requieren
+# nbconvert + ipykernel para persistir las salidas sin abrir Jupyter.
 pandas>=2.0
 pyarrow>=14.0
-matplotlib>=3.8  # graficas de notebooks/presentacion.ipynb
+matplotlib>=3.8  # graficas de la fase de mineria
+
+nbconvert>=7.17
+ipykernel>=7.3
+jupyter-client>=8
