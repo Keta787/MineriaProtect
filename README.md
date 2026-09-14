@@ -94,9 +94,6 @@ MineriaProtect/
 ├── README.md                       # puerta de entrada (este documento)
 ├── .gitignore                      # contextos, metodología y CSV pesados fuera de git
 ├── requirements.txt                # pandas, pyarrow, matplotlib, nbconvert, ipykernel, jupyter-client
-├── .python-version                 # solo en disco (referencia en requirements.txt)
-├── contexto_sesion1/2/3.md         # contexto académico de cada sesión (solo en disco)
-├── METODOLOGIA_KDD_CRISPDM.md      # marco rector KDD ↔ CRISP-DM y cifras de auditoría (solo en disco)
 ├── data/
 │   ├── 01_raw/                     # SELECTION — fuentes inmutables, NUNCA se modifican
 │   │   ├── JobHop_v2_train.parquet # trayectorias (JobHop v2)
