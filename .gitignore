@@ -21,3 +21,6 @@ data/**/*.parquet
 
 # Bitácora de ejecución de los pipelines (trazabilidad en ejecución)
 logs/
+
+# Contextos de sesión (solo se conservan en disco, no se versionan)
+contexto_sesion*.md
