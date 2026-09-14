@@ -1,6 +1,6 @@
 # README ACTUALIZADO · Cambios aplicados al proyecto
 
-Documento de seguimiento de los cambios aplicados sobre el repositorio (enero de 2026 - sesión 3/curso). Complementa al `README.md` principal: aquí se registra **qué cambió y por qué**.
+Documento de seguimiento de los cambios aplicados sobre el repositorio (enero de 2026 - sesión 3/curso). Aquí se registra el estado del proyecto: **qué cambió, por qué y cómo quedó la estructura**.
 
 ## 1. Causa raíz: rutas del layout antiguo
 
