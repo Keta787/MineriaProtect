@@ -20,7 +20,7 @@ Todos los scripts y cuadernos apuntaban a las carpetas del **layout viejo**, que
 - `src/limpieza/limpiar_empleos.py` → origen/destino en `data/03_processed/`.
 - `src/limpieza/limpiar_datos.py` → `data/01_raw/` → `data/02_interim/`.
 - `src/filtro/filtros.py` y `src/filtro/indicadores.py` → docstrings con rutas nuevas.
-- `notebooks/Lectura.ipynb`, `notebooks/Diagnostico_Limpieza_Empleos.ipynb`, `notebooks/presentacion.ipynb` → rutas, `sys.path` y `RUTA` de los CSV corregidos (JSON validado, sin referencias viejas).
+- `notebooks/` reorganizado a tres unidades alineadas con las sesiones 1–3: `1.0_comprension_negocio.md`, `2.0_EDA_y_seleccion.ipynb` y `3.0_preprocesamiento.ipynb` (los cuadernos viejos `Lectura.ipynb`, `Diagnostico_Limpieza_Empleos.ipynb` y `presentacion.ipynb` fueron eliminados; sus rutas, `sys.path` y `RUTA` quedaron corregidos y ejecutados en verde).
 - `.gitignore` → reglas de tamaño: se versionan `data/01_raw/` y `data/02_interim/` (todos los archivos <50 MB); se descartan los CSV de `data/03_processed/` (156–184 MB, no caben en GitHub) y `logs/`.
 
 ## 3. Pipelines re-ejecutados (validación en verde)
@@ -58,7 +58,7 @@ Los dos limpios se **cruzan entre sí** para comparar descriptivos (duración, t
 
 ### Validación cruzada con/sin outliers
 
-| Métrica | Con outliers (`empleos_limpio.csv`) | Sin outliers (`sin_outliers.csv`) |
+| Métrica | Con outliers (`empleos_limpio.csv`) | Sin outliers (`empleos_limpio_sin_outliers.csv`) |
 |---|---|---|
 | Filas | 1.506.434 | 1.364.853 |
 | Personas | 284.247 | 277.052 |
@@ -79,4 +79,4 @@ Los dos limpios se **cruzan entre sí** para comparar descriptivos (duración, t
 1. Convertir experiencias en secuencias temporales por persona (`src/filtro/`).
 2. Cruzar descriptivos con/sin cola larga y **seleccionar la técnica de minería**.
 3. Evaluar, interpretar y documentar los patrones.
-4. Actualizar la bitácora del proyecto (`BITACORA_PROYECTO.md`) con estos cambios.
+4. Actualizar la bitácora del proyecto (`logs/bitacora_*.csv`) con estos cambios.

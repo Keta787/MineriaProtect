@@ -11,14 +11,15 @@ Flujo:
         -> VALIDACION (resumen antes/despues)
         -> DATOS LIMPIOS (data/02_interim/)
 
-Alcance actual (3 datasets gestionados):
-    - JobHop_v2_train.parquet          -> se limpia aqui (lineage reproducible).
-    - ESCO occupations_en.csv          -> se limpia aqui.
-    - ESCO ISCOGroups_en.csv           -> se limpia aqui.
+Alcance (6 datasets gestionados, todos bajo data/01_raw/ -> data/02_interim/):
+    - JobHop_v2_train.parquet                        -> se limpia aqui (lineage reproducible).
+    - ESCO occupations_en.csv                        -> se limpia aqui.
+    - ESCO ISCOGroups_en.csv                         -> se limpia aqui.
+    - ESCO skills_en.csv                             -> se limpia aqui.
+    - ESCO greenShareOcc_en.csv                      -> se limpia aqui.
+    - ESCO occupationSkillRelations_en.csv           -> se limpia aqui.
     El limpio de JobHop se regenera desde data/01_raw/ como el resto del pipeline
     (ya no se mantiene a mano; ver decision de trazabilidad en la bitacora).
-    Otros CSV de ESCO fueron descartados del repo; sus ramas siguen en el codigo
-    por trazabilidad, pero no se ejecutan (no hay archivos para ellas).
 
 Reglas generales:
     - NUNCA se modifican los archivos originales: solo se leen.
@@ -260,8 +261,8 @@ def limpiar_jobhop(df: pd.DataFrame, cambios: list, stats: dict) -> pd.DataFrame
     #    PROBLEMA: 136.497 registros no tienen fecha de fin y 'end_date' queda
     #    con NaN. Sin una decidida, esos empleos no pueden ubicarse en la
     #    trayectoria. TRANSFORMACION: representar "sin fecha de fin" como
-    #    'Present' (empleo vigente), segun la practica ya documentada en el
-    #    notebook Lectura.ipynb. IMPACTO: valores rellenados, 0 filas perdidas.
+    #    'Present' (empleo vigente), segun el convenio del proyecto (bandera
+    #    es_vigente, fase 4 de limpiar_empleos.py). IMPACTO: valores rellenados, 0 filas perdidas.
     n_end_null = int(df["end_date"].isna().sum())
     if n_end_null > 0:
         df["end_date"] = df["end_date"].fillna("Present")

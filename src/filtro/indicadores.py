@@ -1,4 +1,4 @@
-"""Indicadores reutilizables para el libro de análisis (notebooks/presentacion.ipynb).
+"""Indicadores reutilizables para el análisis de los cuadernos del proyecto.
 
 Derivados calculados en vivo a partir de `data/03_processed/empleos_limpio.csv`:
 

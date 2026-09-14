@@ -1,4 +1,4 @@
-"""Filtros reutilizables para el libro de análisis (notebooks/presentacion.ipynb).
+"""Filtros reutilizables para el análisis de los cuadernos del proyecto.
 
 Todo se aplica sobre `data/03_processed/empleos_limpio.csv` (solo lectura; el CSV se carga en
 el notebook convirtiendo los `es_*` a booleano):
