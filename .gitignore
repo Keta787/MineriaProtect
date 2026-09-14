@@ -1,0 +1,23 @@
+.ipynb_checkpoints/
+__pycache__/
+*.pyc
+.DS_Store
+
+# ============================================================
+# ARCHIVOS GRANDES - REGLA DEL PROYECTO: NO SUBIR A GIT SI
+# EL ARCHIVO SUPERA LOS 50 MB (límite GitHub por archivo: 100 MB).
+# ============================================================
+# Los tres CSV del bloque 4 superan 50 MB y quedan EXCLUIDOS:
+#   empleos.csv                  (156,8 MB)
+#   empleos_limpio.csv           (183,8 MB)
+#   empleos_limpio_sin_outliers.csv (166,2 MB)
+data/03_processed/*.csv
+
+# Fuentes originales: no se versionan (se reconstruyen localmente / desde el historial)
+data/01_raw/
+
+# Parquet: no se versionan (formato acordado = CSV; los limpios se regeneran)
+data/**/*.parquet
+
+# Bitácora de ejecución de los pipelines (trazabilidad en ejecución)
+logs/
