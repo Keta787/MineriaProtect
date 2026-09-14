@@ -7,19 +7,14 @@ __pycache__/
 # ARCHIVOS GRANDES - REGLA DEL PROYECTO: NO SUBIR A GIT SI
 # EL ARCHIVO SUPERA LOS 50 MB (límite GitHub por archivo: 100 MB).
 # ============================================================
-# Los tres CSV del bloque 4 superan 50 MB y quedan EXCLUIDOS:
-#   empleos.csv                  (156,8 MB)
-#   empleos_limpio.csv           (183,8 MB)
-#   empleos_limpio_sin_outliers.csv (166,2 MB)
-data/03_processed/*.csv
+# data/03_processed/*.csv pesan 156-184 MB cada uno (>100 MB = limite
+# duro de GitHub) -> NO se versionan. Solo se sube la estructura
+# de la carpeta mediante .gitkeep (los CSV se regeneran localmente
+# ejecutando src/limpieza/*.py sobre data/01_raw/).
+data/03_processed/*
+!data/03_processed/.gitkeep
 
-# Fuentes originales: no se versionan (se reconstruyen localmente / desde el historial)
-data/01_raw/
-
-# Parquet: no se versionan (formato acordado = CSV; los limpios se regeneran)
-data/**/*.parquet
-
-# Bitácora de ejecución de los pipelines (trazabilidad en ejecución)
+# bitácora de ejecución de los pipelines (trazabilidad en ejecución)
 logs/
 
 # Contextos de sesión (solo se conservan en disco, no se versionan)

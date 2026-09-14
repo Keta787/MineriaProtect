@@ -21,7 +21,7 @@ Todos los scripts y cuadernos apuntaban a las carpetas del **layout viejo**, que
 - `src/limpieza/limpiar_datos.py` → `data/01_raw/` → `data/02_interim/`.
 - `src/filtro/filtros.py` y `src/filtro/indicadores.py` → docstrings con rutas nuevas.
 - `notebooks/Lectura.ipynb`, `notebooks/Diagnostico_Limpieza_Empleos.ipynb`, `notebooks/presentacion.ipynb` → rutas, `sys.path` y `RUTA` de los CSV corregidos (JSON validado, sin referencias viejas).
-- `.gitignore` → reglas del layout nuevo (`data/01_raw/`, `data/**/*.parquet`, `data/03_processed/*.csv`, `logs/`).
+- `.gitignore` → reglas de tamaño: se versionan `data/01_raw/` y `data/02_interim/` (todos los archivos <50 MB); se descartan los CSV de `data/03_processed/` (156–184 MB, no caben en GitHub) y `logs/`.
 
 ## 3. Pipelines re-ejecutados (validación en verde)
 
@@ -67,11 +67,12 @@ Los dos limpios se **cruzan entre sí** para comparar descriptivos (duración, t
 | `dur_Q` máx | 160 | 24 |
 | Nulos sin bandera | 0 | 0 |
 
-## 5. Estado de los archivos en disco
+## 5. Estado de los archivos en disco y en GitHub
 
-- `data/01_raw/` (8,8 MB parquet + 5 ESCO CSV), `data/02_interim/` (parquet limpio + 5 ESCO `*_limpio.csv`).
-- `data/03_processed/`: `empleos.csv` (156,8 MB), `empleos_limpio.csv` (183,8 MB), `empleos_limpio_sin_outliers.csv` (166,2 MB).
-- `logs/`: bitácoras de ejecución (`bitacora_limpieza_empleos.csv`, `bitacora_dividir_outliers.csv`).
+- En GitHub se versionan **completos** `data/01_raw/` (parquet + 5 ESCO CSV) y `data/02_interim/` (parquet limpio + 5 ESCO `*_limpio.csv`), además de `src/`, `notebooks/` y este documento.
+- `data/03_processed/` NO se versiona su contenido: los 3 CSV pesan 156–184 MB (superan el límite duro de GitHub de 100 MB por archivo y la regla del proyecto de 50 MB). Solo se sube la estructura de la carpeta con un `.gitkeep`.
+- En disco: `data/01_raw/` (8,8 MB parquet + 5 ESCO CSV), `data/02_interim/` (parquet limpio + 5 ESCO `*_limpio.csv`), `data/03_processed/` (`empleos.csv` 156,8 MB, `empleos_limpio.csv` 183,8 MB, `empleos_limpio_sin_outliers.csv` 166,2 MB).
+- `logs/`: bitácoras de ejecución (solo en disco, no se versionan).
 
 ## 6. Siguientes pasos
 
