@@ -25,6 +25,7 @@ Metodo (resumen de decisiones, veridadas en la auditoria de la rama):
       igual que la auditoria: misma IQR Q1=2 Q3=11 superior 24,5.)
     - 11 fechas futuras (>2026, mcar) -> eliminar filas (error de dominio; la auditoria
       contaba "1 inicio + 11 fin" = 12 contando dos veces la fila Q1 2027 -> Q1 2028).
+      En el integrado actual (particiones test + val) no hay fechas futuras (0).
 
 Las cifras canonicas de la auditoria estan centralizadas en `EXPECTED` (constante):
 cada assert compara el valor obtenido contra ese canon y, si difiere, reporta
@@ -83,30 +84,31 @@ ANIO_CORTE = 2026              # Anio del proyecto: fechas posteriores = error d
 ANIO_LIMITE_HISTORICO = 1990   # Ventana temporal historica razonable (cola documentada).
 CLAVE_PRIMARIA = ["resume_id", "matched_code", "start_date", "end_date"]
 
-# Valores canonicos verificados en la auditoria (fase 3 re-verifica estos conteos).
+# Valores canonicos verificados en la auditoria del integrado test+val
+# (fase 3 re-verifica estos conteos).
 CANONICOS = {
     "emparejado": 3,
-    "university_level": 5,
-    "isco_group_label": 426,
-    "occupation_label": 2966,
+    "university_level": 4,
+    "isco_group_label": 424,
+    "occupation_label": 2855,
 }
 
-# Cifras canonicas del integrado `empleos` (auditoria secciones 7.7 y 8.2),
+# Cifras canonicas del integrado `empleos` (union test+val, auditadas),
 # centralizadas para que cualquier discrepancia falle con diagnostico claro.
 EXPECTED = {
-    "filas_original": 1_506_445,
-    "filas_limpio": 1_506_434,
-    "personas_original": 284_247,
+    "filas_original": 376_567,
+    "filas_limpio": 376_567,
+    "personas_original": 71_061,
     "duplicado_exacto": 0,
     "duplicado_pk": 0,
-    "clave_corta_fin": 74_357,          # (resume_id, start_date, end_date)
-    "clave_corta_codigo": 9_601,        # (resume_id, start_date, matched_code)
-    "none_recategorizados": 174_036,    # literal 'None' -> 'No reportado'
-    "personas_unknown": 64_508,
-    "personas_historial_unknown": 2_490,
-    "fuera_iqr_filas": 141_591,
-    "fuera_iqr_personas": 97_954,
-    "fechas_futuras": 11,
+    "clave_corta_fin": 18_749,          # (resume_id, start_date, end_date)
+    "clave_corta_codigo": 2_386,        # (resume_id, start_date, matched_code)
+    "none_recategorizados": 42_807,         # 'None' (0) + celdas vacias (42.807)
+    "personas_unknown": 16_055,
+    "personas_historial_unknown": 605,
+    "fuera_iqr_filas": 35_477,
+    "fuera_iqr_personas": 24_687,
+    "fechas_futuras": 0,
     "duracion_iqr_q1": 2.0,
     "duracion_iqr_q3": 11.0,
     "duracion_iqr_superior": 24.5,
@@ -251,7 +253,7 @@ class LimpiadorEmpleos:
         tabla = {}
         for col, esperado in CANONICOS.items():
             # Los conteos canonicos de la auditoria excluyen el NaN (dropna=True),
-            # p. ej. 2.966 etiquetas de ocupacion + 1 categoria NaN, 426 areas ISCO.
+            # p. ej. 2.855 etiquetas de ocupacion + 1 categoria NaN, 424 areas ISCO.
             obtenido = int(df[col].nunique())
             tabla[col] = {"esperado": esperado, "obtenido": obtenido, "ok": obtenido == esperado}
         _display(pd.DataFrame(tabla).T)
@@ -263,23 +265,30 @@ class LimpiadorEmpleos:
         print("Distribucion university_level:")
         _display(df["university_level"].value_counts(dropna=False).rename("cantidad").to_frame())
 
-        # Aplicar caso B (MNAR): el literal 'None' pasa a categoria propia 'No reportado'.
-        # No se imputa moda: fabricaria educacion para 174.036 filas.
+        # Aplicar caso B (MNAR): 'None' y celdas vacias pasan a categoria propia
+        # 'No reportado'. No se imputa moda: fabricaria educacion para esas filas.
         n_none = int(self.df["university_level"].eq("None").sum())
-        self.df["university_level"] = self.df["university_level"].replace({"None": "No reportado"})
-        assert int(self.df["university_level"].eq("None").sum()) == 0, "Queda 'None' sin re-categorizar"
-        assert n_none == EXPECTED["none_recategorizados"], (
-            f"'None' contados: {n_none} != {EXPECTED['none_recategorizados']}"
+        n_vacio = int(self.df["university_level"].isna().sum())
+        n_mn = n_none + n_vacio
+        self.df["university_level"] = (
+            self.df["university_level"]
+            .replace({"None": "No reportado"})
+            .fillna("No reportado")
         )
-        assert int(self.df["university_level"].eq("No reportado").sum()) == n_none, "Conteo 'No reportado' no coincide"
-        print(f"\nRe-categorizacion caso B (MNAR): 'None' ({n_none:,}) -> 'No reportado'")
+        assert int(self.df["university_level"].eq("None").sum()) == 0, "Queda 'None' sin re-categorizar"
+        assert int(self.df["university_level"].isna().sum()) == 0, "Quedan celdas vacias sin re-categorizar"
+        assert n_mn == EXPECTED["none_recategorizados"], (
+            f"'None' + vacias contadas: {n_mn} != {EXPECTED['none_recategorizados']}"
+        )
+        assert int(self.df["university_level"].eq("No reportado").sum()) == n_mn, "Conteo 'No reportado' no coincide"
+        print(f"\nRe-categorizacion caso B (MNAR): 'None' ({n_none:,}) + vacias ({n_vacio:,}) -> 'No reportado' ({n_mn:,})")
         _display(self.df["university_level"].value_counts(dropna=False).rename("cantidad").to_frame())
         self._anotar(
-            "university_level", "Literal 'None' (MNAR)",
-            n_none,
+            "university_level", "'None' o celda vacia (MNAR)",
+            n_mn,
             "Re-categorizar a 'No reportado'",
-            "Imputar la moda (Secondary school) fabricaria educacion para esa fila.",
-            "Categoria propia, sin None restante.",
+            "Imputar la moda (Secondary school) fabricaria educacion para esas filas.",
+            "Categoria propia, sin 'None' ni celdas vacias restantes.",
         )
 
     # ------------------------------------------------------------- fase 4
@@ -339,7 +348,7 @@ class LimpiadorEmpleos:
     # ------------------------------------------------------------- fase 5
     def fase5_outliers(self) -> None:
         """IQR sobre el original (cola larga: conservar) y fechas futuras (eliminar)."""
-        dur = self._duracion_trimestres().dropna()  # sobre la copia aun con las 11 futuras
+        dur = self._duracion_trimestres().dropna()  # sobre la copia aun con futuras
         limites = self._limites_iqr(dur)
         fuera = (dur < limites["inferior"]) | (dur > limites["superior"])
         personas_fuera = int(self.df.loc[dur[fuera].index, "resume_id"].nunique())

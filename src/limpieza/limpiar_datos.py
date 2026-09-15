@@ -11,8 +11,9 @@ Flujo:
         -> VALIDACION (resumen antes/despues)
         -> DATOS LIMPIOS (data/02_interim/)
 
-Alcance (6 datasets gestionados, todos bajo data/01_raw/ -> data/02_interim/):
-    - JobHop_v2_train.parquet                        -> se limpia aqui (lineage reproducible).
+Alcance (todos los archivos bajo data/01_raw/ -> data/02_interim/):
+    - JobHop v2 (dato crudo) en CSV: particiones train/test/val
+      (JobHop_v2_train.csv, JobHop_v2_test.csv, JobHop_v2_val.csv) -> se limpian aqui.
     - ESCO occupations_en.csv                        -> se limpia aqui.
     - ESCO ISCOGroups_en.csv                         -> se limpia aqui.
     - ESCO skills_en.csv                             -> se limpia aqui.
@@ -174,6 +175,8 @@ def significado(columna: str) -> str:
 CRITICAS = {
     # nombre base -> columnas que no deberian quedar nulas para poder cruzar
     "JobHop_v2_train": ["resume_id", "matched_code", "start_date"],
+    "JobHop_v2_test": ["resume_id", "matched_code", "start_date"],
+    "JobHop_v2_val": ["resume_id", "matched_code", "start_date"],
     "occupations_en": ["code"],
     "ISCOGroups_en": ["code"],
     "occupationSkillRelations_en": ["occupationUri", "skillUri", "relationType"],
@@ -253,7 +256,7 @@ def nulos_criticos(df: pd.DataFrame, stem: str) -> int:
 # LIMPIEZA
 # ---------------------------------------------------------------------------
 def limpiar_jobhop(df: pd.DataFrame, cambios: list, stats: dict) -> pd.DataFrame:
-    """Limpieza especifica de JobHop_v2_train.parquet."""
+    """Limpieza especifica de las particiones CSV de JobHop v2 (train/test/val)."""
     stats["cambio_tipos"] = ""
     stats["texto_normalizado"] = False
 
@@ -522,19 +525,19 @@ def main() -> None:
             "texto_normalizado": False,
             "duplicados_eliminados": False,
         }
-        if ruta.suffix.lower() == EXT_PARQUET:
+        # JobHop llega en CSV (particiones train/test/val) con sus propias reglas;
+        # el resto (ESCO) usa la limpieza generica por archivo.
+        es_jobhop = stem.startswith("JobHop_v2")
+        if es_jobhop:
             df_limpio = limpiar_jobhop(df, cambios, stats)
         else:
             df_limpio = limpiar_csv(df, stem, cambios, stats)
 
-        # 4. Guardar (nunca toca 01_raw/)
+        # 4. Guardar (nunca toca 01_raw/); salida siempre CSV.
         destino = destino_para(ruta_rel)
         stats["destino"] = destino
         destino.parent.mkdir(parents=True, exist_ok=True)
-        if destino.suffix.lower() == EXT_PARQUET:
-            df_limpio.to_parquet(destino, index=False)
-        else:
-            df_limpio.to_csv(destino, index=False, encoding="utf-8")
+        df_limpio.to_csv(destino, index=False, encoding="utf-8")
 
         # 5. Validacion
         validacion = {

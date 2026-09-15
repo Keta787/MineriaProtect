@@ -131,7 +131,7 @@ def crosstab_nivel_grupo(df: pd.DataFrame, top: int = 30) -> pd.DataFrame:
 def _repetidas_exactas(df: pd.DataFrame) -> pd.DataFrame:
     """Quita filas repetidas (resume_id, start, end) para transiciones/solape.
 
-    El pipeline ya marcó estas 74.357 repeticiones; mantenerlas inflaría
+    El pipeline ya marcó estas 18.749 repeticiones; mantenerlas inflaría
     los indicadores de transición y pluriempleo con ruido.
     """
     return df.drop_duplicates(subset=["resume_id", "start_date", "end_date"], keep="first")
