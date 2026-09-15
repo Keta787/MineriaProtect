@@ -110,7 +110,8 @@ JobPath/
 ├── notebooks/                      # COMPRENSION/EXPLORACION — unidad por fase
 │   ├── 1.0_comprension_negocio.md         # acta de constitución analítica (sesión 1)
 │   ├── 2.0_EDA_y_seleccion.ipynb          # fuentes, carga defensiva, EDA, API ESCO (sesión 2)
-│   └── 3.0_preprocesamiento.ipynb         # pipeline de limpieza en 7 fases + validación (sesión 3)
+│   ├── 3.0_preprocesamiento.ipynb         # pipeline de limpieza en 7 fases + validación (sesión 3)
+│   └── ENTREGAMINERIA.pdf                 # informe de entrega (marco KDD–CRISP-DM)
 └── src/                            # CODIGO REUTILIZABLE
     ├── filtro/                     # TRANSFORMACION (insumos) — análisis reutilizable
     │   ├── filtros.py              # selecciones: nivel, grupo ISCO, ocupación, periodo, vigencia
@@ -156,6 +157,7 @@ Limpia las 3 particiones CSV de JobHop (`train`/`test`/`val`: elimina filas sin 
 ## Decisiones técnicas clave
 
 - **Salida única en CSV para el cruce:** `empleos.csv`, `empleos_limpio.csv` y `empleos_limpio_sin_outliers.csv` se mantienen exclusivamente en CSV (`data/03_processed/`), regenerables desde los scripts. Los CSV no se versionan por tamaño (41–48 MB) y la estructura de la carpeta se conserva en git con `.gitkeep`.
+- **CSV procesados también en Google Drive:** el integrado (`empleos.csv`), la versión limpia con outliers (`empleos_limpio.csv`) y la versión limpia sin outliers (`empleos_limpio_sin_outliers.csv`) se comparten en: https://drive.google.com/file/d/1NH-ibBT_wsehhnQNOKCpGJDx1UPmG1sC/view
 - **Banderas en lugar de imputación:** la ausencia es informativa; no se usa `fillna`. Nulos estructurales conservados con banderas: `es_unknown_ocupacion` (25.805), `es_rescatado` (2.499) y re-categorización de `'None'`/celdas vacías → `'No reportado'` (42.807).
 - **Censura (`Present`) explícita:** `es_vigente` (18.956) marca empleos vigentes al capturar el CV; no se inventa fecha de fin (censura por la derecha).
 - **Duración trimestral inclusiva:** `end − start + 1` (un empleo del mismo trimestre dura 1); Q1=2, mediana 5, Q3=11, IQR=9, máximo 160 (≈40 años).
