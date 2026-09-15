@@ -1,6 +1,6 @@
-# MineríaProtect
+# JobPath
 
-Análisis de minería de trayectorias laborales mediante **JobHop v2**, enriquecido con la taxonomía **ESCO v1.2.1**, para descubrir patrones de transición ocupacional después de la formación académica.
+JobPath es el proyecto de minería de datos que estudia las **trayectorias laborales** reconstruidas por **JobHop v2** y las enriquece con la taxonomía **ESCO v1.2.1** para descubrir patrones de transición ocupacional después de la formación académica. El proyecto sigue las metodologías **KDD** y **CRISP-DM**: sobre el **dato crudo** de JobHop se integran las fuentes (ESCO) y se ejecutan la unión y la limpieza en **CSV**, dejando el dataset listo para construir las secuencias por persona (`Sₚ`) y aplicar la minería de secuencias.
 
 > **Estado del proyecto (TL;DR):** ✅ Selección y Preprocesamiento **HECHOS y verificados** (integrado `empleos.csv` 1.506.445 × 11; limpio `empleos_limpio.csv` **1.506.434 × 14**, validación 6/6) · ⏳ **Pendiente:** Transformación a secuencias por persona, Minería y Evaluación. La limpieza está **100 % terminada**; el siguiente paso es construir el dataset de secuencias (`Sₚ`) y seleccionar la técnica de minería.
 
@@ -26,7 +26,7 @@ Análisis de minería de trayectorias laborales mediante **JobHop v2**, enriquec
 
 ## Contexto general del proyecto
 
-MineríaProtect es un proyecto académico del curso de **Minería de Datos** (2026-2, Unidad 1) de la Especialización en Ingeniería de Sistemas de **UNIMINUTO (Ibagué)**, formalizado sobre las metodologías **KDD** y **CRISP-DM** (acta de constitución analítica en `notebooks/1.0_comprension_negocio.md`).
+JobPath es un proyecto académico del curso de **Minería de Datos** (2026-2, Unidad 1) de la Especialización en Ingeniería de Sistemas de **UNIMINUTO (Ibagué)**, formalizado sobre las metodologías **KDD** y **CRISP-DM** (acta de constitución analítica en `notebooks/1.0_comprension_negocio.md`).
 
 **El problema de fondo.** Las hojas de vida contienen historial laboral en lenguaje natural y no estructurado: distintas personas describen cargos de maneras distintas y no existe un significado estandarizado de cada ocupación. **JobHop v2** ya reconstruyó ese historial en un dataset relacional —una fila por experiencia laboral con `resume_id`, fechas y un código de ocupación (`matched_code`)— pero los códigos aún carecen de *significado* interpretable. Para comparar trayectorias y estudiar transiciones se necesita traducir cada código a una ocupación con nombre y área ocupacional: ese es el papel de la taxonomía **ESCO v1.2.1**.
 
@@ -67,7 +67,7 @@ El estudio descubre y evalúa patrones presentes en los datos; trabajar (o no) e
 | **JobHop v2** (`aida-ugent/JobHop`, Hugging Face) | Fuente principal: trayectorias laborales reconstruidas de hojas de vida no estructuradas | Flandes, Bélgica. Columnas clave: `resume_id`, `matched_code`, `start_date`, `end_date`, `university_level` |
 | **ESCO v1.2.1** (Comisión Europea) | Fuente de enriquecimiento: da **significado** a cada `matched_code` | `occupations_en.csv` (código → nombre + grupo ISCO-08), `ISCOGroups_en.csv` (jerarquía del área ocupacional), `skills_en.csv`, `occupationSkillRelations_en.csv`, `greenShareOcc_en.csv` |
 
-Fuentes públicas declaradas (sesión 2: ≥2 fuentes, ≥1 API o base pública): JobHop v2 se aloja en **Hugging Face** (descarga oficial formato Parquet) y ESCO es la base oficial de la **Unión Europea** con **API REST documentada** (`https://data.europa.eu/esco/api`). El cuaderno `2.0` §5b demuestra la consulta en vivo sobre un `conceptUri` real del dataset, con fallback informativo si la red de evaluación no alcanza el dominio.
+Fuentes públicas declaradas (sesión 2: ≥2 fuentes, ≥1 API o base pública): JobHop v2 se aloja en **Hugging Face** (descarga oficial del dato crudo) y ESCO es la base oficial de la **Unión Europea** con **API REST documentada** (`https://data.europa.eu/esco/api`). El cuaderno `2.0` §5b demuestra la consulta en vivo sobre un `conceptUri` real del dataset, con fallback informativo si la red de evaluación no alcanza el dominio.
 
 ESCO no aporta trayectorias: interpreta las ocupaciones para posibilitar el análisis de transiciones. `matched_code` cruza **directamente** con `occupations.code`: 2.966 de 2.983 códigos únicos (99,4 % de cobertura de categorías, ≈92 % de las filas); el resto se rescata por prefijo (grupo ISCO de 4 dígitos) o se flagga (`unknown`).
 
@@ -75,7 +75,7 @@ ESCO no aporta trayectorias: interpreta las ocupaciones para posibilitar el aná
 
 | Dataset | Antes (entrada) | Después (salida) | Operación clave |
 |---|---|---|---|
-| `JobHop_v2_train.parquet` | 1.594.827 filas | 1.506.445 filas | Elimina filas sin `start_date` (−58.312) y duplicados (−30.070) |
+| JobHop v2 (dato crudo) | 1.594.827 filas | 1.506.445 filas | Del dato crudo al CSV: elimina filas sin `start_date` (−58.312) y duplicados (−30.070) |
 | `ESCO/occupations_en.csv` | 3.043 | 3.039 | −4 filas por `code` duplicado |
 | `ESCO/ISCOGroups_en.csv` | 619 (8 col.) | 619 (7 col.) | Columna 100 % nula eliminada |
 | `ESCO/occupationSkillRelations_en.csv` | 126.051 | 126.051 | 59 con `skillType` nulo conservados (bandera) |
@@ -90,17 +90,17 @@ Validación final del limpio (**6/6**): duplicados · duplicados por llave natur
 ## Estructura del proyecto
 
 ```text
-MineriaProtect/
+JobPath/
 ├── README.md                       # puerta de entrada (este documento)
 ├── .gitignore                      # contextos, metodología y CSV pesados fuera de git
 ├── requirements.txt                # pandas, pyarrow, matplotlib, nbconvert, ipykernel, jupyter-client
 ├── data/
 │   ├── 01_raw/                     # SELECTION — fuentes inmutables, NUNCA se modifican
-│   │   ├── JobHop_v2_train.parquet # trayectorias (JobHop v2)
+│   │   ├── JobHop (dato crudo)   # trayectorias (JobHop v2)
 │   │   └── ESCO/                   # occupations_en, ISCOGroups_en, skills_en,
 │   │                               #   occupationSkillRelations_en, greenShareOcc_en
 │   ├── 02_interim/                 # PREPROCESAMIENTO — versiones limpias de las fuentes
-│   │   ├── JobHop_v2_train_limpio.parquet
+│   │   ├── JobHop (limpio)         # dato crudo limpio, listo para el cruce en CSV
 │   │   └── ESCO/                   # *_limpio.csv (códigos como texto)
 │   └── 03_processed/               # PREPROCESAMIENTO — integrado, formato exclusivo: CSV
 │       ├── empleos.csv             # 1.506.445 × 11 (inmutable)
@@ -141,7 +141,7 @@ El marco rector completo (mapeo KDD ↔ CRISP-DM por corte, criterios de éxito,
 **`src/limpieza/limpiar_datos.py`** — limpieza de fuentes: `data/01_raw/` → `data/02_interim/`.
 Limpia JobHop (elimina filas sin `start_date` y duplicados, ordena por persona/trimestre) y los cinco CSV de ESCO (duplicados por `code`/`conceptUri`, columnas 100 % nulas, `greenShare` → float). Función `validar(...)` audita cada archivo; bitácora de cambios por ejecución.
 
-**`src/limpieza/limpiar_empleos.py`** — clase `LimpiadorEmpleos` con **7 fases** (`fase1_diagnostico` … `fase7_exportar`) sobre el integrado. Cada fase termina en un `assert` contra `EXPECTED` (umbrales de aceptación, criterio "funciones reutilizables + pruebas automáticas" de la rúbrica de la sesión 3):
+**`src/limpieza/limpiar_empleos.py`** — clase `LimpiadorEmpleos` con **7 fases** (`fase1_diagnostico` … `fase7_exportar`) sobre el integrado `empleos.csv` (CSV). Cada fase termina en un `assert` contra `EXPECTED` (umbrales de aceptación, criterio "funciones reutilizables + pruebas automáticas" de la rúbrica de la sesión 3):
 1. Diagnóstico (nada se toca) → 2. Duplicados (0 exactos; claves cortas = pluriempleo, se conservan) → 3. Categorías y caso MNAR (`'None'` → `'No reportado'`) → 4. Faltantes por bandera (MAR + censura, sin imputar) → 5. Outliers IQR de Tukey + solo se eliminan las 11 fechas futuras (MCAR) → 6. Validación 6/6 → 7. Exportar CSV + bitácora.
 
 **`src/limpieza/dividir_por_outliers.py`** — genera la variante **sin cola larga** (`empleos_limpio_sin_outliers.csv`) con la misma convención IQR de la fase 5 (`dur_Q ≥ 25`), para comparar el impacto de la cola larga antes de elegir la técnica de minería.
