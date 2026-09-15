@@ -20,6 +20,10 @@ logs/
 # Contextos de sesión (solo se conservan en disco, no se versionan)
 contexto_sesion*.md
 
+# Docs de la rama J3sT con cifras de la era train (solo en disco)
+docs/AUDITORIA_RAMA_PRUEBA.md
+docs/METODOLOGIA_KDD_CRISPDM.md
+
 # Metodología KDD/CRISP-DM (solo en disco, no se versiona; igual que contextos)
 METODOLOGIA_KDD_CRISPDM.md
 
