@@ -2,7 +2,7 @@
 
 JobPath es el proyecto de minería de datos que estudia las **trayectorias laborales** reconstruidas por **JobHop v2** y las enriquece con la taxonomía **ESCO v1.2.1** para descubrir patrones de transición ocupacional después de la formación académica. El proyecto sigue las metodologías **KDD** y **CRISP-DM**: sobre el **dato crudo** de JobHop (particiones CSV train/test/val) se integran las fuentes (ESCO) y se ejecutan la unión (**test + val**) y la limpieza en **CSV**, dejando el dataset listo para construir las secuencias por persona (`Sₚ`) y aplicar la minería de secuencias.
 
-> **Estado del proyecto (TL;DR):** ✅ Selección y Preprocesamiento **HECHOS y verificados** (integrado `empleos.csv` **376.567 × 11**, unión test+val; limpio `empleos_limpio.csv` **376.567 × 14**, validación 6/6) · ⏳ **Pendiente:** Transformación a secuencias por persona, Minería y Evaluación. La limpieza está **100 % terminada**; el siguiente paso es construir el dataset de secuencias (`Sₚ`) y seleccionar la técnica de minería.
+> **Estado del proyecto (TL;DR):** ✅ Selección, Preprocesamiento **y Transformación a features HECHOS y verificados** (integrado `empleos.csv` **376.567 × 11**; limpio `empleos_limpio.csv` **376.567 × 14** y variante sin cola larga **341.090 × 14**; codificación ordinal/one-hot, escalado robusto/minmax y auditoría PCA en `notebooks/4.x`) · ⏳ **Pendiente:** Construcción de secuencias por persona (`Sₚ`), Minería y Evaluación. La transformación a features está **100 % terminada**; el siguiente paso es construir el dataset de secuencias (`Sₚ`) y seleccionar la técnica de minería.
 
 ## Contenidos
 
@@ -111,6 +111,8 @@ JobPath/
 │   ├── 1.0_comprension_negocio.md         # acta de constitución analítica (sesión 1)
 │   ├── 2.0_EDA_y_seleccion.ipynb          # fuentes, carga defensiva, EDA, API ESCO (sesión 2)
 │   ├── 3.0_preprocesamiento.ipynb         # pipeline de limpieza en 7 fases + validación (sesión 3)
+│   ├── 4.0_transformacion.ipynb           # codificación ordinal/one-hot + escalado + PCA (sesión 4, con cola)
+│   ├── 4.1_transformacion_sin_outliers.ipynb  # ídem sobre la variante sin cola larga
 │   └── ENTREGAMINERIA.pdf                 # informe de entrega (marco KDD–CRISP-DM)
 └── src/                            # CODIGO REUTILIZABLE
     ├── filtro/                     # TRANSFORMACION (insumos) — análisis reutilizable
@@ -130,8 +132,8 @@ Reglas de oro: originales intocables · derivados regenerables (pipelines **dete
 | # | Fase KDD | Fase CRISP-DM | Estado | Entregable |
 |---|---|---|---|---|
 | 1 | **Selección** | Comprensión del negocio | ✅ **HECHO** | Acta `1.0`; objetivo, preguntas y fuentes (JobHop v2 + ESCO v1.2.1) |
-| 2 | **Preprocesamiento** | Comprensión y preparación de datos | ✅ **HECHO** | Fuentes limpias (`02_interim`); integrado validado; `empleos_limpio.csv` (14 columnas) y variante sin cola larga |
-| 3 | **Transformación** | Preparación (hacia modelado) | ⏳ **PENDIENTE** | Construcción de secuencias por persona (`Sₚ`); insumos ya listos en `src/filtro/` |
+| 2 | **Preprocesamiento** | Comprensión y preparación de datos | ✅ **HECHO** | Fuentes limpias (`02_interim`); integrado validado; `empleos_limpio.csv` (14 columnas) y variante sin cola larga; **transformación a features** (ordinal/one-hot/escalado/PCA) en `4.0` y `4.1` |
+| 3 | **Transformación** | Preparación (hacia modelado) | ⏳ **PENDIENTE** (features listas) | Codificación y escalado ya entregados en `notebooks/4.x`; resta la construcción de secuencias por persona (`Sₚ`); insumos listos en `src/filtro/` |
 | 4 | **Minería** | Modelado | ⏳ **PENDIENTE** | Técnica de minería de secuencias/transiciones a seleccionar |
 | 5 | **Interpretación y evaluación** | Evaluación | ⏳ **PENDIENTE** | Patrones juzgados: frecuentes, consistentes, interpretables, útiles |
 | 6 | **Conocimiento** | Despliegue | ⏳ **PENDIENTE** | Caracterización de patrones e informe final |
@@ -152,7 +154,14 @@ Limpia las 3 particiones CSV de JobHop (`train`/`test`/`val`: elimina filas sin 
 
 **`src/filtro/filtros.py` y `src/filtro/indicadores.py`** — biblioteca reutilizable de **transformación**: filtros (nivel educativo, grupo ISCO, ocupación, periodo, vigentes) e indicadores (duración trimestral inclusiva, distribución, medianas por grupo/nivel, crosstabs, transiciones consecutivas, proporción que conserva el grupo, primera→segunda ocupación, brechas entre empleos, personas solapadas, resumen de banderas). Son los insumos de la fase 3 (construcción de `Sₚ`).
 
-**`notebooks/`** — reproducen y exhiben cada fase con evidencia impresa y outputs persistidos: `1.0` (acta/diseño), `2.0` (selección de fuentes + carga defensiva + EDA + diagnóstico de calidad + API ESCO), `3.0` (pipeline de limpieza ejecutado en vivo, validación 6/6, bitácora, división con/sin cola larga). Se ejecutan de principio a fin sin errores (núcleo `python3` 3.14.7).
+**`notebooks/`** — reproducen y exhiben cada fase con evidencia impresa y outputs persistidos: `1.0` (acta/diseño), `2.0` (selección de fuentes + carga defensiva + EDA + diagnóstico de calidad + API ESCO), `3.0` (pipeline de limpieza ejecutado en vivo, validación 6/6, bitácora, división con/sin cola larga). De la **sesión 4 (transformación)**, `4.0_transformacion.ipynb` (sobre `empleos_limpio.csv`, con cola larga) y `4.1_transformacion_sin_outliers.ipynb` (sobre la variante sin cola larga) comparten un pipeline parametrizado por `VERSION` (una celda de configuración elige el CSV):
+
+1. **Justificación por categoría** de por qué cada columna es ordinal (jerarquía real: fechas `Qn AAAA`, `university_level`, `isco_level`) o one-hot (sin orden: `emparejado`, `occupation_code`, banderas `es_*`) — con auditoría de redundancias (1:1, prefijos, constantes) que descarta `matched_code`, `occupation_label`, `isco_group*`.
+2. **Codificación:** ordinal `año×4+trimestre` + `KBinsDiscretizer` (quantile, demo) para fechas; mapeo manual 0–4 para educación; `get_dummies` (demo) y `OneHotEncoder` sparse (producción) para las nominales; banderas como 0/1 enteros.
+3. **Escalado con auditoría de outliers (Tukey):** `RobustScaler` para fechas y `dur_q` (colas reales censuradas), `MinMaxScaler` para educación (rango acotado) y `StandardScaler` mostrado y descartado; **no se escalan dummies ni banderas**; `fit` solo sobre la muestra (sin fuga de datos).
+4. **PCA auditado y descartado (sección 4.3):** correlaciones + varianza acumulada muestran que las numéricas son ~3 dimensiones lineales (`dur_q = end − start + 1`) y que las dummies no entran a PCA por diseño; no comprime aquí.
+
+Se ejecutan de principio a fin sin errores (núcleo `python3` 3.14.7) y entregan una **X** numérica finita (0 nulos, 0 columnas no numéricas) lista para minería.
 
 ## Decisiones técnicas clave
 
@@ -163,6 +172,7 @@ Limpia las 3 particiones CSV de JobHop (`train`/`test`/`val`: elimina filas sin 
 - **Duración trimestral inclusiva:** `end − start + 1` (un empleo del mismo trimestre dura 1); Q1=2, mediana 5, Q3=11, IQR=9, máximo 160 (≈40 años).
 - **Solo se elimina lo justificado:** 0 filas con fechas futuras en test+val (MCAR de dominio; el pipeline las eliminaría si aparecieran). La cola larga de duración (IQR de Tukey, límite superior **24,5**) se **conserva**: estabilidad de carrera = señal, no contaminación.
 - **Lectura defensiva:** `dtype=str`, `encoding="utf-8"`, `keep_default_na=False` + `na_values=[""]` para conservar ceros a la izquierda y literales `'None'`/`'Present'`/`'unknown'` como texto (trampas de la sesión 2).
+- **Transformación 4.x:** escalador elegido por los outliers re-auditados (robust para fechas/duración aunque se limpie la cola — la censura `Present`→Q1 2026 recrea extremos; minmax para educación); banderas y dummies sin escalar; PCA descartado tras correlación/varianza. `fit` del escalador solo sobre la muestra de trabajo.
 
 ## Excepciones explícitas del proyecto
 
@@ -185,7 +195,8 @@ Deudas formales heredadas para la fase de minería:
 ## Verificación del resultado
 
 - **Asserts por fase (nivel "Excepcional"):** `limpiar_empleos.py` valida cada fase contra cantidades verificadas de la fuente (`EXPECTED`), con tabla de umbrales 6/6 y bitácora de trazabilidad en `logs/`.
-- **Cuadernos de diagnóstico:** `2.0` y `3.0` se ejecutan de principio a fin sin errores y reproducen los scripts con evidencia impresa (nbclient con núcleo `python3`).
+- **Cuadernos de diagnóstico:** `2.0`, `3.0`, `4.0` y `4.1` se ejecutan de principio a fin sin errores y reproducen los scripts con evidencia impresa (nbclient con núcleo `python3`).
+- **Sanidad de la matriz final (4.x):** `X_final` sin nulos y sin columnas no numéricas; mediana ≈ 0 en las robust, extremos 0/1 en la minmax; auditoría de outliers y varianza de PCA impresas en vivo.
 - **Comparación con/sin cola larga:** `dividir_por_outliers.py` cruza ambas versiones (filas, personas, mediana/máximo de `dur_Q`, vigentes) para cuantificar el impacto antes de elegir la técnica de minería.
 - **Idempotencia/regeneración:** los pipelines son deterministas (sin aleatoriedad) y regenerables desde `data/01_raw/`; cada cifra del informe se reproduce con los comandos de la sección siguiente.
 - **API pública (sesión 2):** `2.0` §5b intenta la consulta REST de ESCO sobre un `conceptUri` real; en redes sin acceso reporta el fallback con las URLs oficiales (la respuesta JSON viva requiere red que alcance `data.europa.eu/esco/api`).
@@ -201,7 +212,7 @@ python src/limpieza/limpiar_empleos.py      # integrado → data/03_processed/em
 python src/limpieza/dividir_por_outliers.py # limpio → empleos_limpio_sin_outliers.csv
 ```
 
-Los scripts resuelven la raíz del proyecto buscando hacia arriba la carpeta `data/`, por lo que se ejecutan desde cualquier directorio del repo (rutas relativas). Requiere **Python 3** (referencia: `.python-version` = 3.14.7, documento `requirements.txt`) y las dependencias declaradas (pandas, pyarrow, matplotlib, nbconvert, ipykernel, jupyter-client).
+Los scripts resuelven la raíz del proyecto buscando hacia arriba la carpeta `data/`, por lo que se ejecutan desde cualquier directorio del repo (rutas relativas). Requiere **Python 3** (referencia: `.python-version` = 3.14.7, documento `requirements.txt`) y las dependencias declaradas (pandas, pyarrow, matplotlib, **scikit-learn** para la transformación `4.x`, nbconvert, ipykernel, jupyter-client).
 
 **Regeneración de derivados (cierre del ciclo):**
 - `data/02_interim/**` y los CSV de `data/03_processed/` se regeneran con los scripts anteriores.
@@ -210,9 +221,9 @@ Los scripts resuelven la raíz del proyecto buscando hacia arriba la carpeta `da
 
 ## Estado actual y siguientes pasos
 
-**Estado:** la limpieza está **100 % terminada y verificada** en los tres niveles — fuentes (`limpiar_datos.py`), integración (`integrar_empleos.py`) e integrado (`limpiar_empleos.py`). `empleos_limpio.csv` alcanzó **376.567 filas × 14 columnas** (71.061 personas), con validación final 6/6; la variante sin cola larga (341.090 × 14, 69.182 personas) queda lista para comparar. Alineado con las sesiones 1–3: acta (1.0), fuentes/carga defensiva/EDA/API (2.0) y pipeline de limpieza con rúbrica de código (3.0).
+**Estado:** la limpieza está **100 % terminada y verificada** en los tres niveles — fuentes (`limpiar_datos.py`), integración (`integrar_empleos.py`) e integrado (`limpiar_empleos.py`). `empleos_limpio.csv` alcanzó **376.567 filas × 14 columnas** (71.061 personas), con validación final 6/6; la variante sin cola larga (341.090 × 14, 69.182 personas) queda lista para comparar. La **transformación a features** (sesión 4) está **100 % terminada**: `4.0` y `4.1` codifican (ordinal/one-hot), escalan (robust/minmax) y auditan PCA sobre ambas versiones, entregando la **X** numérica lista para modelar. Alineado con las sesiones 1–4: acta (1.0), fuentes/carga defensiva/EDA/API (2.0), pipeline de limpieza con rúbrica de código (3.0) y transformación (4.0/4.1).
 
-**Siguiente paso:** construir el **dataset de secuencias por persona** (`Sₚ`) sobre `empleos_limpio.csv`: orden estable por trimestre, unidad de análisis (ocupación ESCO / grupo ISCO), ventana temporal y manejo de pluriempleo y censura (ver `src/filtro/`). Sobre esas secuencias se seleccionará y aplicará la técnica de minería, se evaluarán los patrones y se consolidará el conocimiento (fases 3–6 de la tabla metodológica).
+**Siguiente paso:** construir el **dataset de secuencias por persona** (`Sₚ`) sobre `empleos_limpio.csv`: orden estable por trimestre, unidad de análisis (ocupación ESCO / grupo ISCO), ventana temporal y manejo de pluriempleo y censura (ver `src/filtro/`). La **X** de los cuadernos 4.x habilita los modelos de sesiones 7–9 (KNN / K-means / árboles). Sobre esas secuencias se seleccionará y aplicará la técnica de minería, se evaluarán los patrones y se consolidará el conocimiento (fases 3–6 de la tabla metodológica).
 
 ## Limitaciones
 
@@ -231,7 +242,8 @@ Los scripts resuelven la raíz del proyecto buscando hacia arriba la carpeta `da
 3. `notebooks/1.0_comprension_negocio.md` — acta de constitución analítica.
 4. `notebooks/2.0_EDA_y_seleccion.ipynb` — fuentes, carga defensiva, EDA y diagnóstico.
 5. `notebooks/3.0_preprocesamiento.ipynb` — pipeline de limpieza, validación y bitácora.
-6. **Código:** `src/limpieza/` (pipelines) y `src/filtro/` (análisis reutilizable).
+6. `notebooks/4.0_transformacion.ipynb` y `4.1_transformacion_sin_outliers.ipynb` — transformación a features (codificación, escalado, PCA) en ambas versiones.
+7. **Código:** `src/limpieza/` (pipelines) y `src/filtro/` (análisis reutilizable).
 
 ## Referencias
 

@@ -1,9 +1,10 @@
-# Entorno validado con Python 3.14.7 (version completa en .python-version).
-# Los cuadernos 1.0/2.0/3.0 se ejecutan in-situ con nbclient: se requieren
+﻿# Entorno validado con Python 3.14.7 (version completa en .python-version).
+# Los cuadernos 1.0/2.0/3.0/4.0/4.1 se ejecutan in-situ con nbclient: se requieren
 # nbconvert + ipykernel para persistir las salidas sin abrir Jupyter.
 pandas>=2.0
 pyarrow>=14.0
 matplotlib>=3.8  # graficas de la fase de mineria
+scikit-learn>=1.6  # transformacion 4.0/4.1: escalado (Robust/MinMax), KBins, one-hot, PCA
 
 nbconvert>=7.17
 ipykernel>=7.3
