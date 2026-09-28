@@ -284,7 +284,95 @@ demanda media de 18 a 32 competencias», y eso es un hallazgo legítimo y útil.
 
 ---
 
-## 10. Reproducirlo
+## 10. Estado actual: las skills NO están en la transformación
+
+**Esta sección es la que faltaba, y es la que hay que leer antes de usar la §9.**
+
+Los cuadernos `4.0_transformacion.ipynb` y `4.1_transformacion_sin_outliers.ipynb` **no las tienen en
+cuenta.** No fue una decisión en contra: cuando se integraron las skills al dataset
+solo se actualizó el texto que anuncia el tamaño del dataset (`376.567 x 14` → `x 20`). La lista de
+features que cada cuaderno construye no se tocó.
+
+Lo que escalan hoy, textualmente:
+
+| Celda | Qué hace | Columnas | ¿Skills? |
+|---|---|---|---|
+| 21 | `OneHotEncoder` | `emparejado`, `occupation_code` | no |
+| 25 | `RobustScaler` | `start_ord`, `end_ord`, `dur_q` | no |
+| 25 | `MinMaxScaler` | `univ_ord` | no |
+| 26 | Aporte a la distancia euclidiana | las 4 anteriores | no |
+| 28 | `X_num` para PCA | las 4 anteriores | no |
+
+Es decir, **la `X` que sale de la sesión 4 es exactamente la misma que antes de las skills**, y su
+PCA sigue auditando 4 variables. Todo lo que dice la §9 sobre qué usar como feature es, hoy,
+**una recomendación pendiente, no una descripción de lo que hace el pipeline.**
+
+### Agregarlas no es añadir una columna: hay que decidir el escalamiento
+
+`n_skills_essential` (rango 5–99) y `veces_ese_oficio` (rango 1–19) tienen escalas incompatibles
+con lo que ya hay. Y la celda 26 de 4.0 existe precisamente para medir eso: *«la columna con más
+unidades secuestra la métrica»*. Medido sobre una submuestra de 50.000 filas:
+
+| Columna | Rango | sd |
+|---|---|---|
+| `start_ord` | 222 | 32,6 |
+| `end_ord` | 220 | 31,0 |
+| `dur_q` | 195 | 18,2 |
+| `n_skills_essential` | 94 | 13,3 |
+| `veces_ese_oficio` | 18 | 1,1 |
+| `univ_ord` | 4 | 1,1 |
+
+Aporte de cada columna a la distancia euclidiana (300 parejas aleatorias):
+
+| Escenario | `start_ord` | `end_ord` | `dur_q` | `univ_ord` | `n_skills` | `veces` |
+|---|---|---|---|---|---|---|
+| **Hoy (sin skills)** | 20,12 % | 21,64 % | **56,56 %** | 1,68 % | — | — |
+| Skills **sin escalar** | 43,61 % | 37,05 % | 11,44 % | 0,05 % | 7,81 % | **0,05 %** |
+| Skills **con `RobustScaler`** | 12,67 % | 13,62 % | 35,60 % | 1,06 % | 17,39 % | 19,66 % |
+
+**Agregarlas sin escalar sería un desastre silencioso.** `n_skills_essential` duplicaría el peso de
+las dos fechas y dejaría a `univ_ord` en 0,05 %: KNN agruparía por demanda de competencia, no por
+trayectoria. Y `veces_ese_oficio` quedaría en **0,05 %** — invisible. Ese 0,05 % es lo que más
+engaña, porque una variable con 0,05 % de aporte parece inofensiva y en realidad está anulada por el
+escalamiento de otra.
+
+**Escaladas con `RobustScaler` pasan a 19,66 % y 17,39 %**: 37 % del aporte total combinado, y el
+comportamiento se invierte. La decisión de qué escalador va con qué columna no es cosmética: define
+por dónde se agrupan los vecinos.
+
+### El problema de los nulos
+
+`n_skills_essential` es `NaN` en el **7,5 %** de las filas (las 28.304 sin oficio clasificado), y
+`sklearn` no acepta `NaN` en un escalador. El proyecto tiene la regla de que ningún filtro imputa
+valores, así que la única salida honorable es **dropear esas filas**: la `X` pasa de 376.567 a
+**348.263** experiencias (−7,5 %).
+
+Eso es el precio de incluir las skills, y hay que decidirlo conscientemente. Las alternativas son
+imputar (prohibido por la regla del proyecto) o separar el análisis en dos universos.
+
+### Sobre `veces_ese_oficio`: quizás un binario sea mejor
+
+El 64,3 % de los valores es `1`, y la desviación es de apenas 1,1. Como variable continua aporta poco
+más que «¿volvió o no?». Si el objetivo es la señal de reincidencia, `veces_ese_oficio > 1`
+probablemente sea más estable para el escalador que el conteo crudo.
+
+### Lo que hay que hacer para cerrarlo
+
+1. Agregar `n_skills_essential` y `veces_ese_oficio` a la lista de `NUM` de la celda 26, **con
+   `RobustScaler`**.
+2. Decidir el destino de las 28.304 filas `no_clasificado` (lo recomendado: excluirlas de la `X` y
+   documentar la pérdida).
+3. Repetir la auditoría de aporte a la distancia con las 6 columnas.
+4. Repetir el PCA de la celda 28, que hoy hardcodea 4 columnas en `range(1, 5)`.
+5. Actualizar la celda de validación de la `X` final, que hoy valida 4 columnas.
+6. Correr lo mismo en `4.0` y `4.1`.
+
+Hasta que eso pase, cualquier cifra de la §9 que diga «usá estas dos features» es consejo, no
+estado.
+
+---
+
+## 11. Reproducirlo
 
 Las skills entran en la fase de integración, antes de cualquier limpieza. El orden importa:
 
@@ -310,7 +398,7 @@ Los contadores se guardan **como texto** en el CSV, porque el proyecto lee todo 
 
 ---
 
-## 11. Verificación
+## 12. Verificación
 
 `limpiar_empleos.py` corre 10 umbrales, 4 de ellos sobre las competencias, y falla ruidosamente si
 alguno se descuadra. Además, `integrar_empleos.py` imprime el bloque `CANON PARA limpiar_empleos.py`
