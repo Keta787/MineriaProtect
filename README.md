@@ -85,6 +85,10 @@ Las 6 columnas de competencias responden "**cuántas competencias esenciales exi
 
 Solo se usan las relaciones `essential` (67.600 de 126.051): las `optional` son habilidades de nivelación, no el piso del cargo, y sumarlas volvería el conteo interpretable. Los **nombres** de las competencias no viven en el pipeline (solo hay contadores, para no multiplicar las filas ×21); se recuperan con `indicadores.skills_de_ocupacion()` o `indicadores.skills_de_persona()`, que resuelven el salto `code` → `occupationUri` (UUID) del puente ESCO.
 
+> **Referencia completa del tema: [`docs/SKILLS.md`](docs/SKILLS.md).** Incluye las seis columnas
+> medidas una por una, por qué son contadores y no filas, qué se puede y qué no se puede sacar de
+> ellas (las seis columnas no son seis variables), y las recetas de uso.
+
 ## Datasets y calidad (antes / después)
 
 | Dataset | Antes (entrada) | Después (salida) | Operación clave |
