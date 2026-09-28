@@ -40,6 +40,22 @@ def _como_bool(serie: pd.Series) -> pd.Series:
     return serie.astype("string").str.strip().str.lower().isin(("true", "1", "t", "yes"))
 
 
+def contar_banderas(df: pd.DataFrame, columna: str) -> int:
+    """Cuántas filas de `df` tienen esa bandera en True, sea cual sea su dtype.
+
+    Envoltorio público de `_como_bool`, que es privado. Existe porque el error es
+    fácil de cometer y **silencioso en un caso**: con la regla `dtype=str` del
+    proyecto, `int(df[col].sum())` sobre una bandera concatena las cadenas y
+    revienta con un `ValueError` que no señala la causa, mientras que
+    `df[col].mean()` sobre la misma columna devuelve `NaN` **sin avisar nada** y
+    se propaga como un `nan %` en un texto impreso.
+
+    Toda suma, promedio o proporción sobre una columna `es_*` debe pasar por
+    aquí. Devolver `int` y no `Series` porque el conteo es lo que se imprime.
+    """
+    return int(_como_bool(df[columna]).sum())
+
+
 def _anio_trimestre(serie: pd.Series) -> pd.Series:
     """Año de un trimestre en formato 'Q1 1955' (devuelve NaN si el formato no aplica)."""
     return serie.str.extract(TRIMESTRE_VALIDO, expand=False)[1].astype("float64")

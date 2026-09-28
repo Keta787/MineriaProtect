@@ -7,6 +7,13 @@ tomó cada decisión de diseño, ver `docs/AUDITORIA_RAMA_PRUEBA.md` §5.6.
 Las cifras de este documento son de la rama vigente (**test + val**: 376.567 experiencias,
 71.061 personas) y se verificaron corriendo el pipeline completo.
 
+> **De dónde sale cada perfil.** Las cifras de las §2 y §7 se midieron sobre
+> `empleos_limpio.csv` con el bloque de la §12, no salieron de una sesión de EDA. Conviene decirlo
+> porque el cuaderno `2.0_EDA_y_seleccion.ipynb` —el único EDA del repo— **se ejecutó el 2026-09-15,
+> antes** de que las seis columnas se integraran, y su salida guardada ni las menciona. Sus
+> comentarios sobre la taxonomía tampoco incluyen los archivos de `01_raw/SKILLS/`. Si se quiere un
+> EDA que cubra las competencias, hay que reejecutar `2.0`; hoy no lo hay.
+
 ---
 
 ## 1. De dónde viene
@@ -49,11 +56,15 @@ solo lugar del código: `indicadores.cargar_relaciones()`.
 | Columna | Tipo | Qué afirma | Cifras (test+val) |
 |---|---|---|---|
 | `saber_skills` | texto | `ok` / `no_clasificado`: si hay oficio al que atribuir competencias | `ok` 348.263 (92,5 %) · `no_clasificado` 28.304 (7,5 %) |
-| `n_skills_essential` | número | Total de competencias esenciales del oficio | 4 a 99 · mediana 20 · media 23,3 · sd 13,3 |
-| `n_skills_competence` | número | Cuántas de esas son *saber hacer* | — |
-| `n_skills_knowledge` | número | Cuántas son *saber* | — |
+| `n_skills_essential` | número | Total de competencias esenciales del oficio | 4 a 99 · mediana 20 · media 23,3 · sd 13,3 · 78 valores distintos |
+| `n_skills_competence` | número | Cuántas de esas son *saber hacer* | 0 a 69 · mediana 18 · media 19,2 · sd 11,2 · 68 valores distintos |
+| `n_skills_knowledge` | número | Cuántas son *saber* | 0 a 45 · mediana 3 · media 4,0 · sd 4,4 · 37 valores distintos |
 | `n_skills_sin_tipo` | número | Las relaciones que la fuente entrega sin `skillType` | >0 en el 0,84 % de las filas |
 | `veces_ese_oficio` | número | Cuántas experiencias tiene esta persona en **este** oficio | 1 a 19 · mediana 1 · 16 valores distintos |
+
+La asimetría entre las dos columnas de tipo es el dato más importante de la tabla: `competence` tiene
+mediana 18 y `knowledge` mediana 3, o sea que el «saber hacer» domina por 6 a 1. Volveremos sobre esto
+en la §7, porque es justo lo que hace que la dimensión de tipo sirva.
 
 `n_skills_competence + n_skills_knowledge + n_skills_sin_tipo = n_skills_essential`, verificado por
 un assert en cada corrida del pipeline.
@@ -131,6 +142,43 @@ experiencia nueva.
 Con contadores, `empleos.csv` pasa de 11 a **17 columnas** y las filas siguen siendo **376.567**.
 El pipeline entero (`limpiar_empleos.py`, `dividir_por_outliers.py`) corre sin cambios
 estructurales.
+
+### El caso que la PK no ve
+
+La fila «duplicados por PK: 0» de la tabla de arriba es cierta, pero la clave con la que se mide
+—`(resume_id, matched_code, start_date, end_date)`— está elegida de tal modo que **no puede detectar
+este problema**. Cambiando `matched_code` por `occupation_code` aparecen **52 grupos · 105 filas · 51
+personas** con el mismo `resume_id`, el mismo `start_date` y el mismo `end_date` registrados dos veces:
+
+```
+100849 | Q1 2012 -> Q1 2013 | matched_code=3412.4.9 | emparejado=rescatado | es_unknown=False
+100849 | Q1 2012 -> Q1 2013 | matched_code=unknown  | emparejado=unknown  | es_unknown=True
+```
+
+Es el **mismo periodo con dos desenlaces contradictorios**: o el puesto se empareja con un código o
+no se empareja; ambas cosas a la vez no puede ser. Ocurre en 50 de los 52 grupos; en los 2 restantes
+las dos filas son `rescatado` con distinto `isco_group`. Un grupo tiene 3 filas, los otros 51 tienen 2.
+
+Lo que arrastra:
+
+- `es_unknown_ocupacion` son **25.755** filas con periodo único, no 25.805.
+- `es_rescatado` son **2.444**, no 2.499.
+
+Ambas cifras del dataset están infladas en 50 y 55 filas respectivamente: el desdoblamiento del
+`matched_code` ocurrió **antes** de que existiera `occupation_code`, que es la columna que hoy
+permitiría verlo.
+
+**No hay que arreglarlo para minar, y conviene saber por qué:** 0 de las 105 filas son
+`saber_skills = 'ok'`, así que **ninguna llega a la `X`** (ni en `4.0` ni en `4.1`). El sesgo vive
+solo en las cifras agregadas de este documento, no en el modelo. Aun así, si alguien cuenta
+`es_unknown_ocupacion` para reportar «cuántas experiencias no se pudieron clasificar», la respuesta
+honesta es 25.755.
+
+Detalle que vuelve el hallazgo confuso de medir: si se busca el duplicado con
+`["resume_id", "occupation_code", "start_date", "end_date"]` **sin rellenar los nulos**, `pandas`
+compara `NaN` contra `NaN` como si fueran iguales y reporta **53** duplicados, cifra que no significa
+nada. El conteo honesto exige tratar el vacío como su propio valor (`fillna("SIN_CODE")`), y recién
+ahí aparece el fenómeno real de 52 grupos.
 
 ### Solo `essential`
 
@@ -327,6 +375,63 @@ relaciones a nivel de ocupación, no de grupo ISCO, así que del código recuper
 contar. Por eso el vacío ≠ 0 de la §4 importa acá también: si esas filas hubieran entrado con un 0
 de relleno, el modelo habría aprendido que «un puesto sin competencias» es una categoría real.
 
+> Los cuatro números de arriba son los del dataset completo. Corregidos por el desdoblamiento de
+> periodos de la §5 serían 25.755 y 2.444. La diferencia no cambia ninguna de las dos filas de la
+> tabla, porque el drop es por `saber_skills`, no por bandera: las 105 filas en cuestión ya están
+> fuera de la `X` por ser `no_clasificado`.
+
+### El efecto secundario del drop: columnas que colapsan y banderas constantes
+
+Este es el punto que hay que tener presente antes de minerar, y no aparece en los cuadernos.
+
+**a) Dos banderas quedan constantes.** `es_unknown_ocupacion` y `es_rescatado` se llevan en la `X`
+como columnas, pero **el drop de la §2.5 las deja en un solo valor**:
+
+```
+es_unknown_ocupacion   en la X (4.0): ['False']        -> 1 valor
+es_rescatado           en la X (4.0): ['False']        -> 1 valor
+es_vigente             en la X (4.0): ['False', 'True'] -> 2 valores
+```
+
+No es un defecto del drop: es su consecuencia lógica. Las filas que llevan esas banderas en `True`
+son **exactamente** las que se van, así que las columnas quedan con ancho cero. Meter dos features
+constantes en un KNN o en k-means no rompe nada, pero tampoco aporta nada y **engaña a cualquier
+lectura de importancia de variables**: un modelo que les dé un peso distinto de cero está usando una
+constante.
+
+**b) El one-hot de `emparejado` se reduce a una columna.** Por la misma causa, `get_dummies` deja de
+devolver tres columnas y devuelve una:
+
+```
+celda 21 de 4.0:  emparejado -> 1 columnas  ['emparejado_ok']
+```
+
+La tabla de codificación de la celda 4 y el comentario de la celda 33 siguen describiendo
+`emparejado` como «3 columnas» y `emparejado_ok / _unknown / _rescatado`. Describen el dataset
+**anterior** al drop. El código hace bien la cuenta y la imprime; lo que quedó desactualizado es el
+texto alrededor.
+
+Las verificaciones finales de los cuadernos no detectan ni (a) ni (b) porque solo comprueban dtypes y
+nulos, y tanto una columna de ceros como una dummy única están sanas en ambos respectos.
+
+Comprobación de una línea para (a):
+
+```python
+for c in ("es_unknown_ocupacion", "es_rescatado"):
+    assert e.loc[e["saber_skills"].eq("ok"), c].nunique() == 1, f"{c} varía dentro de la X"
+```
+
+Y para (b):
+
+```python
+pd.get_dummies(df_s["emparejado"]).shape[1]     # 1, no 3
+```
+
+**Decisión pendiente, no resuelta en el repo:** si se conservan, conviene registrarlas como
+**constantes** y no como features. Si se dropean las dos banderas constantes, `X_final` baja de 2.327
+a 2.325 columnas en `4.0` (y `emparejado_ok` es, por su parte, redundante con
+`occupation_code`, como ya se dice en la §9).
+
 ### El escalamiento, que era la parte no obvia
 
 Agregadas **sin** escalar, las skills rompen la métrica. Medido sobre la submuestra de 50.000 filas
@@ -384,11 +489,19 @@ python src/limpieza/dividir_por_outliers.py  # sin cola larga              (341.
 Los cuatro scripts son deterministas: sin aleatoriedad, sin fechas, sin orden dependiente del
 entorno. Correrlos dos veces da el mismo archivo byte a byte.
 
+> La excepción son los CSV de bitácora en `logs/`, que llevan una marca de tiempo ISO y por eso sí
+> cambian en cada corrida. La afirmación es sobre los datos, no sobre los logs. Verificado por hash:
+> reserializar `empleos_limpio_sin_outliers.csv` desde `empleos_limpio.csv` reproduce el SHA-256 del
+> archivo en disco.
+
 | Archivo | Filas | Columnas | Tamaño |
 |---|---|---|---|
-| `data/03_processed/empleos.csv` | 376.567 | 17 | 47,9 MB |
-| `data/03_processed/empleos_limpio.csv` | 376.567 | 20 | 54,8 MB |
-| `data/03_processed/empleos_limpio_sin_outliers.csv` | 341.090 | 20 | 49,5 MB |
+| `data/03_processed/empleos.csv` | 376.567 | 17 | 47,9 MiB |
+| `data/03_processed/empleos_limpio.csv` | 376.567 | 20 | 54,8 MiB |
+| `data/03_processed/empleos_limpio_sin_outliers.csv` | 341.090 | 20 | 49,5 MiB |
+
+(En MiB, no en MB decimales: los mismos archivos miden 50,2 / 57,4 / 51,9 MB. Vale la pena decirlo
+porque `ls -h` y `stat` usan bases distintas y las cifras parecen no cuadrar.)
 
 Los contadores se guardan **como texto** en el CSV, porque el proyecto lee todo con `dtype=str`
 (regla para no perder los ceros a la izquierda de los códigos ESCO: `0110` no puede colisionar con
@@ -419,9 +532,22 @@ total.eq(0).sum() == 0                             # True
 buckets = num("n_skills_competence") + num("n_skills_knowledge") + num("n_skills_sin_tipo")
 buckets.isna().loc[~total.notna()].all()           # True: sin dato, los 3 también
 buckets.eq(total).loc[total.notna()].all()          # True: 348.263 de 348.263
+
+# las banderas quedan constantes dentro de la X (ver §10)
+[e.loc[ok, c].nunique() for c in ("es_unknown_ocupacion", "es_rescatado")]   # [1, 1]
+
+# y los periodos desdobles de la §5, contados con el vacío como valor propio
+v = e.copy()
+v["occupation_code"] = v["occupation_code"].fillna("SIN_CODE")
+PK = ["resume_id", "occupation_code", "start_date", "end_date"]
+v.duplicated(subset=PK, keep=False).sum()           # 105, en 52 grupos y 51 personas
 ```
 
 > Detalle de pandas al reproducir esto: **`NaN != NaN` es `True`**, así que cualquier comparación de
 > igualdad entre columnas de contadores tiene que restringirse a las filas con dato. Sin ese filtro
 > la cuenta da 28.304 filas «que no cuadran» cuando en realidad cuadran todas — y es exactamente el
 > falso positivo que dio durante la implementación. El assert del pipeline ya lo hace así.
+>
+> Y al revés: al contar duplicados, `NaN` **sí** se considera igual a `NaN`, que es lo que produce
+> los 53 sin sentido de la §5. Las dos trampas son el mismo comportamiento de `pandas`, aplicado en
+> direcciones opuestas.

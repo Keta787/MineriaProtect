@@ -1,5 +1,11 @@
 # Contexto · Minería de Datos · Sesión 3 · Proyecto MineríaProtect
 
+> ⚠️ **Cifras de dos eras — leer antes de citar.** Parte de este documento se escribió sobre
+> la partición **`train`** de JobHop (1.506.445 filas · 284.247 personas · 11 columnas). El pipeline
+> vigente integra **`test` + `val`** (376.567 filas · 71.061 personas · 17 columnas, y 20 en el
+> limpio). Las cifras de la era `train` **no** describen el dataset actual. Las cifras vigentes
+> están en `README.md` y en `docs/SKILLS.md`.
+
 > Adaptación del material de la sesión 3 (que usa el caso TelecomUNO) a los datos y al
 > pipeline del proyecto **MineríaProtect**. Donde un concepto o paso del curso no aplica
 > a este proyecto, se marca explícitamente con **No aplica por: <razón>**.
@@ -14,16 +20,16 @@
 - **Archivos del proyecto usados en esta sesión:**
   - `src/limpieza/limpiar_empleos.py` (pipeline de limpieza del integrado en 7 fases)
   - `notebooks/Diagnostico_Limpieza_Empleos.ipynb` (reproduce el pipeline con evidencia impresa)
-  - `data/cruce/empleos.csv` → integrado crudo (entrada)
-  - `data/cruce/empleos_limpio.csv` → integrado limpio (salida canónica)
+  - `data/03_processed/empleos.csv` → integrado crudo (entrada)
+  - `data/03_processed/empleos_limpio.csv` → integrado limpio (salida canónica)
 
 ## Archivos fuente (punto de partida de la limpieza)
 
-- `data/cruce/empleos.csv` → integrado de entrada (1.506.445 filas × 11 columnas,
+- `data/03_processed/empleos.csv` → integrado de entrada (1.506.445 filas × 11 columnas,
   284.247 personas). Trae problemas: 115.169 nulos de ocupación, 174.036 literales
   `'None'`, 76.180 literales `'Present'`, 11 fechas futuras y 141.591 duraciones fuera
   del IQR. **No tiene** duplicados exactos ni por llave natural.
-- `data/cruce/empleos_limpio.csv` → archivo canónico de la limpieza
+- `data/03_processed/empleos_limpio.csv` → archivo canónico de la limpieza
   (1.506.434 filas × 14 columnas). Es la meta/referencia contra la que validan los asserts.
 
 > Diferencia con el caso del curso: TelecomUNO limpiaba un archivo sin procesar
@@ -177,7 +183,7 @@ contra las cifras verificadas.
   fechas futuras y `start > end` — más el assert de que se eliminaron **exactamente 11
   filas** (1.506.445 → 1.506.434).
 - **fase7_exportar:** assert de que el **original no cambió** (1.506.445 filas) y graba
-  `data/cruce/empleos_limpio.csv` con las 14 columnas finales.
+  `data/03_processed/empleos_limpio.csv` con las 14 columnas finales.
 
 Reproducido con evidencia impresa en `notebooks/Diagnostico_Limpieza_Empleos.ipynb`.
 Orden idéntico al del curso (duplicados y categorías antes que outliers) salvo que aquí no
