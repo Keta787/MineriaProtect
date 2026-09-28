@@ -29,3 +29,11 @@ METODOLOGIA_KDD_CRISPDM.md
 
 # Versión local de Python (solo en disco; la referencia queda en requirements.txt)
 .python-version
+
+# ============================================================
+# PITCH EN WORD - solo en disco, no se versiona.
+# Es un entregable de presentación, no código del pipeline: se
+# edita palabra por palabra en local y se regenera desde el guion.
+# Versionarlo solo produce conflictos de binario en cada revisión.
+# ============================================================
+PITCH_ESCALAMIENTO_5MIN_APA.docx
