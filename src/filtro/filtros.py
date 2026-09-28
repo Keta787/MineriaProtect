@@ -1,8 +1,11 @@
 """Filtros reutilizables para el análisis de los cuadernos del proyecto.
 
-Todo se aplica sobre `data/03_processed/empleos_limpio.csv` (solo lectura; el CSV se carga en
-el notebook convirtiendo los `es_*` a booleano):
-las funciones devuelven copias explícitas para evitar SettingWithCopyWarning.
+Todo se aplica sobre `data/03_processed/empleos_limpio.csv` (solo lectura).
+El CSV se carga con `dtype=str` —regla del proyecto para no perder los ceros a
+la izquierda de los códigos ESCO—, lo que deja las banderas `es_*` como texto
+'True'/'False'; `_como_bool` las normaliza para que el módulo funcione con y sin
+conversión previa en el cuaderno.
+Las funciones devuelven copias explícitas para evitar SettingWithCopyWarning.
 Ningún filtro imputa valores: las filas sin clasificar se excluyen siempre
 reportando su cantidad.
 
@@ -18,6 +21,23 @@ import pandas as pd
 
 TRIMESTRE_VALIDO = re.compile(r"^Q([1-4])\s+(\d{4})$")
 NIVELES_EDUCATIVOS = {"Secondary school", "Bachelor", "Master", "PhD", "No reportado"}
+
+
+def _como_bool(serie: pd.Series) -> pd.Series:
+    """Normaliza una columna de banderas a booleano, sea cual sea su dtype de origen.
+
+    El proyecto lee los CSV con `dtype=str` para no perder los ceros a la
+    izquierda de los códigos ESCO ('0110' no puede colisionar con '110'), y eso
+    arrastra las banderas `es_*` como los textos 'True'/'False'. Sin esta
+    normalización, `int(serie.sum())` concatena las cadenas y revienta con un
+    `ValueError` que no dice nada sobre la causa real. Acepta ambos formatos
+    para que el módulo sirva con y sin la conversión previa del cuaderno.
+    """
+    if serie.dtype == bool:
+        return serie
+    if pd.api.types.is_numeric_dtype(serie):
+        return serie.ne(0)
+    return serie.astype("string").str.strip().str.lower().isin(("true", "1", "t", "yes"))
 
 
 def _anio_trimestre(serie: pd.Series) -> pd.Series:
@@ -69,7 +89,7 @@ def filtrar_por_periodo(
 
 def filtrar_vigentes(df: pd.DataFrame, vigentes: bool = True) -> pd.DataFrame:
     """Experiencias vigentes (es_vigente True) o finalizadas (vigentes=False)."""
-    return df.loc[df["es_vigente"].eq(vigentes)].copy()
+    return df.loc[_como_bool(df["es_vigente"]).eq(vigentes)].copy()
 
 
 def resumen(df: pd.DataFrame, segmento: str) -> pd.DataFrame:
@@ -83,7 +103,7 @@ def resumen(df: pd.DataFrame, segmento: str) -> pd.DataFrame:
             "segmento": [segmento],
             "filas": [len(df)],
             "personas": [df["resume_id"].nunique()],
-            "vigentes": [int(df["es_vigente"].sum())],
+            "vigentes": [int(_como_bool(df["es_vigente"]).sum())],
             "sin_area_isco": [int(df["isco_group"].isna().sum())],
             "sin_ocupacion": [int(df["occupation_label"].isna().sum())],
         }

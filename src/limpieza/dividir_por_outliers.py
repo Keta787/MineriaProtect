@@ -110,7 +110,10 @@ def main() -> None:
     n_out = int(es_outlier.sum())
     assert len(sin) == len(df) - n_out, "Sin outliers no es el total menos los outliers"
     assert len(con) == len(df), "La version con outliers debe conservar todas las filas"
-    assert sin.shape[1] == con.shape[1] == 14, "Cambió la estructura de columnas"
+    assert sin.shape[1] == con.shape[1] == 20, (
+        f"Estructura de columnas inesperada: {con.shape[1]} != 20 "
+        "(17 del integrado + 3 banderas)"
+    )
     assert not sin.empty, "La version sin outliers quedó vacía"
 
     SALIDA_SIN.parent.mkdir(parents=True, exist_ok=True)

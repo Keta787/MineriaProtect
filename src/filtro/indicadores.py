@@ -8,19 +8,116 @@ Derivados calculados en vivo a partir de `data/03_processed/empleos_limpio.csv`:
 - Brechas sin empleo registrado (proxy de desempleo), previa fusión de
   periodos solapados para no confundir pluriempleo con desempleo.
 
+Y los nombres de las competencias ESCO, que NO viven en el pipeline (allí solo
+hay contadores, para no multiplicar las filas): se recuperan de la fuente con
+`cargar_relaciones()` y se consultan con `skills_de_ocupacion()` o
+`skills_de_persona()`.
+
 Práctica: las funciones son puras (sin I/O) para que el libro decida qué
-muestra y cómo lo interpreta.
+muestra y cómo lo interpreta. La única excepción es `cargar_relaciones()`, que
+resuelve el salto `code` -> `occupationUri` (UUID) del puente ESCO: sin ese
+salto el cruce no es posible y falla en silencio devolviendo 0 filas.
 """
 
 from __future__ import annotations
 
 import re
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
 SENTINELA_FIN = 99_999  # fin ordinal de 'Present': última experiencia censurada
 TRIMESTRE_VALIDO = re.compile(r"^Q([1-4])\s+(\d{4})$")
+
+# Puente de competencias ESCO (única fuente de los NOMBRES de skill; los CSV del
+# pipeline solo llevan contadores). Vive en data/02_interim/SKILLS/ porque se
+# limpió aparte del resto de ESCO.
+RAIZ = Path(__file__).resolve().parents[2]
+RUTA_RELACIONES = RAIZ / "data" / "02_interim" / "SKILLS" / "occupationSkillRelations_en_limpio.csv"
+RUTA_OCCUPATIONS = RAIZ / "data" / "02_interim" / "ESCO" / "occupations_en_limpio.csv"
+
+# Solo 'essential'. Ver `integrar_empleos.py`: las 'optional' son telemetría de
+# jerarquía y el pipeline no las usa.
+RELACION_KEPT = "essential"
+
+# Banderas de clasificacion que escribe `limpiar_empleos.py`.
+BANDERAS = ("es_unknown_ocupacion", "es_rescatado", "es_vigente")
+
+
+def cargar_relaciones() -> pd.DataFrame:
+    """ÚNICA función con I/O del módulo: lee el puente de competencias.
+
+    Devuelve `code` (código de ocupación ESCO) en lugar de `occupationUri`
+    (UUID), porque `code` es la llave que ya existe en `empleos_limpio.csv`.
+    Ese salto code -> occupationUri es el que hace el cruce posible; omitirlo
+    devuelve 0 filas sin error visible, así que va resuelto aquí una sola vez.
+    """
+    occ = pd.read_csv(RUTA_OCCUPATIONS, dtype=str, encoding="utf-8",
+                      keep_default_na=False, na_values=[""])
+    rel = pd.read_csv(RUTA_RELACIONES, dtype=str, encoding="utf-8",
+                      keep_default_na=False, na_values=[""])
+    mapa = occ[["code", "conceptUri"]].drop_duplicates(subset="code")
+    rel = rel.loc[rel["relationType"].eq(RELACION_KEPT)]
+    rel = rel.drop_duplicates(subset=["occupationUri", "skillUri"])
+    par = rel.merge(mapa, left_on="occupationUri", right_on="conceptUri", how="inner")
+    return par[["code", "occupationLabel", "skillType", "skillLabel"]].rename(
+        columns={"code": "occupation_code", "skillType": "skill_type",
+                 "skillLabel": "skill_label"}
+    )
+
+
+def skills_de_ocupacion(relaciones: pd.DataFrame, occupation_code: str) -> pd.DataFrame:
+    """Competencias esenciales que exige un cargo (tabla de `cargar_relaciones`).
+
+    Devuelve una fila por competencia, ordenada por tipo. Se llama con el
+    `occupation_code` de `empleos_limpio.csv`; ese código coincide con
+    `n_skills_essential`, así que el conteo y la lista son consistentes.
+    """
+    sub = relaciones.loc[relaciones["occupation_code"].eq(occupation_code)]
+    assert not sub.empty, f"El código {occupation_code!r} no tiene competencias"
+    return sub.sort_values(["skill_type", "skill_label"]).reset_index(drop=True)
+
+
+def skills_de_persona(empleos: pd.DataFrame, relaciones: pd.DataFrame) -> pd.DataFrame:
+    """Competencias atribuidas a una persona a lo largo de TODAS sus experiencias.
+
+    Devuelve una fila por (`resume_id`, `skill_label`): si la persona repite el
+    mismo cargo 19 veces, esa skill aparece UNA vez, no 19. El conteo de
+    experiencias y de cargos distintos queda en la propia tabla, para que la
+    repetición siga siendo visible.
+
+    Solo incluye filas con `saber_skills == 'ok'`; las 'no_clasificado' no
+    tienen cargo y por lo tanto no tienen competencias atribuibles.
+    """
+    clave = ["resume_id", "occupation_code", "occupation_label",
+             "n_skills_essential", "saber_skills"]
+    trabajo = empleos.loc[empleos["saber_skills"].eq("ok"), clave].drop_duplicates()
+    salida = trabajo.merge(relaciones, on="occupation_code", how="inner")
+    salida = salida.sort_values(["resume_id", "skill_type", "skill_label"])
+    return salida.reset_index(drop=True)
+
+
+def resumen_competencias(empleos: pd.DataFrame) -> pd.DataFrame:
+    """Reparto de `n_skills_essential` por tipo de cargo y split knowledge/competence.
+
+    Los contadores llegan como texto porque el proyecto lee los CSV con
+    `dtype=str` (regla para no perder ceros en los códigos); se convierten aquí.
+    """
+    num = lambda c: pd.to_numeric(empleos[c], errors="coerce")
+    trabajo = empleos.loc[empleos["saber_skills"].eq("ok")].copy()
+    trabajo["_n"] = num("n_skills_essential").loc[trabajo.index]
+    trabajo["_c"] = num("n_skills_competence").loc[trabajo.index]
+    trabajo["_k"] = num("n_skills_knowledge").loc[trabajo.index]
+    trabajo["_s"] = num("n_skills_sin_tipo").loc[trabajo.index]
+    por_cargo = trabajo.groupby("occupation_code").agg(
+        n_skills_essential=("_n", "first"),
+        n_skills_competence=("_c", "first"),
+        n_skills_knowledge=("_k", "first"),
+        n_skills_sin_tipo=("_s", "first"),
+        experiencias=("resume_id", "size"),
+    )
+    return por_cargo.sort_values("n_skills_essential", ascending=False).reset_index()
 
 
 def _ordinal_trimestre(serie: pd.Series) -> pd.Series:
@@ -266,19 +363,19 @@ def resumen_personas_solapadas(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def resumen_banderas(df: pd.DataFrame) -> pd.DataFrame:
-    """Conteo de las banderas de clasificación del pipeline."""
+    """Conteo de las banderas de clasificación del pipeline.
+
+    Usa `_como_bool` de `filtros` porque el proyecto lee los CSV con
+    `dtype=str` y las banderas llegan como el texto 'True'/'False'; sin la
+    normalización, `int(serie.sum())` concatena las cadenas y revienta.
+    """
+    from filtros import _como_bool  # import diferido: evita ciclo con filtros
+
+    banderas = {c: _como_bool(df[c]) for c in BANDERAS}
     return pd.DataFrame(
         {
-            "flag": ["es_unknown_ocupacion", "es_rescatado", "es_vigente"],
-            "n": [
-                int(df["es_unknown_ocupacion"].sum()),
-                int(df["es_rescatado"].sum()),
-                int(df["es_vigente"].sum()),
-            ],
-            "%_del_total": [
-                round(100 * df["es_unknown_ocupacion"].mean(), 2),
-                round(100 * df["es_rescatado"].mean(), 2),
-                round(100 * df["es_vigente"].mean(), 2),
-            ],
+            "flag": list(BANDERAS),
+            "n": [int(banderas[c].sum()) for c in BANDERAS],
+            "%_del_total": [round(100 * banderas[c].mean(), 2) for c in BANDERAS],
         }
     )

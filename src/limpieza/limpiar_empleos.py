@@ -91,6 +91,10 @@ CANONICOS = {
     "university_level": 4,
     "isco_group_label": 424,
     "occupation_label": 2855,
+    # Columnas de competencias (agregadas en integrar_empleos.py).
+    "saber_skills": 2,
+    "n_skills_essential": 78,
+    "veces_ese_oficio": 16,
 }
 
 # Cifras canonicas del integrado `empleos` (union test+val, auditadas),
@@ -113,8 +117,12 @@ EXPECTED = {
     "duracion_iqr_q3": 11.0,
     "duracion_iqr_superior": 24.5,
     "duracion_maxima": 160,
+    # Enriquecimiento de competencias: las cifras verificadas al regenerar
+    # `empleos.csv` con integrar_empleos.py (16 columnas).
+    "filas_saber_skills_ok": 348_263,
+    "filas_sin_oficio": 28_304,
+    "max_veces_ese_oficio": 19,
 }
-
 
 class LimpiadorEmpleos:
     """Limpieza del integrado `empleos`: diagnostico -> ... -> exportacion.
@@ -438,6 +446,40 @@ class LimpiadorEmpleos:
         start_end = int((self._duracion_trimestres() < 0).sum())
         personas = int(df["resume_id"].nunique())
 
+        # Competencias: los contadores son VACIOS cuando no hay oficio
+        # clasificado y NUNCA valen 0. Un 0 afirmaria que el cargo no exige
+        # ninguna competencia, que es falso; vacio afirma que no sabemos el
+        # cargo. Son cosas opuestas y esta tabla impide que se mezclen.
+        # El dataset se lee como texto (regla del proyecto: dtype=str para no
+        # perder ceros en los codigos), asi que los contadores se convierten
+        # aqui; el CSV los guarda como texto.
+        es_ok = df["saber_skills"].eq("ok")
+        n_sk = pd.to_numeric(df["n_skills_essential"], errors="coerce")
+        veces = pd.to_numeric(df["veces_ese_oficio"], errors="coerce")
+        skills_vacias_sin_oficio = int(
+            (n_sk.isna() & es_ok).sum() + (n_sk.notna() & ~es_ok).sum()
+        )
+        skills_en_cero = int(n_sk.eq(0).sum())
+        # Los tres buckets deben cerrar contra el total. Sin el bucket
+        # `n_skills_sin_tipo` esta suma no daria: 39 relaciones 'essential'
+        # llegan sin `skillType` desde la fuente.
+        partes = sum(
+            pd.to_numeric(df[col], errors="coerce")
+            for col in ("n_skills_competence", "n_skills_knowledge",
+                        "n_skills_sin_tipo")
+        )
+        # NaN != NaN es True en pandas, asi que el contraste se restringe a las
+        # filas con dato: las 'no_clasificado' se validan arriba (contadores
+        # vacios y coherentes con el flag), no aqui.
+        skills_no_cuadran = int(((partes != n_sk) & n_sk.notna()).sum())
+        veces_incoherentes = int(
+            (veces.isna() & es_ok).sum()
+            + (veces.notna() & ~es_ok).sum()
+            + (veces < 1).sum()
+        )
+        skills_ok = int(es_ok.sum())
+        veces_max = int(veces.max())
+
         umbrales = [
             ("Duplicados exactos", dups, 0),
             ("Duplicados por PK natural", dups_pk, 0),
@@ -445,6 +487,10 @@ class LimpiadorEmpleos:
             ("Nulos de ocupacion sin bandera", ocupacion_huerfanos, 0),
             ("Fechas futuras", futuras, 0),
             ("start > end", start_end, 0),
+            ("Skills: contador descuadrado vs saber_skills", skills_vacias_sin_oficio, 0),
+            ("Skills: contador en 0 (debe ser vacio)", skills_en_cero, 0),
+            ("Skills: competence+knowledge+sin_tipo != total", skills_no_cuadran, 0),
+            ("Skills: veces_ese_oficio incoherente", veces_incoherentes, 0),
         ]
         tabla = pd.DataFrame(umbrales, columns=["criterio", "valor", "esperado"])
         tabla["ok"] = tabla["valor"].eq(tabla["esperado"])
@@ -463,6 +509,17 @@ class LimpiadorEmpleos:
         )
         assert len(df) == EXPECTED["filas_limpio"], (
             f"Filas finales: {len(df)} != {EXPECTED['filas_limpio']} (canonico de la auditoria)"
+        )
+        assert skills_ok == EXPECTED["filas_saber_skills_ok"], (
+            f"Filas con saber_skills='ok': {skills_ok} != "
+            f"{EXPECTED['filas_saber_skills_ok']}"
+        )
+        assert len(df) - skills_ok == EXPECTED["filas_sin_oficio"], (
+            f"Filas sin oficio clasificado: {len(df) - skills_ok} != "
+            f"{EXPECTED['filas_sin_oficio']}"
+        )
+        assert veces_max == EXPECTED["max_veces_ese_oficio"], (
+            f"Max veces_ese_oficio: {veces_max} != {EXPECTED['max_veces_ese_oficio']}"
         )
 
     # ------------------------------------------------------------- fase 7

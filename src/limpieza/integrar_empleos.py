@@ -8,6 +8,7 @@ en `data/02_interim/`:
       (union de las particiones test y val del dato crudo de JobHop v2 en CSV)
     + ESCO occupations_en_limpio.csv  (matched_code -> ocupacion + grupo ISCO)
     + ESCO ISCOGroups_en_limpio.csv   (grupo ISCO-08 -> etiqueta de area)
+    + ESCO occupationSkillRelations_en_limpio.csv (oficio -> competencias)
 
 Regla de emparejado (semantica documentada en README y en el acta 1.0):
     - 'ok'       : matched_code == occupations.code (cruce directo por codigo).
@@ -17,8 +18,32 @@ Regla de emparejado (semantica documentada en README y en el acta 1.0):
     - 'unknown'  : sin mapeo directo ni grupo ISCO valido (incluye el literal
                    'unknown'). Se flagga, no se elimina.
 
-Salida (unica): `data/03_processed/empleos.csv` (11 columnas), canonica e
-inmutable. `limpiar_empleos.py` la lee y exporta `empleos_limpio.csv`.
+Enriquecimiento de competencias (5 columnas, fase de integracion):
+    Las competencias NO se agregan como filas: hacerlo multiplicaria el dataset
+    por ~21 y dejaria sin llave primaria. Se agregan como CONTADORES por
+    experiencia, de modo que el grano canonico sigue siendo 1 fila = 1
+    experiencia y todo el pipeline descendente (limpieza, outliers, modelos)
+    sigue operando sin cambios.
+
+    Que significa "skill de una persona" (leer antes de usar):
+        ESCO describe lo que un CARGO exige, no lo que un INDIVIDUO sabe. El
+        dato de skills de una persona no existe en ninguna fuente: se ATRIBUYE
+        a partir del oficio que ocupaba. Cualquier lectura debe decir "este cargo
+        exige N competencias", nunca "esta persona sabe N cosas".
+        `saber_skills` deja explicito el otro caso: cuando no hay oficio
+        clasificado las cuentas quedan VACIAS, no en 0. Un 0 afirmaria que el
+        cargo no exige ninguna competencia, que es falso; vacio afirma que no
+        sabemos cual era el cargo. Son cosas opuestas y no deben mezclarse.
+
+        `veces_ese_oficio` existe para que la reincidencia no se pierda: una
+        persona que repite el mismo cargo 19 veces tiene 19 filas (una por
+        experiencia, con sus fechas), todas con veces_ese_oficio=19, y sus
+        competencias NO se repiten dentro de cada fila. Sin esta columna, el
+        conteo de competencias seria ambiguo entre "un cargo duro" y "muchos
+        periodos en el mismo cargo".
+
+Salida (unica): `data/03_processed/empleos.csv` (16 columnas), canonica.
+`limpiar_empleos.py` la lee y exporta `empleos_limpio.csv` (19 columnas).
 
 Como ejecutar:
     python src/limpieza/integrar_empleos.py
@@ -60,9 +85,17 @@ PARTICIONES_JOBHOP = ["JobHop_v2_test_limpio.csv", "JobHop_v2_val_limpio.csv"]
 
 OCCUPATIONS = INTERIM / "ESCO" / "occupations_en_limpio.csv"
 ISCO_GROUPS = INTERIM / "ESCO" / "ISCOGroups_en_limpio.csv"
+# Puente de competencias. Vive en data/02_interim/SKILLS/ porque se limpio aparte
+# del resto de ESCO; `limpiar_datos.py` lo descubre con rglob y conserva la
+# subcarpeta, asi que la ruta refleja esa organizacion.
+SKILL_RELATIONS = INTERIM / "SKILLS" / "occupationSkillRelations_en_limpio.csv"
 SALIDA = PROC / "empleos.csv"
 
-# Orden de columnas canonico del integrado (11 columnas).
+# Solo se usan las competencias 'essential' (el piso minimo del cargo). Las
+# 'optional' son telemetria de jerarquia y se descartan por decision de alcance.
+RELACION_KEPT = "essential"
+
+# Orden de columnas canonico del integrado (16 columnas).
 COLUMNAS = [
     "resume_id",
     "start_date",
@@ -75,7 +108,27 @@ COLUMNAS = [
     "isco_group",
     "isco_group_label",
     "isco_level",
+    # --- Enriquecimiento de competencias (contadores, no filas) ---
+    "n_skills_essential",
+    "n_skills_competence",
+    "n_skills_knowledge",
+    "n_skills_sin_tipo",
+    "veces_ese_oficio",
+    "saber_skills",
 ]
+
+# Columnas de contadores. Se dejan VACIAS cuando no hay oficio clasificado:
+# vacio = "no sabemos el cargo"; 0 = "el cargo no exige nada" (falso).
+CONTADORES_SKILL = [
+    "n_skills_essential",
+    "n_skills_competence",
+    "n_skills_knowledge",
+    "n_skills_sin_tipo",
+]
+
+# Valores admitidos de `saber_skills`.
+SABER_OK = "ok"
+SABER_NO_CLASIFICADO = "no_clasificado"
 
 
 def _cargar(ruta: Path) -> pd.DataFrame:
@@ -106,6 +159,11 @@ def main() -> None:
         )
     if not OCCUPATIONS.exists() or not ISCO_GROUPS.exists():
         raise FileNotFoundError("Faltan las limpias de ESCO en data/02_interim/ESCO/.")
+    if not SKILL_RELATIONS.exists():
+        raise FileNotFoundError(
+            f"Falta el puente de competencias: {SKILL_RELATIONS}\n"
+            "Ejecuta primero: python src/limpieza/limpiar_datos.py"
+        )
 
     print("=" * 78)
     print("INTEGRACION DE EMPLEOS (union test + val, cruce con ESCO)")
@@ -164,17 +222,75 @@ def main() -> None:
     m["isco_group_label"] = m["isco_group"].map(etiqueta_ig)
     m["isco_level"] = m["isco_group"].map(lambda c: "4" if pd.notna(c) else "")
 
+    # 4b. Enriquecimiento de competencias: CONTADORES por ocupacion.
+    #     El puente de skills usa `occupationUri` (UUID), no `code`, asi que hay
+    #     que traducir con occupations antes de poder contar.
+    rel = _cargar(SKILL_RELATIONS)
+    rel = rel.loc[rel["relationType"].eq(RELACION_KEPT)]
+    rel = rel.drop_duplicates(subset=["occupationUri", "skillUri"])
+    print(f"\nPares de competencia '{RELACION_KEPT}': {len(rel):,}")
+
+    codigo_uri = occ[["code", "conceptUri"]].drop_duplicates(subset="code")
+    par = rel.merge(codigo_uri, left_on="occupationUri", right_on="conceptUri",
+                    how="inner")
+    # ESCO escribe esta columna en camelCase; se renombra en la frontera.
+    par = par.rename(columns={"skillType": "skill_type", "code": "occupation_code"})
+    conteo = (
+        par.groupby("occupation_code")
+        .agg(
+            n_skills_essential=("skillUri", "size"),
+            n_skills_competence=("skill_type",
+                                 lambda s: int(s.eq("skill/competence").sum())),
+            n_skills_knowledge=("skill_type",
+                                lambda s: int(s.eq("knowledge").sum())),
+            # 39 de las 67.600 relaciones 'essential' llegan sin `skillType`
+            # (defecto conocido de la fuente, documentado en el README). Sin
+            # este bucket la suma competence + knowledge no cerraria contra el
+            # total en las experiencias de esos oficios.
+            n_skills_sin_tipo=("skill_type",
+                               lambda s: int(s.isna().sum())),
+        )
+    )
+    print(f"Ocupaciones con competencias: {len(conteo):,} | "
+          f"mediana {conteo['n_skills_essential'].median():.0f} | "
+          f"max {conteo['n_skills_essential'].max()}")
+
+    for col in CONTADORES_SKILL:
+        m[col] = m["occupation_code"].map(conteo[col])
+
+    # 4c. Reincidencia: cuantas experiencias tiene esta persona en ESTE oficio.
+    #     Cuenta sobre el merged, no sobre JobHop, para que la unidad sea la
+    #     experiencia clasificada (la misma que aporta cada fila del dataset).
+    m["veces_ese_oficio"] = (
+        m.groupby(["resume_id", "occupation_code"])["occupation_code"]
+        .transform("size")
+        .where(m["occupation_code"].notna())
+    )
+
+    # 4d. Flag de Sabibilidad. 'rescatado' cae en 'no_clasificado' porque ESCO
+    #     solo publica relaciones de competencia a nivel de OCUPACION, no de
+    #     grupo ISCO: aunque sepamos el area, no hay con que contar skills.
+    m["saber_skills"] = SABER_OK
+    m.loc[m["occupation_code"].isna(), "saber_skills"] = SABER_NO_CLASIFICADO
+
+    n_ok = int(m["saber_skills"].eq(SABER_OK).sum())
+    print(f"\nsaber_skills: '{SABER_OK}' {n_ok:,} ({100 * n_ok / len(m):.1f} %) | "
+          f"'{SABER_NO_CLASIFICADO}' {len(m) - n_ok:,} "
+          f"({100 * (len(m) - n_ok) / len(m):.1f} %)")
+    print("  (los contadores quedan VACIOS en 'no_clasificado', nunca en 0)")
+
     # 5. Columnas canonicas y escritura.
     empleos = m[COLUMNAS]
     print(f"\nemparejado:")
     print(empleos["emparejado"].value_counts(dropna=False).rename("filas").to_string())
     print(f"occupation_code NaN: {int(empleos['occupation_code'].isna().sum()):,}")
+    print(f"n_skills_essential vacio: "
+          f"{int(empleos['n_skills_essential'].isna().sum()):,}")
 
     PROC.mkdir(parents=True, exist_ok=True)
     empleos.to_csv(SALIDA, index=False, encoding="utf-8")
     print(f"\nEscrito: {SALIDA} ({SALIDA.stat().st_size / 1e6:.1f} MB) | "
           f"{empleos.shape[0]:,} filas x {empleos.shape[1]} columnas")
-    print("El CSV es la salida unica de la integracion (salida inmutable).")
 
     # 6. Canon para EXPECTED/CANONICOS de limpiar_empleos.py (auditoria).
     print("\n" + "#" * 78)
@@ -218,6 +334,17 @@ def main() -> None:
     print(f"CANONICOS university_level: {int(d['university_level'].nunique(dropna=True))}")
     print(f"CANONICOS isco_group_label: {int(d['isco_group_label'].nunique(dropna=True))}")
     print(f"CANONICOS occupation_label: {int(d['occupation_label'].nunique(dropna=True))}")
+
+    # Canon de las columnas de competencias (para los asserts de
+    # limpiar_empleos.py). Se imprime el rango de la mediana para dejar
+    # constancia de la dispersion del piso de exigencia por cargo.
+    print(f"CANONICOS saber_skills     : {int(d['saber_skills'].nunique())}")
+    print(f"CANONICOS n_skills_essential: {int(d['n_skills_essential'].nunique(dropna=True))}")
+    print(f"CANONICOS veces_ese_oficio : {int(d['veces_ese_oficio'].nunique(dropna=True))}")
+    print(f"mediana_n_skills_essential : {float(d['n_skills_essential'].median()):.0f}")
+    print(f"max_veces_ese_oficio       : {int(d['veces_ese_oficio'].max())}")
+    print(f"filas_saber_skills_ok      : {int(d['saber_skills'].eq(SABER_OK).sum())}")
+    print(f"filas_sin_oficio           : {int(d['occupation_code'].isna().sum())}")
 
 
 if __name__ == "__main__":
