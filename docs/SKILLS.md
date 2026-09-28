@@ -258,6 +258,8 @@ veces_ese_oficio      # reincidencia de la persona
 No le asignes un número de relleno: el vacío ya dice lo que hay que saber, y un 0 sería una
 afirmación falsa sobre el 7,5 % del dataset.
 
+Esta selección de dos features es la que quedó implementada en los cuadernos de la sesión 4 (ver §10), junto con el binario de reincidencia.
+
 **Si te interesa el contraste saber / saber hacer, usa el ratio, no los conteos:**
 
 ```python
@@ -284,91 +286,87 @@ demanda media de 18 a 32 competencias», y eso es un hallazgo legítimo y útil.
 
 ---
 
-## 10. Estado actual: las skills NO están en la transformación
+## 10. Las skills en la transformación (`4.0` / `4.1`)
 
-**Esta sección es la que faltaba, y es la que hay que leer antes de usar la §9.**
+**Estado: HECHO.** La sección **2.5** de ambos cuadernos las incorpora a la `X`. Esta sección
+explica cómo y qué costó, porque las dos decisiones no son obvias.
 
-Los cuadernos `4.0_transformacion.ipynb` y `4.1_transformacion_sin_outliers.ipynb` **no las tienen en
-cuenta.** No fue una decisión en contra: cuando se integraron las skills al dataset
-solo se actualizó el texto que anuncia el tamaño del dataset (`376.567 x 14` → `x 20`). La lista de
-features que cada cuaderno construye no se tocó.
+### Qué entra y qué no
 
-Lo que escalan hoy, textualmente:
-
-| Celda | Qué hace | Columnas | ¿Skills? |
-|---|---|---|---|
-| 21 | `OneHotEncoder` | `emparejado`, `occupation_code` | no |
-| 25 | `RobustScaler` | `start_ord`, `end_ord`, `dur_q` | no |
-| 25 | `MinMaxScaler` | `univ_ord` | no |
-| 26 | Aporte a la distancia euclidiana | las 4 anteriores | no |
-| 28 | `X_num` para PCA | las 4 anteriores | no |
-
-Es decir, **la `X` que sale de la sesión 4 es exactamente la misma que antes de las skills**, y su
-PCA sigue auditando 4 variables. Todo lo que dice la §9 sobre qué usar como feature es, hoy,
-**una recomendación pendiente, no una descripción de lo que hace el pipeline.**
-
-### Agregarlas no es añadir una columna: hay que decidir el escalamiento
-
-`n_skills_essential` (rango 5–99) y `veces_ese_oficio` (rango 1–19) tienen escalas incompatibles
-con lo que ya hay. Y la celda 26 de 4.0 existe precisamente para medir eso: *«la columna con más
-unidades secuestra la métrica»*. Medido sobre una submuestra de 50.000 filas:
-
-| Columna | Rango | sd |
+| Columna | ¿Entra a la `X`? | Por qué |
 |---|---|---|
-| `start_ord` | 222 | 32,6 |
-| `end_ord` | 220 | 31,0 |
-| `dur_q` | 195 | 18,2 |
-| `n_skills_essential` | 94 | 13,3 |
-| `veces_ese_oficio` | 18 | 1,1 |
-| `univ_ord` | 4 | 1,1 |
+| `n_skills_essential` | sí, con `RobustScaler` | La demanda de competencias del oficio |
+| `veces_ese_oficio` | sí, con `RobustScaler` | La reincidencia, en magnitud (2 ≠ 19) |
+| `reincide` (= `veces > 1`) | sí, **sin escalar** | El mismo dato como 0/1, que es estable para el escalador |
+| `n_skills_competence` | no | Es `essential` repartido, no información nueva |
+| `n_skills_knowledge` | no | Ídem |
+| `n_skills_sin_tipo` | no | Es aritmética, no un atributo del cargo |
+| `saber_skills` | no | Es un filtro, no una variable |
 
-Aporte de cada columna a la distancia euclidiana (300 parejas aleatorias):
+El binario **no se escala** por la misma regla que el cuaderno ya aplicaba a las dummies y a las
+banderas: un 0/1 no gana nada con un escalador. Y `n_skills_essential` se incluye **aun siendo
+redundante con el one-hot de `occupation_code`**, porque en un modelo con distancia euclídea una
+variable numérica densa ordena a los vecinos de forma que 2.855 columnas dispersas no.
+
+### El costo: 7,5 % de las filas salen de la `X`
+
+`n_skills_essential` es `NaN` en las filas sin oficio clasificado, y `sklearn` no admite `NaN` en un
+escalador. Como el proyecto no imputa, la salida es dropearlas, y la pérdida se declara en el
+cuaderno en vez de esconderla:
+
+| | `4.0` (con cola larga) | `4.1` (sin cola larga) |
+|---|---|---|
+| filas antes | 376.567 | 341.090 |
+| filas que salen de la `X` | 28.304 (7,52 %) | 26.186 (7,68 %) |
+| filas usable para la `X` | **348.263** | **314.904** |
+| personas | 71.061 → 70.397 | 69.182 → 68.338 |
+
+Las que salen son exactamente las de `emparejado = 'unknown'` (25.805 / 23.886) más las de
+`emparejado = 'rescatado'` (2.499 / 2.300). Estas últimas sí tienen `occupation_code`: ESCO publica
+relaciones a nivel de ocupación, no de grupo ISCO, así que del código recuperado no hay nada que
+contar. Por eso el vacío ≠ 0 de la §4 importa acá también: si esas filas hubieran entrado con un 0
+de relleno, el modelo habría aprendido que «un puesto sin competencias» es una categoría real.
+
+### El escalamiento, que era la parte no obvia
+
+Agregadas **sin** escalar, las skills rompen la métrica. Medido sobre la submuestra de 50.000 filas
+de `4.0` (300 parejas aleatorias), aporte de cada columna a la distancia euclídea:
 
 | Escenario | `start_ord` | `end_ord` | `dur_q` | `univ_ord` | `n_skills` | `veces` |
 |---|---|---|---|---|---|---|
-| **Hoy (sin skills)** | 20,12 % | 21,64 % | **56,56 %** | 1,68 % | — | — |
-| Skills **sin escalar** | 43,61 % | 37,05 % | 11,44 % | 0,05 % | 7,81 % | **0,05 %** |
-| Skills **con `RobustScaler`** | 12,67 % | 13,62 % | 35,60 % | 1,06 % | 17,39 % | 19,66 % |
+| **Sin skills** (lo que había) | 20,12 % | 21,64 % | **56,56 %** | 1,68 % | — | — |
+| Skills **sin escalar** | 42,94 % | 38,00 % | 10,78 % | 0,03 % | 8,19 % | **0,05 %** |
+| Skills **con `RobustScaler`** (producción) | 12,09 % | 13,54 % | 32,51 % | 0,66 % | **17,68 %** | **19,74 %** |
 
-**Agregarlas sin escalar sería un desastre silencioso.** `n_skills_essential` duplicaría el peso de
-las dos fechas y dejaría a `univ_ord` en 0,05 %: KNN agruparía por demanda de competencia, no por
-trayectoria. Y `veces_ese_oficio` quedaría en **0,05 %** — invisible. Ese 0,05 % es lo que más
-engaña, porque una variable con 0,05 % de aporte parece inofensiva y en realidad está anulada por el
-escalamiento de otra.
+Dos cosas que la tabla deja claras y que no se ven en la §5:
 
-**Escaladas con `RobustScaler` pasan a 19,66 % y 17,39 %**: 37 % del aporte total combinado, y el
-comportamiento se invierte. La decisión de qué escalador va con qué columna no es cosmética: define
-por dónde se agrupan los vecinos.
+1. **`veces_ese_oficio` sin escalar vale 0,05 %.** No es «una variable que aporta poco»: es una
+   variable **anulada** por el escalamiento de otra. Con `RobustScaler` pasa a 19,74 %.
+2. **Sin las skills, `univ_ord` ya estaba en 0,03 %** y con ellas en producción sigue en 0,66 %.
+   Ese es un efecto lateral conocido de mezclar IQR con rango total, ya documentado como deuda
+   abierta en la sección 4.2 de los cuadernos. Las skills no lo crearon ni lo empeoraron.
 
-### El problema de los nulos
+En `4.1` el panorama es el mismo con otros números (fechas 83,75 % sin escalar; `n_skills` de 8,76 %
+a 14,24 % con `Robust`).
 
-`n_skills_essential` es `NaN` en el **7,5 %** de las filas (las 28.304 sin oficio clasificado), y
-`sklearn` no acepta `NaN` en un escalador. El proyecto tiene la regla de que ningún filtro imputa
-valores, así que la única salida honorable es **dropear esas filas**: la `X` pasa de 376.567 a
-**348.263** experiencias (−7,5 %).
+### Qué pasó con el PCA
 
-Eso es el precio de incluir las skills, y hay que decidirlo conscientemente. Las alternativas son
-imputar (prohibido por la regla del proyecto) o separar el análisis en dos universos.
+El audit de correlación ahora corre sobre **6** numéricas en vez de 4, y la conclusión no cambió:
+hacen falta **4 de 6** componentes para el 80 % de la varianza y la sexta no aporta nada. PCA
+sigue sin aplicar y sigue fuera de la `X` final.
 
-### Sobre `veces_ese_oficio`: quizás un binario sea mejor
+Lo interesante es **por qué** no comprime, y las competencias lo hacen visible: la correlación de
+`n_skills_essential` contra `start_ord` es **0,046** en `4.0` y **0,038** en `4.1`. Son casi
+ortogonales. Las fechas y la duración son una dependencia lineal entre sí; las competencias
+describen el *puesto*, no el *cuándo*. Son dimensiones que no se solapan, que es exactamente la
+condición para que un PCA no sirva.
 
-El 64,3 % de los valores es `1`, y la desviación es de apenas 1,1. Como variable continua aporta poco
-más que «¿volvió o no?». Si el objetivo es la señal de reincidencia, `veces_ese_oficio > 1`
-probablemente sea más estable para el escalador que el conteo crudo.
+### Cómo se verifica
 
-### Lo que hay que hacer para cerrarlo
-
-1. Agregar `n_skills_essential` y `veces_ese_oficio` a la lista de `NUM` de la celda 26, **con
-   `RobustScaler`**.
-2. Decidir el destino de las 28.304 filas `no_clasificado` (lo recomendado: excluirlas de la `X` y
-   documentar la pérdida).
-3. Repetir la auditoría de aporte a la distancia con las 6 columnas.
-4. Repetir el PCA de la celda 28, que hoy hardcodea 4 columnas en `range(1, 5)`.
-5. Actualizar la celda de validación de la `X` final, que hoy valida 4 columnas.
-6. Correr lo mismo en `4.0` y `4.1`.
-
-Hasta que eso pase, cualquier cifra de la §9 que diga «usá estas dos features» es consejo, no
-estado.
+Las dos celdas de la 2.5 comprueban, antes de dropear, que no haya ningún `0` y que el vacío
+coincida exacto con `saber_skills == 'no_clasificado'`. Y la celda de la `X` final sigue
+comprobando que no queden nulos ni dtypes no numéricos: `X_final` queda en
+(50.000 × 2.327) en `4.0` y (50.000 × 2.328) en `4.1`, con 0 nulos.
 
 ---
 
