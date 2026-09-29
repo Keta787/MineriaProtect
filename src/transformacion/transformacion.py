@@ -77,7 +77,35 @@ ORDEN_UNIV = {
     "PhD": 4,
 }
 
+# Las tres banderas del dataset limpio. Las tres son True exactamente cuando
+# `occupation_code` esta vacio.
 BANDERAS = ["es_unknown_ocupacion", "es_rescatado", "es_vigente"]
+
+# De las tres, solo UNA entra en la `X`. Las otras dos quedan constante False en el
+# universo de trabajo, y una columna constante es ruido con consecuencias:
+#
+#   - no aporta nada a una distancia euclidea (KNN, k-means, PCA): todas las filas
+#     estan a la misma distancia de ella, luego la dimension colapsa a 0;
+#   - infla el conteo de features (2.327 -> 2.325);
+#   - sobre todo, ENGAÑA cualquier lectura de importancia de variables: un modelo
+#     que le de peso distinto de cero a una constante no esta usando informacion,
+#     esta usando un artefacto del drop.
+#
+# No es un defecto del drop, es su consecuencia logica. El drop de la 2.5 se lleva
+# las filas sin dato de competencia, y esas son exactamente las que llevan estas dos
+# banderas en True. La `X` se construye solo con filas donde SI se conoce el oficio,
+# asi que "no se conoce el oficio" es False por construccion: es una tautologia, no
+# un dato. La informacion no se pierde, se muda al hecho de que esas filas no estan
+# en la `X`. Las banderas siguen en el dataset, donde si significan algo.
+#
+# `es_vigente` si entra: "el empleo sigue vigente" no tiene relacion con conocer el
+# oficio, asi que sobrevive al drop con sus dos valores.
+BANDERAS_EN_X = ["es_vigente"]
+
+# Las que quedan fuera, y por que. El `assert` de `codificar` verifica que sigan
+# siendo constantes: si alguna vez dejaran de serlo, el aviso salta en vez de que la
+# `X` cambie de forma silenciosa y todas las cifras citadas queden desactualizadas.
+BANDERAS_EXCLUIDAS = ["es_unknown_ocupacion", "es_rescatado"]
 
 # Los dos contadores de ESCO, listados una sola vez. `SKILLS` es el nombre que usa
 # la medicion de aporte a la distancia; `CONTADORES`, el de la conversion a
@@ -214,17 +242,39 @@ def submuestra(df: pd.DataFrame, rng: np.random.RandomState,
 
 
 def codificar(df_s: pd.DataFrame) -> dict:
-    """One-hot de las categoricas + banderas en 0/1.
+    """One-hot de las categoricas + las banderas que si aportan, en 0/1.
 
     Las banderas ya son one-hot de k-1: no pasan por `get_dummies` ni por
     escalador. Devuelve un dict con las claves `emparejado`, `ocupacion` y
     `banderas`.
+
+    De las tres banderas solo entra `es_vigente`. `es_unknown_ocupacion` y
+    `es_rescatado` quedan constante False en este universo, y una columna constante
+    no aporta nada a una distancia y falsea cualquier lectura de importancia de
+    variables. El razon completo esta en el comentario de `BANDERAS_EN_X`, arriba.
+
+    El `assert` es la parte que importa a futuro. Si alguien cambia la regla del drop
+    y esas banderas dejan de ser constantes, el universo de trabajo ya no seria "solo
+    filas con oficio conocido" y excluirlas seria una perdida real. El `assert` lo
+    dice en el momento en que se rompe, en vez de dejar la `X` con una forma
+    distinta a la que todos los documentos y salidas guardadas dan por hecha.
     """
+    for c in BANDERAS_EXCLUIDAS:
+        valores = sorted(df_s[c].unique())
+        assert valores == ["False"], (
+            f"{c} deja de ser constante en el universo de trabajo (valores: "
+            f"{valores}). Eso significa que el drop de la 2.5 ya no se lleva todas "
+            f"las filas sin oficio conocido, asi que {c} SI aporta informacion y "
+            f"tiene que entrar en la `X`: agreguela a BANDERAS_EN_X y saque el "
+            f"nombre de BANDERAS_EXCLUIDAS. Ademas la forma de la `X` cambia y hay "
+            f"que actualizar las cifras citadas en README.md y docs/SKILLS.md."
+        )
+
     dummies_emparejado = pd.get_dummies(
         df_s["emparejado"], prefix="emparejado", dtype=np.uint8)
     dummies_ocupacion = pd.get_dummies(
         df_s["occupation_code"], prefix="occupation", dtype=np.uint8)
-    flags = (df_s[BANDERAS]
+    flags = (df_s[BANDERAS_EN_X]
              .replace({"True": 1, "False": 0})
              .astype(np.uint8))
     return {"emparejado": dummies_emparejado,
@@ -275,7 +325,12 @@ def escalar(df_s: pd.DataFrame) -> dict:
 
 def armar_X(escalado: dict, codificado: dict, df_s: pd.DataFrame) -> pd.DataFrame:
     """Concatena las piezas en la `X` final, en el orden de `TODAS` mas las
-    dummies y las banderas al final."""
+    dummies y las banderas al final.
+
+    Al final entra una sola bandera, `es_vigente`. Las otras dos del dataset son
+    constante False aqui y se excluyen a proposito; el motivo esta en
+    `BANDERAS_EN_X`.
+    """
     return pd.concat([
         escalado["numericas"],   # start_ord_rob, end_ord_rob, dur_q_rob
         escalado["competencias"],  # n_skills_essential_rob, veces_ese_oficio_rob
@@ -283,5 +338,5 @@ def armar_X(escalado: dict, codificado: dict, df_s: pd.DataFrame) -> pd.DataFram
         df_s[BINARIA],           # 0/1, sin escalar
         codificado["emparejado"],  # emparejado_ok
         codificado["ocupacion"],  # occupation_<codigo>
-        codificado["banderas"],   # es_unknown_ocupacion, es_rescatado, es_vigente
+        codificado["banderas"],   # solo es_vigente (ver BANDERAS_EN_X)
     ], axis=1)

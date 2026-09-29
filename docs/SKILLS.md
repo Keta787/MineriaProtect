@@ -528,10 +528,30 @@ Y para (b):
 pd.get_dummies(df_s["emparejado"]).shape[1]     # 1, no 3
 ```
 
-**Decisión pendiente, no resuelta en el repo:** si se conservan, conviene registrarlas como
-**constantes** y no como features. Si se dropean las dos banderas constantes, `X_final` baja de 2.327
-a 2.325 columnas en `4.0` (y `emparejado_ok` es, por su parte, redundante con
-`occupation_code`, como ya se dice en la §9).
+**Decisión tomada: las dos banderas constantes quedan FUERA de la `X`.** De las tres
+banderas del dataset (`BANDERAS` en `src/transformacion/transformacion.py`) solo entra
+`es_vigente` (`BANDERAS_EN_X`). Las otras dos quedan constante `False` en el universo de
+trabajo, y por eso se excluyen (`BANDERAS_EXCLUIDAS`):
+
+- Una columna constante colapsa a 0 en la dimensión efectiva: todas las filas están a la
+  misma distancia de ella, así que no aporta a KNN ni a k-means.
+- Infla el conteo de features: `X_final` baja de 2.327 a **2.325** columnas en `4.0`
+  (2.328 → 2.326 en `4.1`).
+- Sobre todo, **engaña la importancia de variables**: un modelo que les dé peso distinto
+  de cero no está usando información, está usando el drop.
+
+No es un defecto del drop de la 2.5, es su consecuencia lógica. Las banderas son `True`
+exactamente cuando `occupation_code` está vacío, y el drop se lleva esas filas; como la
+`X` se construye solo con filas donde **sí** se conoce el oficio, «no se conoce el oficio»
+es `False` por construcción. La información no se pierde: se muda al hecho de que esas
+filas no están en la `X`, y las banderas siguen en el dataset, donde sí significan algo.
+
+`codificar()` tiene un `assert` que verifica que las excluidas sigan siendo constantes. Si
+alguien cambia la regla del drop y dejan de serlo, el aviso salta ahí en vez de que la `X`
+cambie de forma silenciosa y todas las cifras citadas queden desactualizadas.
+
+(`emparejado_ok` es, por su parte, redundante con `occupation_code`, como ya se dice en la
+§9: eso es otro caso —redundancia entre variables con señal—, no el de una constante.)
 
 ### El escalamiento, que era la parte no obvia
 
@@ -577,7 +597,7 @@ al módulo al extraer la transformación de los cuadernos, y conviene decirlo po
 anterior de esta línea decía que el check vivía en la celda.
 
 La celda de la `X` final, en cambio, sí sigue comprobando en el cuaderno que no queden nulos ni
-dtypes no numéricos: `X_final` queda en (50.000 × 2.327) en `4.0` y (50.000 × 2.328) en `4.1`,
+dtypes no numéricos: `X_final` queda en (50.000 × 2.325) en `4.0` y (50.000 × 2.326) en `4.1`,
 con 0 nulos y 0 columnas no numéricas en ambos.
 
 ---
@@ -602,7 +622,7 @@ entorno. Correrlos dos veces da el mismo archivo byte a byte.
 > `src/transformacion/` (librería, sin `__main__`), la fase 4 se reproduce abriendo
 > `notebooks/4.0_transformacion.ipynb` o `4.1_transformacion_sin_outliers.ipynb` y ejecutándolos:
 > los cuadernos importan el módulo y **imprimen**, el módulo **devuelve**. No se ejecuta con
-> `python` y no deja archivos: la `X` no se persiste (50.000 × ~2.327 en denso son ~116 MB, y
+> `python` y no deja archivos: la `X` no se persiste (50.000 × ~2.325 en denso son ~116 MB, y
 > el curso no pide el `.csv`), así que la evidencia de esa fase es la salida guardada del
 > cuaderno, no un derivado en `data/`. Los dos cuadernos se conservan y difieren solo en
 > `VERSION`.
