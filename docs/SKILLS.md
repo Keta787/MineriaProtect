@@ -2,7 +2,7 @@
 
 Qué son las seis columnas de competencias del dataset integrado, qué significan, qué se puede
 sacar de ellas y qué no. Este documento es la referencia del tema; para el detalle de por qué se
-tomó cada decisión de diseño, ver `docs/AUDITORIA_RAMA_PRUEBA.md` §5.6.
+tomó cada decisión de diseño, ver las secciones de decisiones del `README.md`. La auditoría de la rama (`docs/AUDITORIA_RAMA_PRUEBA.md`) está **fuera de git** y documenta una versión anterior del pipeline (era `train`, 1.506.445 filas); sirve como contexto, no como fuente de verdad.
 
 Las cifras de este documento son de la rama vigente (**test + val**: 376.567 experiencias,
 71.061 personas) y se verificaron corriendo el pipeline completo.
@@ -400,7 +400,7 @@ veces_ese_oficio      # reincidencia de la persona
 No le asignes un número de relleno: el vacío ya dice lo que hay que saber, y un 0 sería una
 afirmación falsa sobre el 7,5 % del dataset.
 
-Esta selección de dos features es la que quedó implementada en los cuadernos de la sesión 4 (ver §10), junto con el binario de reincidencia.
+Esta selección de dos features es la que quedó implementada en la fase de transformación (código en `src/transformacion/`, evidencia en los cuadernos de la sesión 4, ver §10), junto con el binario de reincidencia.
 
 **Si te interesa el contraste saber / saber hacer, usa el ratio, no los conteos:**
 
@@ -436,7 +436,8 @@ demanda media de 18 a 32 competencias», y eso es un hallazgo legítimo y útil.
 
 ## 10. Las skills en la transformación (`4.0` / `4.1`)
 
-**Estado: HECHO.** La sección **2.5** de ambos cuadernos las incorpora a la `X`. Esta sección
+**Estado: HECHO.** La sección **2.5** de ambos cuadernos las incorpora a la `X`; el cálculo vive
+en `src/transformacion/`, que es lo que ambos ejecutan. Esta sección
 explica cómo y qué costó, porque las dos decisiones no son obvias.
 
 ### Qué entra y qué no
@@ -568,10 +569,16 @@ condición para que un PCA no sirva.
 
 ### Cómo se verifica
 
-Las dos celdas de la 2.5 comprueban, antes de dropear, que no haya ningún `0` y que el vacío
-coincida exacto con `saber_skills == 'no_clasificado'`. Y la celda de la `X` final sigue
-comprobando que no queden nulos ni dtypes no numéricos: `X_final` queda en
-(50.000 × 2.327) en `4.0` y (50.000 × 2.328) en `4.1`, con 0 nulos.
+Los dos checks de la 2.5 —que no haya ningún `0` y que el vacío coincida exacto con
+`saber_skills == 'no_clasificado'`— se calculan **antes** del drop, en
+`transformacion.universo_con_competencias` (`src/transformacion/`); la celda 2.5 de los
+cuadernos los imprime ya medidos (`info["ceros"]`, `info["vacio_exacto"]`). El cálculo se movió
+al módulo al extraer la transformación de los cuadernos, y conviene decirlo porque la versión
+anterior de esta línea decía que el check vivía en la celda.
+
+La celda de la `X` final, en cambio, sí sigue comprobando en el cuaderno que no queden nulos ni
+dtypes no numéricos: `X_final` queda en (50.000 × 2.327) en `4.0` y (50.000 × 2.328) en `4.1`,
+con 0 nulos y 0 columnas no numéricas en ambos.
 
 ---
 
@@ -590,6 +597,23 @@ python src/limpieza/dividir_por_outliers.py  # sin cola larga              (341.
 
 Los cinco scripts son deterministas: sin aleatoriedad, sin fechas, sin orden dependiente del
 entorno. Correrlos dos veces da el mismo archivo byte a byte.
+
+> **La transformación no es un sexto script.** Desde que el código salió de los cuadernos a
+> `src/transformacion/` (librería, sin `__main__`), la fase 4 se reproduce abriendo
+> `notebooks/4.0_transformacion.ipynb` o `4.1_transformacion_sin_outliers.ipynb` y ejecutándolos:
+> los cuadernos importan el módulo y **imprimen**, el módulo **devuelve**. No se ejecuta con
+> `python` y no deja archivos: la `X` no se persiste (50.000 × ~2.327 en denso son ~116 MB, y
+> el curso no pide el `.csv`), así que la evidencia de esa fase es la salida guardada del
+> cuaderno, no un derivado en `data/`. Los dos cuadernos se conservan y difieren solo en
+> `VERSION`.
+
+En esa fase la aleatoriedad sí existe y por eso está atada: un único `RandomState` compartido
+(`rng = np.random.RandomState(T.SEED_MUESTRA)`) se crea en la celda de configuración y se pasa
+después a `submuestra()` y a `auditoria_pca()`, en ese orden, para que el consumo coincida con el
+de la versión anterior. Y el `KBinsDiscretizer` de la 2.4 va con `subsample=None` a propósito: en
+sklearn 1.9.1 `fit` hace `resample(..., random_state=None)` sobre una submuestra de 200.000 filas,
+así que con 376.567 filas los bordes salían distintos en cada corrida (regla D5 incumplida). Ese
+bloque es exploratorio y no entra en la `X`, pero sus bordes estaban citados en el cuaderno.
 
 > La excepción son los CSV de bitácora en `logs/`, que llevan una marca de tiempo ISO y por eso sí
 > cambian en cada corrida. La afirmación es sobre los datos, no sobre los logs. Verificado por hash:

@@ -2,7 +2,7 @@
 
 JobPath es el proyecto de minería de datos que estudia las **trayectorias laborales** reconstruidas por **JobHop v2** y las enriquece con la taxonomía **ESCO v1.2.1** para descubrir patrones de transición ocupacional después de la formación académica. El proyecto sigue las metodologías **KDD** y **CRISP-DM**: sobre el **dato crudo** de JobHop (particiones CSV train/test/val) se integran las fuentes (ESCO) y se ejecutan la unión (**test + val**) y la limpieza en **CSV**, dejando el dataset listo para construir las secuencias por persona (`Sₚ`) y aplicar la minería de secuencias.
 
-> **Estado del proyecto (TL;DR):** ✅ Selección, Preprocesamiento **y Transformación a features HECHOS y verificados** (integrado `empleos.csv` **376.567 × 17**; limpio `empleos_limpio.csv` **376.567 × 20** y variante sin cola larga **341.090 × 20**; codificación ordinal/one-hot, escalado robusto/minmax y auditoría PCA en `notebooks/4.x`, **incluidas las competencias ESCO**) · ⏳ **Pendiente:** construcción de secuencias por persona (`Sₚ`), Minería y Evaluación.
+> **Estado del proyecto (TL;DR):** ✅ Selección, Preprocesamiento **y Transformación a features HECHOS y verificados** (integrado `empleos.csv` **376.567 × 17**; limpio `empleos_limpio.csv` **376.567 × 20** y variante sin cola larga **341.090 × 20**; codificación ordinal/one-hot, escalado robusto/minmax y auditoría PCA en `src/transformacion/` (evidencia en `notebooks/4.x`), **incluidas las competencias ESCO**) · ⏳ **Pendiente:** construcción de secuencias por persona (`Sₚ`), Minería y Evaluación.
 >
 > ℹ️ La `X` que sale de `4.0`/`4.1` usa **7 variables**: `start_ord`, `end_ord`, `dur_q` y `n_skills_essential` / `veces_ese_oficio` con `RobustScaler`, `univ_ord` con `MinMaxScaler`, y el binario `reincide` sin escalar. Como el 7,5 % de las filas no tiene oficio clasificado y `sklearn` no admite `NaN` en un escalador, **esas filas salen de la `X`** (376.567 → 348.263 y 341.090 → 314.904) y la pérdida se declara en el cuaderno. Ver `docs/SKILLS.md` §10.
 
@@ -71,7 +71,16 @@ El estudio descubre y evalúa patrones presentes en los datos; trabajar (o no) e
 
 Fuentes públicas declaradas (sesión 2: ≥2 fuentes, ≥1 API o base pública): JobHop v2 se aloja en **Hugging Face** (descarga oficial del dato crudo) y ESCO es la base oficial de la **Unión Europea** con **API REST documentada** (`https://data.europa.eu/esco/api`). El cuaderno `2.0` §5b demuestra la consulta en vivo sobre un `conceptUri` real del dataset, con fallback informativo si la red de evaluación no alcanza el dominio.
 
-ESCO no aporta trayectorias: interpreta las ocupaciones para posibilitar el análisis de transiciones. Sobre el integrado test+val, `matched_code` cruza **directamente** con `occupations.code` en 2.855 de 2.873 códigos únicos (93,1 % de las filas, emparejado `ok` 348.263); el resto se rescata por prefijo (grupo ISCO de 4 dígitos, `rescatado` 2.499) o se flagga (`unknown` 25.805).
+ESCO no aporta trayectorias: interpreta las ocupaciones para posibilitar el análisis de transiciones. Sobre el integrado test+val, `matched_code` cruza **directamente** con `occupations.code` en 2.855 de los 2.873 códigos distintos, o sea el **99,4 % de los _códigos_**; sobre filas eso deja **348.263 experiencias emparejadas `ok`, el 92,5 % de las 376.567**. Los dos porcentajes son ciertos y no se pueden intercambiar: el 99,4 % mide cuántos oficios de ESCO quedaron cubiertos y el 92,5 % cuánto pesa esa cobertura en la `X`.
+
+Las 28.304 filas sin cobertura se reparten en dos estados que se suelen confundir:
+
+| Estado | Filas | Qué es | De dónde sale el código |
+|---|---|---|---|
+| `unknown` | 25.805 | sin coincidencia en ESCO | ninguno: `occupation_code` queda vacío y se levanta la bandera `es_unknown_ocupacion` |
+| `rescatado` | 2.499 | llegó con `matched_code` pero sin código utilizable | **se rescata en la fase 4, no aquí**: `transformacion.fusionar_rescatado` recorta el prefijo ISCO de 4 dígitos y recupera 3 códigos |
+
+Por eso las filas sin `occupation_code` (**28.304**) son más que las `es_unknown_ocupacion` (**25.805**): la diferencia son exactamente las 2.499 rescatadas, que en el CSV limpio todavía no tienen código. Quien solo lea el segundo número se queda 2.499 filas sin explicar.
 
 ### Competencias ESCO: qué significa y qué no
 
@@ -107,7 +116,7 @@ Esa columna es la **regla de guardado, no la de lectura**: para mostrar el perfi
 | `empleos.csv` (integrado, unión test+val) | — | 376.567 × 17 (inmutable) | Integración validada (`integrar_empleos.py`); cruce N:1 por persona + 6 columnas de competencias |
 | `competencias_por_oficio.csv` | — | **67.600 × 4** | Tabla normalizada de competencias ESCO: 1 fila = 1 competencia de 1 oficio (`generar_competencias.py`); 3.039 oficios, 11.378 habilidades distintas |
 | `empleos_limpio.csv` (integrado) | 376.567 × 17 | **376.567 × 20** | Pipeline en 7 fases: 0 filas con fechas futuras en test+val (MCAR) + 3 banderas `es_*` |
-| `empleos_limpio_sin_outliers.csv` | 376.567 × 20 | 341.090 × 20 | Variante sin cola larga (`dur_Q ≥ 25`, IQR de Tukey); −35.477 filas / 24.687 personas |
+| `empleos_limpio_sin_outliers.csv` | 376.567 × 20 | 341.090 × 20 | Variante sin cola larga (`dur_Q ≥ 25`, IQR de Tukey): **−35.477 filas (−9,4 %)**. En personas el efecto es bastante menor: de 71.061 personas con cola larga, **69.182** conservan al menos una experiencia y solo **1.879** desaparecen por completo (−2,6 %) |
 
 Validación final del limpio (**6/6**): duplicados · duplicados por llave natural · nulos sin bandera · nulos de ocupación sin bandera · fechas futuras · `start > end`. Lectura siempre como texto (`dtype=str`) para conservar ceros a la izquierda en los códigos ISCO/ESCO.
 
@@ -145,12 +154,15 @@ JobPath/
     │   ├── filtros.py              # selecciones: nivel, grupo ISCO, ocupación, periodo, vigencia
     │   └── indicadores.py          # duración, IQR, transiciones, brechas, crosstabs, banderas,
     │                               #   perfil de competencias por persona, salto de competencias
-    └── limpieza/                   # PREPROCESAMIENTO/PREPARACION
-        ├── limpiar_datos.py        # data/01_raw/ → data/02_interim/ (limpieza de fuentes)
-        ├── integrar_empleos.py      # unión test+val + ESCO → data/03_processed/empleos.csv
-        ├── generar_competencias.py # ESCO → competencias_por_oficio.csv (tabla normalizada)
-        ├── limpiar_empleos.py      # data/03_processed/empleos.csv → empleos_limpio.csv (7 fases)
-        └── dividir_por_outliers.py # empleos_limpio.csv → empleos_limpio_sin_outliers.csv (IQR)
+    ├── limpieza/                   # PREPROCESAMIENTO/PREPARACION
+    │   ├── limpiar_datos.py        # data/01_raw/ → data/02_interim/ (limpieza de fuentes)
+    │   ├── integrar_empleos.py      # unión test+val + ESCO → data/03_processed/empleos.csv
+    │   ├── generar_competencias.py # ESCO → competencias_por_oficio.csv (tabla normalizada)
+    │   ├── limpiar_empleos.py      # data/03_processed/empleos.csv → empleos_limpio.csv (7 fases)
+    │   └── dividir_por_outliers.py # empleos_limpio.csv → empleos_limpio_sin_outliers.csv (IQR)
+    └── transformacion/             # TRANSFORMACION (sesión 4) — la X
+        ├── transformacion.py       # features, codificación, escalado, ensamble de X_final
+        └── diagnostico.py          # Tukey, aporte a la distancia, PCA, comprobaciones del cruce
 ```
 
 Reglas de oro: originales intocables · derivados regenerables (pipelines **deterministas**) · rutas relativas (la raíz se resuelve buscando `data/` hacia arriba) · salida del cruce única en **CSV** · toda decisión de negocio documentada en bitácora (`logs/`).
@@ -161,7 +173,7 @@ Reglas de oro: originales intocables · derivados regenerables (pipelines **dete
 |---|---|---|---|---|
 | 1 | **Selección** | Comprensión del negocio | ✅ **HECHO** | Acta `1.0`; objetivo, preguntas y fuentes (JobHop v2 + ESCO v1.2.1) |
 | 2 | **Preprocesamiento** | Comprensión y preparación de datos | ✅ **HECHO** | Fuentes limpias (`02_interim`); integrado validado; `empleos_limpio.csv` (20 columnas, incluye 6 de competencias ESCO) y variante sin cola larga; **transformación a features** (ordinal/one-hot/escalado/PCA) en `4.0` y `4.1` — competencias ESCO incorporadas a la `X` en la sección 2.5 (`docs/SKILLS.md` §10) |
-| 3 | **Transformación** | Preparación (hacia modelado) | ✅ **HECHO** (features listas) | Codificación y escalado entregados en `notebooks/4.x`, **competencias ESCO incluidas** (sección 2.5); resta la construcción de secuencias por persona (`Sₚ`); insumos listos en `src/filtro/` |
+| 3 | **Transformación** | Preparación (hacia modelado) | ✅ **HECHO** (features listas) | Codificación y escalado en `src/transformacion/`, ejecutados y evidenciados por `notebooks/4.x`, **competencias ESCO incluidas** (sección 2.5); resta la construcción de secuencias por persona (`Sₚ`); insumos listos en `src/filtro/` |
 | 4 | **Minería** | Modelado | ⏳ **PENDIENTE** | Técnica de minería de secuencias/transiciones a seleccionar |
 | 5 | **Interpretación y evaluación** | Evaluación | ⏳ **PENDIENTE** | Patrones juzgados: frecuentes, consistentes, interpretables, útiles |
 | 6 | **Conocimiento** | Despliegue | ⏳ **PENDIENTE** | Caracterización de patrones e informe final |
@@ -184,7 +196,9 @@ Limpia las 3 particiones CSV de JobHop (`train`/`test`/`val`: elimina filas sin 
 
 **`src/filtro/filtros.py` y `src/filtro/indicadores.py`** — biblioteca reutilizable de **transformación**: filtros (nivel educativo, grupo ISCO, ocupación, periodo, vigentes) e indicadores (duración trimestral inclusiva, distribución, medianas por grupo/nivel, crosstabs, transiciones consecutivas, proporción que conserva el grupo, primera→segunda ocupación, brechas entre empleos, personas solapadas, resumen de banderas). Sobre la tabla de competencias añaden `cargar_competencias()`, `perfil_persona()` (trayectoria de una persona con las competencias que exigía cada contrato) y `salto_competencias()` (índice de Jaccard entre contratos consecutivos). Son los insumos de la fase 3 (construcción de `Sₚ`).
 
-**`notebooks/`** — reproducen y exhiben cada fase con evidencia impresa y outputs persistidos: `1.0` (acta/diseño), `2.0` (selección de fuentes + carga defensiva + EDA + diagnóstico de calidad + API ESCO), `3.0` (pipeline de limpieza ejecutado en vivo, validación 6/6, bitácora, división con/sin cola larga). De la **sesión 4 (transformación)**, `4.0_transformacion.ipynb` (sobre `empleos_limpio.csv`, con cola larga) y `4.1_transformacion_sin_outliers.ipynb` (sobre la variante sin cola larga) comparten un pipeline parametrizado por `VERSION` (una celda de configuración elige el CSV):
+**`src/transformacion/transformacion.py` y `src/transformacion/diagnostico.py`** — la fase de **transformación** (sesión 4) como código, no como cuaderno. `transformacion.py` arma la `X` en orden: carga la versión pedida, fusiona el código recuperado de las filas rescatadas, deriva los ordinales (trimestre, duración, nivel educativo), recorta el universo sin dato de competencias midiendo el costo, toma la submuestra, codifica (one-hot + banderas) y escala por grupos. `diagnostico.py` produce las medidas que **justifican** esas decisiones: Tukey, el aporte de cada columna a la distancia euclidea, el PCA y las comprobaciones del cruce con ESCO. Ninguna de las dos imprime: devuelven los datos y los cuadernos los formatean, porque el texto que las justifica es parte del entregable. Salieron de los cuadernos 4.0/4.1 y la `X` que producen es idéntica, bit a bit, a la que producían antes (verificado diffando las 225 líneas de salida de cada cuaderno).
+
+**`notebooks/`** — reproducen y exhiben cada fase con evidencia impresa y outputs persistidos: `1.0` (acta/diseño), `2.0` (selección de fuentes + carga defensiva + EDA + diagnóstico de calidad + API ESCO), `3.0` (pipeline de limpieza ejecutado en vivo, validación 6/6, bitácora, división con/sin cola larga). De la **sesión 4 (transformación)**, `4.0_transformacion.ipynb` (sobre `empleos_limpio.csv`, con cola larga) y `4.1_transformacion_sin_outliers.ipynb` (sobre la variante sin cola larga) comparten un pipeline parametrizado por `VERSION` (una celda de configuración elige el CSV). El cálculo no vive en los cuadernos sino en `src/transformacion/`: los dos importan el mismo módulo y sus 18 celdas de código difieren **en una sola línea**, la del `VERSION`. Los cuadernos quedan como narrativa y evidencia;
 
 1. **Justificación por categoría** de por qué cada columna es ordinal (jerarquía real: fechas `Qn AAAA`, `university_level`, `isco_level`) o one-hot (sin orden: `emparejado`, `occupation_code`, banderas `es_*`) — con auditoría de redundancias (1:1, prefijos, constantes) que descarta `matched_code`, `occupation_label`, `isco_group*`.
 2. **Codificación:** ordinal `año×4+trimestre` + `KBinsDiscretizer` (quantile, demo) para fechas; mapeo manual 0–4 para educación; `get_dummies` (demo) y `OneHotEncoder` sparse (producción) para las nominales; banderas como 0/1 enteros.
@@ -195,7 +209,7 @@ Se ejecutan de principio a fin sin errores (núcleo `python3` 3.14.7) y entregan
 
 ## Decisiones técnicas clave
 
-- **Salida única en CSV para el cruce:** `empleos.csv`, `empleos_limpio.csv` y `empleos_limpio_sin_outliers.csv` se mantienen exclusivamente en CSV (`data/03_processed/`), regenerables desde los scripts. Los CSV no se versionan por tamaño (41–48 MB) y la estructura de la carpeta se conserva en git con `.gitkeep`.
+- **Salida única en CSV para el cruce:** `empleos.csv`, `empleos_limpio.csv` y `empleos_limpio_sin_outliers.csv` se mantienen exclusivamente en CSV (`data/03_processed/`), regenerables desde los scripts. Los CSV no se versionan por tamaño (**48–57 MiB**, es decir 50,2 / 57,4 / 51,9 MB decimales) y la estructura de la carpeta se conserva en git con `.gitkeep`.
 - **Competencias en tabla aparte, no en columna:** los nombres van en `competencias_por_oficio.csv` (1 fila = 1 competencia de 1 oficio) porque son un atributo del **oficio**, no de la persona: 2.855 oficios distintos para 376.567 experiencias. Guardarlos en cada fila los repetiría ~376.000 veces (+230 MB) y rompería la llave primaria. La unión es N:1 por `occupation_code`, que **ya existe en los tres CSV**: no hizo falta modificar ninguno.
 - **Una fila por competencia, no por oficio:** elegir la forma larga (67.600 filas) y no la ancha (3.039 filas con los nombres en un texto) permite preguntar *"¿qué oficios exigen `welding techniques`?"* con un `groupby` en vez de partir texto en 3.039 filas — que es justamente la pregunta de investigación. Cuesta 3 MiB más y evita el `str.split` en cada consulta.
 - **`n_skills_essential` es caché verificada, no un dato independiente:** se conserva (está dentro de la `X` de `4.0`/`4.1` y no cuesta nada) pero es derivable de la tabla de competencias —se comprobó que la reproduce en los 2.855 oficios, con 0 discrepancias—. `generar_competencias.py` lo contrasta en cada corrida: si el puente ESCO se rompiera, el pipeline cortaría con diagnóstico en vez de dejar dos números distintos circulando. La redundancia no se elimina, se vigila.
@@ -223,7 +237,7 @@ Deudas formales heredadas para la fase de minería:
 | # | Decisión | Pregunta a resolver |
 |---|---|---|
 | D1 | Tratamiento de `unknown` en minería | ¿Se excluyen, se marcan como paso nulo o se analizan como segmento propio las filas con `es_unknown_ocupacion`? |
-| D2 | Empleos simultáneos / pluriempleo (18.749 claves cortas) | ¿Cómo se concreta la regla de negocio "transición" en secuencias con pluriempleo conservado? |
+| D2 | Empleos simultáneos / pluriempleo (18.749 filas repetidas) | ¿Cómo se concreta la regla de negocio "transición" en secuencias con pluriempleo conservado? |
 | D3 | ~~Enriquecimiento temático futuro~~ | **RESUELTO**: las competencias ESCO ya están agregadas al integrado como 6 columnas de contadores (`saber_skills`, `n_skills_essential`, `n_skills_competence`, `n_skills_knowledge`, `n_skills_sin_tipo`, `veces_ese_oficio`). `greenShare` se descartó por no responder a la pregunta de investigación |
 | D4 | Técnica de minería y destino de las secuencias | ¿Qué técnica y dónde se persiste `Sₚ` (misma regla: CSV + original intocable)? |
 
@@ -270,7 +284,7 @@ Los scripts resuelven la raíz del proyecto buscando hacia arriba la carpeta `da
 - **Alcance geográfico:** los datos provienen de Flandes, Bélgica; los hallazgos no describen un mercado laboral colombiano.
 - **ESCO solo enriquece:** no aporta trayectorias; sin ella, `matched_code` no es interpretable.
 - **Censura y ausencia sin imputar:** `Present` y `unknown` se conservan con banderas; su rol en la minería está en discusión (D1).
-- **Pluriempleo conservado:** las 18.749 claves cortas simultáneas se mantienen; la regla de "transición" se define en la fase de transformación (D2).
+- **Pluriempleo conservado:** sobre la llave natural `(persona, inicio, fin)` hay **18.749 filas de más** —el mismo periodo repetido, por un cargo simultáneo o por una transición real dentro del mismo trimestre—, que equivalen a **357.818 periodos distintos**. El nombre "clave corta" es engañoso: lo que se cuenta son filas de más dentro de un grupo, no grupos; un grupo no puede estar "corto". Se conservan todas, y la regla de "transición" se define en la fase de transformación (D2).
 - **Técnica de minería por definir:** se fija tras explorar la estructura final de las secuencias.
 - **API ESCO dependiente de red:** la demostración en vivo (§5b de `2.0`) requiere acceso a `data.europa.eu/esco/api` desde la máquina que la ejecute.
 
@@ -282,7 +296,7 @@ Los scripts resuelven la raíz del proyecto buscando hacia arriba la carpeta `da
 4. `notebooks/2.0_EDA_y_seleccion.ipynb` — fuentes, carga defensiva, EDA y diagnóstico.
 5. `notebooks/3.0_preprocesamiento.ipynb` — pipeline de limpieza, validación y bitácora.
 6. `notebooks/4.0_transformacion.ipynb` y `4.1_transformacion_sin_outliers.ipynb` — transformación a features (codificación, escalado, PCA) en ambas versiones.
-7. **Código:** `src/limpieza/` (pipelines) y `src/filtro/` (análisis reutilizable).
+7. **Código:** `src/limpieza/` (pipelines), `src/filtro/` (análisis reutilizable) y `src/transformacion/` (la `X` de la sesión 4).
 
 ## Referencias
 
