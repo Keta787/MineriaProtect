@@ -270,26 +270,120 @@ aritmético, no un atributo del cargo.
 
 ---
 
-## 8. Los nombres no están en el pipeline
+## 8. Los nombres: la tabla `competencias_por_oficio.csv`
 
-Solo hay contadores. Los nombres de las competencias se recuperan bajo demanda desde la fuente, con
-tres funciones de `src/filtro/indicadores.py`:
+Los nombres de las competencias **sí están en el pipeline**, pero no dentro de `empleos_limpio.csv`:
+viven en una tabla aparte, `data/03_processed/competencias_por_oficio.csv`, con **una fila por (oficio,
+competencia)**. La produce `src/limpieza/generar_competencias.py`.
+
+### Por qué una tabla y no una columna
+
+Por el motivo de la §5 (los nombres son largos: 659 caracteres de promedio) y por uno propio: las
+competencias son un atributo del **oficio**, no de la persona. Hay **3.039 oficios** para 71.061
+personas y 376.567 experiencias, así que escribirlas en cada fila las repetiría unas 376.000 veces
+(+230 MB). En su propia tabla se escriben **una vez por oficio** y se unen con un cruce N:1 por
+`occupation_code`, que ya existe en los tres CSV del pipeline. **No hizo falta modificar ninguno.**
+
+### La forma de la tabla
+
+```
+occupation_code | occupation_label         | habilidad_nombre                | habilidad_tipo
+9111.1          | domestic cleaner         | cleaning techniques             | knowledge
+9111.1          | domestic cleaner         | remove dust                    | skill/competence
+9111.1          | domestic cleaner         | make the beds                  | skill/competence
+...
+```
+
+| | |
+|---|---|
+| Filas | **67.600** (1 por par oficio × competencia) |
+| Oficios | **3.039** |
+| Habilidades distintas | **11.378** |
+| Peso | 5,02 MiB |
+
+**"1 fila = 1 competencia" es la regla de guardado, no la de lectura.** Para mostrar el perfil de un
+cargo se agrupa por `occupation_code` y sale una línea con todas sus competencias; eso hace
+`perfil_persona()`. Un cargo con 20 competencias ocupa 20 filas en el CSV y se muestra como una sola
+línea de 20 nombres.
+
+**Por qué no la forma ancha** (3.039 filas con los nombres dentro de un texto delimitado): permite
+preguntar *«¿qué oficios exigen `welding techniques`?»* o *«¿qué hay en común entre horneador y
+welder?»* con un `groupby`, en vez de partir texto en 3.039 filas cada vez. Eso es justamente la
+pregunta de investigación, y cuesta 3 MB más.
+
+### La tabla es un superconjunto del dataset
+
+La tabla describe a **ESCO** (3.039 oficios); JobHop solo usa **2.855**. Los 184 oficios restantes
+(3.693 competencias) no aparecen en ninguna fila de `empleos_limpio.csv` y están a propósito, para
+poder ampliar sin volver a la fuente. No es una discrepancia.
+
+### Las dos fuentes de verdad, vigiladas
+
+`n_skills_essential` **se conserva** en los CSV del pipeline (está dentro de la `X` de `4.0`/`4.1` y no
+cuesta nada), pero deja de ser un dato independiente: es una **caché desnormalizada** de esta tabla.
+`generar_competencias.py` lo verifica en cada corrida, y lo verifica **por los cuatro contadores**:
+
+```
+n_skills_essential     reproduce todos los tipos    oficios que no cuadran: 0
+n_skills_competence    reproduce skill/competence   oficios que no cuadran: 0
+n_skills_knowledge     reproduce knowledge          oficios que no cuadran: 0
+n_skills_sin_tipo      reproduce sin_tipo           oficios que no cuadran: 0
+```
+
+El contraste se restringe a los 2.855 oficios que JobHop usa. Comparar también los otros 184 daría
+`NaN != NaN` y 184 falsos positivos — la trampa documentada en la §12, pero al revés.
+
+Esto no elimina la redundancia: la convierte en una **red de seguridad**. Si el puente ESCO se
+rompe, el pipeline corta con diagnóstico en vez de dejar dos números distintos circulando.
+
+### Cómo usarla
 
 ```python
 import indicadores as I
 
-rel = I.cargar_relaciones()                       # 67.600 pares / 3.039 oficios, con occupation_code
-I.skills_de_ocupacion(rel, "8331.1")             # las competencias de UN cargo
-I.skills_de_persona(empleos, rel)                 # las de TODAS las experiencias de una persona
-I.resumen_competencias(empleos)                   # una fila por oficio, con los contadores
+comp = I.cargar_competencias()                       # 67.600 × 4, la tabla normalizada
+I.competencias_por_oficio(comp)                      # {occupation_code: [nombres]}
+I.perfil_persona(empleos, comp, "100013")            # trayectoria con las competencias de cada cargo
+I.salto_competencias(empleos, comp)                  # (detalle, resumen) del Jaccard entre contratos
+
+# El camino viejo sigue vivo y da el mismo resultado:
+rel = I.cargar_relaciones()                          # lee el puente ESCO crudo
+I.skills_de_ocupacion(rel, "8331.1")                 # las competencias de UN cargo
+I.skills_de_persona(empleos, rel)                    # las de TODAS las experiencias de una persona
+I.resumen_competencias(empleos)                      # una fila por oficio, con los contadores
 ```
 
-La razón de que estén fuera del pipeline es la de §5: los nombres son largos (659 caracteres
-promedio), y meterlos como columna agregada añadiría 230 MB al dataset principal sin ganar nada que
-el merge no dé en un segundo.
+`cargar_competencias()` es la vía preferida: el archivo existe, el salto `code` → `occupationUri` ya
+está hecho y validado, y no depende de que la fuente ESCO siga donde estaba.
+`cargar_relaciones()` se conserva como lectura directa de la fuente y como referencia de contraste.
 
-`skills_de_persona()` devuelve **una fila por (`resume_id`, `skill_label`)**: el caso del taxista de
-19 veces da **33 skills únicas**, no 19 × 33 = 627. La repetición ya está en `veces_ese_oficio`.
+**Sobre el reparto de las competencias**, que no se había medido: las 11.378 habilidades son muy
+específicas y su distribución es de cola larga. Sobre los 67.600 pares, las **10** habilidades más
+frecuentes cubren el **3,3 %**, las **100** cubren el **17,2 %** y las **1.000** el **56,0 %**: hace
+falta llegar a un cuarto de las habilidades para cubrir la mitad de los pares. No son un puñado de
+"habilidades generales" sino miles de competencias específicas de cada puesto — lo que refuerza que
+la unidad útil de análisis sea el **oficio** y no un "perfil de competencias" promedio.
+
+### El salto entre contratos
+
+`salto_competencias()` mide el **índice de Jaccard** entre las competencias que exigían dos contratos
+consecutivos de una misma persona (`|A ∩ B| / |A ∪ B|`). Sobre 249.323 transiciones: **mediana 0,00** y
+**53,5 %** sin compartir **ni una sola** competencia. Es decir, más de la mitad de los cambios de
+oficio no tocan el conjunto de competencias exigidas.
+
+Dos criterios, ambos iguales a los de `transiciones_consecutivas` para que los dos indicadores de
+transición del proyecto sean comparables:
+
+- Se eliminan los periodos repetidos exactos (misma persona, mismo inicio, mismo fin). Ojo: de los
+  15.290 grupos repetidos solo **2.127** tienen un único cargo (ahí sí es duplicado); los otros
+  **13.163** son cargos **distintos en el mismo periodo**, o sea pluriempleo simultáneo. Un trabajo
+  simultáneo no es una transición.
+- Un periodo **sin oficio clasificado rompe la cadena**: no se salta para emparejar los trabajos de los
+  lados. Si alguien tiene un hueco de tres años cuyo cargo desconocemos, no se puede afirmar que pasó
+  directamente de A a B.
+
+Como dentro de un oficio no hay variación (§3), este indicador mide **cuánto cambian los requisitos
+entre dos puestos**, no cuánto cambian las capacidades de una persona.
 
 ---
 
@@ -326,6 +420,12 @@ modelo ya incluye `occupation_label` o `isco_group_label` one-hot, la informaci�
 variable no agrega señal, solo costo. Elige una de las dos formas. La ventaja de quedarse con el
 número es comparabilidad y escalado; la de quedarse con la etiqueta es no perder la identidad del
 oficio.
+
+**Son dos redundancias distintas, y conviene no mezclarlas.** La de **almacenamiento** (el número
+está en el CSV y además en la tabla de la §8) ya se resolvió: se conserva porque no cuesta nada, y se
+vigila con un assert en cada corrida. La de **análisis** (si el número entra o no en la `X` como
+variable) sigue abierta y es una decisión de modelado, no de datos: depende de si se va a usar la
+identidad del oficio como etiqueta one-hot o su exigencia como número, y no de cómo se guarde.
 
 **Y una advertencia metodológica**, si esto llega a un informe: como el conteo es por oficio y no
 por persona, un análisis de «personas con más habilidades» está mal construido desde el inicio. Lo
@@ -477,16 +577,18 @@ comprobando que no queden nulos ni dtypes no numéricos: `X_final` queda en
 
 ## 11. Reproducirlo
 
-Las skills entran en la fase de integración, antes de cualquier limpieza. El orden importa:
+Las skills entran en la fase de integración, antes de cualquier limpieza. La tabla de competencias se
+genera después de la integración, porque se contrasta contra sus contadores. El orden importa:
 
 ```bash
 python src/limpieza/limpiar_datos.py         # crea data/02_interim/SKILLS/ (el puente limpio)
 python src/limpieza/integrar_empleos.py      # + 6 columnas → empleos.csv   (376.567 × 17)
+python src/limpieza/generar_competencias.py  # tabla de competencias        (67.600 × 4)
 python src/limpieza/limpiar_empleos.py       # + 3 banderas → *_limpio.csv  (376.567 × 20)
 python src/limpieza/dividir_por_outliers.py  # sin cola larga              (341.090 × 20)
 ```
 
-Los cuatro scripts son deterministas: sin aleatoriedad, sin fechas, sin orden dependiente del
+Los cinco scripts son deterministas: sin aleatoriedad, sin fechas, sin orden dependiente del
 entorno. Correrlos dos veces da el mismo archivo byte a byte.
 
 > La excepción son los CSV de bitácora en `logs/`, que llevan una marca de tiempo ISO y por eso sí
@@ -497,11 +599,12 @@ entorno. Correrlos dos veces da el mismo archivo byte a byte.
 | Archivo | Filas | Columnas | Tamaño |
 |---|---|---|---|
 | `data/03_processed/empleos.csv` | 376.567 | 17 | 47,9 MiB |
+| `data/03_processed/competencias_por_oficio.csv` | 67.600 | 4 | 5,02 MiB |
 | `data/03_processed/empleos_limpio.csv` | 376.567 | 20 | 54,8 MiB |
 | `data/03_processed/empleos_limpio_sin_outliers.csv` | 341.090 | 20 | 49,5 MiB |
 
-(En MiB, no en MB decimales: los mismos archivos miden 50,2 / 57,4 / 51,9 MB. Vale la pena decirlo
-porque `ls -h` y `stat` usan bases distintas y las cifras parecen no cuadrar.)
+(En MiB, no en MB decimales: los mismos archivos miden 5,3 / 50,2 / 57,4 / 51,9 MB. Vale la pena
+decirlo porque `ls -h` y `stat` usan bases distintas y las cifras parecen no cuadrar.)
 
 Los contadores se guardan **como texto** en el CSV, porque el proyecto lee todo con `dtype=str`
 (regla para no perder los ceros a la izquierda de los códigos ESCO: `0110` no puede colisionar con
@@ -514,6 +617,13 @@ Los contadores se guardan **como texto** en el CSV, porque el proyecto lee todo 
 `limpiar_empleos.py` corre 10 umbrales, 4 de ellos sobre las competencias, y falla ruidosamente si
 alguno se descuadra. Además, `integrar_empleos.py` imprime el bloque `CANON PARA limpiar_empleos.py`
 con las cifras verificadas en cada corrida.
+
+La tabla de competencias de la §8 añade un cuarto control, que es el que ata las dos fuentes de
+verdad: `generar_competencias.py` **no escribe nada** hasta que contar sus filas por oficio reproduce
+los cuatro contadores de `empleos.csv`, oficio por oficio (0 discrepancias en los 2.855). Además
+exige que no haya ni un par (oficio, competencia) repetido, porque sin eso el conteo por oficio
+dejaría de equivaler al conteo de competencias distintas y el contraste compararía dos cosas
+distintas.
 
 Para una revisión completa del dataset:
 
@@ -541,6 +651,18 @@ v = e.copy()
 v["occupation_code"] = v["occupation_code"].fillna("SIN_CODE")
 PK = ["resume_id", "occupation_code", "start_date", "end_date"]
 v.duplicated(subset=PK, keep=False).sum()           # 105, en 52 grupos y 51 personas
+
+# la tabla de la §8 reproduce los contadores, por los cuatro
+c = pd.read_csv("data/03_processed/competencias_por_oficio.csv", dtype=str,
+                keep_default_na=False, na_values=[""])
+conteo = c.groupby(["occupation_code", "habilidad_tipo"]).size().unstack(fill_value=0)
+conteo["n_skills_essential"] = conteo.sum(axis=1)
+usados = (e.loc[ok, ["occupation_code", "n_skills_essential"]]
+          .drop_duplicates("occupation_code")
+          .set_index("occupation_code")["n_skills_essential"]
+          .pipe(pd.to_numeric))
+(usados == conteo.loc[usados.index, "n_skills_essential"]).all()          # True
+c.duplicated(subset=["occupation_code", "habilidad_nombre"]).sum()       # 0
 ```
 
 > Detalle de pandas al reproducir esto: **`NaN != NaN` es `True`**, así que cualquier comparación de

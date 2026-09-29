@@ -8,15 +8,24 @@ Derivados calculados en vivo a partir de `data/03_processed/empleos_limpio.csv`:
 - Brechas sin empleo registrado (proxy de desempleo), previa fusión de
   periodos solapados para no confundir pluriempleo con desempleo.
 
-Y los nombres de las competencias ESCO, que NO viven en el pipeline (allí solo
-hay contadores, para no multiplicar las filas): se recuperan de la fuente con
-`cargar_relaciones()` y se consultan con `skills_de_ocupacion()` o
-`skills_de_persona()`.
+Y los nombres de las competencias ESCO, que no viven en los CSV del pipeline
+(allí solo hay contadores, para no multiplicar las filas). Hay dos caminos:
+
+- `cargar_competencias()`: lee `data/03_processed/competencias_por_oficio.csv`,
+  la tabla normalizada que produce `src/limpieza/generar_competencias.py`
+  (1 fila = 1 competencia de 1 oficio). Es la vía preferida.
+- `cargar_relaciones()`: lee el puente ESCO crudo y resuelve el salto
+  `code` -> `occupationUri` (UUID) en el momento. Sin ese salto el cruce no es
+  posible y falla en silencio devolviendo 0 filas; se conserva como lectura
+  directa de la fuente y como referencia de contraste.
+
+Sobre esa tabla: `perfil_persona()` arma la trayectoria de una persona con las
+competencias que exigía cada contrato, y `salto_competencias()` mide el
+Jaccard entre contratos consecutivos.
 
 Práctica: las funciones son puras (sin I/O) para que el libro decida qué
-muestra y cómo lo interpreta. La única excepción es `cargar_relaciones()`, que
-resuelve el salto `code` -> `occupationUri` (UUID) del puente ESCO: sin ese
-salto el cruce no es posible y falla en silencio devolviendo 0 filas.
+muestra y cómo lo interpreta. Las dos únicas excepciones son
+`cargar_competencias()` y `cargar_relaciones()`.
 """
 
 from __future__ import annotations
@@ -36,6 +45,18 @@ TRIMESTRE_VALIDO = re.compile(r"^Q([1-4])\s+(\d{4})$")
 RAIZ = Path(__file__).resolve().parents[2]
 RUTA_RELACIONES = RAIZ / "data" / "02_interim" / "SKILLS" / "occupationSkillRelations_en_limpio.csv"
 RUTA_OCCUPATIONS = RAIZ / "data" / "02_interim" / "ESCO" / "occupations_en_limpio.csv"
+
+# Tabla normalizada de competencias (produce `src/limpieza/generar_competencias.py`).
+# Ya viene con el salto `code` -> `occupationUri` resuelto y contrastada contra los
+# contadores del pipeline, asi que consultarla no obliga a rehacer ese cruce.
+RUTA_COMPETENCIAS = RAIZ / "data" / "03_processed" / "competencias_por_oficio.csv"
+
+# Como se ve un cargo que no se pudo clasificar. NUNCA se deja en blanco: vacio
+# diria "no hay informacion de competencias", cuando lo cierto es "no sabemos que
+# cargo era" - y no son lo mismo. `saber_skills` conserva el dato crudo; esto es
+# solo la forma de mostrarlo.
+OFICIO_NO_CLASIFICADO = "[OFICIO NO CLASIFICADO]"
+AVISO_SIN_COMPETENCIAS = "\u26a0 habilidades desconocidas: no sabemos que trabajo era"
 
 # Solo 'essential'. Ver `integrar_empleos.py`: las 'optional' son telemetría de
 # jerarquía y el pipeline no las usa.
@@ -120,6 +141,47 @@ def resumen_competencias(empleos: pd.DataFrame) -> pd.DataFrame:
     return por_cargo.sort_values("n_skills_essential", ascending=False).reset_index()
 
 
+def cargar_competencias() -> pd.DataFrame:
+    """Lee la tabla de competencias por oficio (produce `generar_competencias.py`).
+
+    Devuelve columnas `occupation_code`, `occupation_label`, `habilidad_nombre` y
+    `habilidad_tipo`. Es la vía preferida para consultar nombres: el archivo ya
+    existe, el salto `code` -> `occupationUri` ya está hecho y validado contra
+    `n_skills_essential`, y leerlo no depende de que la fuente ESCO siga donde
+    estaba.
+
+    `cargar_relaciones()` se conserva como lectura directa de la fuente ESCO, que
+    es la que usaba el pipeline antes de que existiera esta tabla.
+
+    Si la fuente ESCO cambia, hay que regenerar el archivo antes de usar esto:
+        python src/limpieza/generar_competencias.py
+    """
+    assert RUTA_COMPETENCIAS.exists(), (
+        f"Falta la tabla de competencias: {RUTA_COMPETENCIAS}\n"
+        "Generala con: python src/limpieza/generar_competencias.py"
+    )
+    return pd.read_csv(RUTA_COMPETENCIAS, dtype=str, encoding="utf-8",
+                       keep_default_na=False, na_values=[""])
+
+
+def competencias_por_oficio(competencias: pd.DataFrame) -> dict[str, list[str]]:
+    """De la tabla normalizada (1 fila = 1 competencia) a 1 lista por oficio.
+
+    Es el paso de "guardar desglosado" a "mostrar junto": un cargo con 20
+    competencias ocupa 20 filas en el CSV y aparece aquí como una sola lista de
+    20 nombres, que es como se lee. Los nombres van ordenados para que dos
+    llamadas den el mismo resultado.
+
+    Un oficio ausente del diccionario no tiene competencias conocidas: eso NO es
+    lo mismo que tener cero, y por eso la ausencia no se rellena con una lista
+    vacía en los llamadores.
+    """
+    por_codigo = (
+        competencias.sort_values("habilidad_nombre", kind="stable")
+        .groupby("occupation_code")["habilidad_nombre"]
+        .agg(list)
+    )
+    return por_codigo.to_dict()
 def _ordinal_trimestre(serie: pd.Series) -> pd.Series:
     """Ordinal continuo de un trimestre 'Q4 2010' -> 2010*4 + 4 = 8044."""
     partes = serie.str.extract(TRIMESTRE_VALIDO, expand=False)
@@ -232,6 +294,211 @@ def _repetidas_exactas(df: pd.DataFrame) -> pd.DataFrame:
     los indicadores de transición y pluriempleo con ruido.
     """
     return df.drop_duplicates(subset=["resume_id", "start_date", "end_date"], keep="first")
+
+
+def _etiquetas_por_oficio(competencias: pd.DataFrame) -> pd.Series:
+    """`occupation_code` -> `occupation_label`, con una sola etiqueta por oficio."""
+    oficios = competencias[["occupation_code", "occupation_label"]].drop_duplicates(
+        subset="occupation_code"
+    )
+    assert not oficios["occupation_code"].duplicated().any(), (
+        "La tabla de competencias trae mas de una etiqueta para el mismo oficio"
+    )
+    return oficios.set_index("occupation_code")["occupation_label"]
+
+
+def resumen_perfil(empleos: pd.DataFrame, resume_id: str) -> pd.DataFrame:
+    """Una fila con los numeros de la trayectoria, para encabezar `perfil_persona()`.
+
+    `contrato_mas_repetido` es el mayor valor de `veces_ese_oficio`: quantas
+    veces la persona repite un mismo cargo. Va aparte de `periodos` porque
+    "12 periodos" y "12 periodos del mismo cargo" son trayectorias opuestas.
+    """
+    ruta = empleos.loc[empleos["resume_id"].eq(resume_id)]
+    assert not ruta.empty, f"La persona {resume_id!r} no tiene experiencias"
+    niveles = ruta["university_level"].dropna().unique()
+    veces = pd.to_numeric(ruta["veces_ese_oficio"], errors="coerce")
+    sin_oficio = int(ruta["occupation_code"].isna().sum())
+    return pd.DataFrame([{
+        "persona": resume_id,
+        "nivel_educativo": niveles[0] if len(niveles) else "No reportado",
+        "periodos": int(len(ruta)),
+        "oficios_distintos": int(ruta["occupation_code"].nunique()),
+        "periodos_con_oficio": int(len(ruta) - sin_oficio),
+        "periodos_sin_oficio": sin_oficio,
+        "contrato_mas_repetido": int(veces.max()) if veces.notna().any() else 0,
+    }])
+
+
+def perfil_persona(
+    empleos: pd.DataFrame, competencias: pd.DataFrame, resume_id: str
+) -> pd.DataFrame:
+    """Trayectoria de una persona: una fila por experiencia, con lo que exigía cada cargo.
+
+    Las experiencias van en orden cronológico (inicio, fin), no en el orden del
+    CSV, para que la ruta se lea como una línea de tiempo. Se conservan TODAS,
+    incluidas las repeticiones exactas: en una trayectoria, "estuvo 12 periodos
+    como auxiliar de nómina" es información, no ruido.
+
+    Qué significa cada columna (leer antes de interpretar):
+        `occupation_label`  : el cargo según ESCO. Donde no se pudo clasificar
+            aparece `[OFICIO NO CLASIFICADO]`, nunca vacío: vacío diría "este
+            cargo no exige nada", que es falso, cuando lo cierto es que no
+            sabemos qué cargo era.
+        `competencias`      : los NOMBRES de las competencias 'essential' que
+            el contrato exigía. Es atribución por CONTRATO - si la persona
+            ocupó el cargo, su contrato obligaba a esas competencias. No dice
+            que las ejecute hoy ni que las domine todas; y no dice nada de los
+            periodos sin oficio clasificado, que quedan declarados desconocidos.
+        `n_competencias`    : cuántas son. Sale de la tabla de competencias, no
+            del contador `n_skills_essential` del dataset; ambos se cruzan aquí
+            y tienen que coincidir.
+        `veces_ese_oficio`  : cuántas experiencias tiene esta persona en ESTE
+            cargo, para que la repetición no se esconda detrás del nombre.
+        `aviso`             : vacío, o el texto que declara que las competencias
+            son desconocidas. Viaja con la fila para que el "no sabemos" no se
+            pierda al filtrar o al exportar.
+    """
+    columnas = ["occupation_code", "occupation_label", "saber_skills",
+                "veces_ese_oficio", "n_skills_essential"]
+    trabajo, ini, fin = _ordenar_empleos(
+        empleos.loc[empleos["resume_id"].eq(resume_id)], columnas
+    )
+    assert not trabajo.empty, f"La persona {resume_id!r} no tiene experiencias"
+    trabajo = trabajo.reset_index(drop=True)
+
+    por_oficio = competencias_por_oficio(competencias)
+    sin_oficio = trabajo["occupation_code"].isna()
+
+    salida = trabajo.assign(
+        # 'Present' no tiene fin observado: su duración es NaN (censura), nunca 0.
+        duracion_trimestres=(fin - ini + 1).where(trabajo["end_date"].ne("Present")),
+        occupation_label=trabajo["occupation_label"].where(
+            ~sin_oficio, OFICIO_NO_CLASIFICADO
+        ),
+        orden=range(1, len(trabajo) + 1),
+    )
+    salida["competencias"] = [
+        por_oficio[code] if pd.notna(code) else []
+        for code in salida["occupation_code"]
+    ]
+    salida["n_competencias"] = salida["competencias"].apply(len)
+    salida["aviso"] = sin_oficio.map({True: AVISO_SIN_COMPETENCIAS, False: ""})
+    # El proyecto lee los CSV como texto (regla para no perder ceros en los
+    # codigos), asi que los contadores llegan como '1.0' y no como 1. Se
+    # convierten aqui, igual que en `resumen_competencias`: convertirlos en el
+    # llamador repetition es donde uno se encuentra `int('1.0')`.
+    salida["veces_ese_oficio"] = pd.to_numeric(
+        salida["veces_ese_oficio"], errors="coerce"
+    )
+
+    # El contador del dataset y el conteo de la tabla no pueden separarse: son
+    # la misma informacion en dos sitios. Si divergen, alguien regenero uno y no
+    # el otro, y el perfil no debe decidir cual de los dos va bien.
+    declarado = pd.to_numeric(salida["n_skills_essential"], errors="coerce")
+    assert not (declarado.isna() != sin_oficio).any(), (
+        "vacío != 0 roto: hay ocupacion con el contador vacio o al reves"
+    )
+    assert not ((declarado != salida["n_competencias"]) & declarado.notna()).any(), (
+        "n_skills_essential no coincide con el conteo de la tabla de competencias"
+    )
+    # Invariante del puente: si hay codigo, hay competencias. El generador lo
+    # garantiza; un vacio aqui significa tabla y dataset desincronizados.
+    sin_competencias = (~sin_oficio) & salida["n_competencias"].eq(0)
+    assert not sin_competencias.any(), (
+        f"{int(sin_competencias.sum())} filas con occupation_code pero sin ninguna "
+        "competencia: regenera la tabla con generar_competencias.py"
+    )
+
+    return salida[[
+        "orden", "occupation_code", "occupation_label", "start_date", "end_date",
+        "duracion_trimestres", "veces_ese_oficio", "n_competencias",
+        "competencias", "saber_skills", "aviso",
+    ]]
+
+
+def salto_competencias(
+    empleos: pd.DataFrame, competencias: pd.DataFrame
+) -> "tuple[pd.DataFrame, dict[str, float | int]]":
+    """Similitud entre las competencias que exigen dos contratos consecutivos.
+
+    Devuelve `(detalle, resumen)`. El detalle tiene una fila por transición
+    consecutiva de una persona en la que **ambos** cargos son conocidos
+    (`occupation_code` presente); el resumen trae la distribución de esa medida.
+
+    La medida es el índice de Jaccard de los nombres: `|A ∩ B| / |A ∪ B|`. Vale
+    1 cuando los dos cargos exigen exactamente las mismas competencias y 0
+    cuando no comparten ni una sola. Como la mediana es 0 y más de la mitad de
+    las transiciones no comparte ninguna, el resumen reporta ese porcentaje
+    aparte: es el dato que separa "el salto de oficio no tocó las competencias"
+    de "el salto fue suave".
+
+    Las repeticiones exactas (misma persona, mismo inicio, mismo fin) se eliminan
+    antes de emparejar, igual que en `transiciones_consecutivas`. Ojo con lo que
+    son: de los 15.290 grupos repetidos de `empleos_limpio.csv`, solo 2.127
+    tienen un unico cargo (ahi si es duplicado). Los otros 13.163 son cargos
+    DISTINTOS en el mismo periodo, es decir pluriempleo simultaneo. Un trabajo
+    simultaneo no es una transicion, asi que se descarta: emparejar A -> B cuando
+    los dos ocurrieron a la vez seria un salto de empleo inexistente.
+
+    Un periodo SIN OFICIO CLASIFICADO, en cambio, si rompe la cadena: no se salta
+    para emparejar los trabajos de los lados. Si alguien tiene un hueco de tres
+    anos cuyo cargo desconocemos, no se puede afirmar que paso directamente de A
+    a B. Esto es el mismo criterio de `transiciones_consecutivas`, y hace que los
+    dos indicadores de transicion del proyecto se calculen sobre la misma base y
+    sean comparables.
+    """
+    por_oficio = {code: frozenset(nombres)
+                  for code, nombres in competencias_por_oficio(competencias).items()}
+    etiquetas = _etiquetas_por_oficio(competencias)
+
+    trabajo, _, _ = _ordenar_empleos(
+        _repetidas_exactas(empleos), ["occupation_code"]
+    )
+    # Se empareja PRIMERO y se filtra DESPUES: una fila sin oficio ocupa su lugar
+    # en la secuencia y rompe la cadena, en vez de desaparecer y dejar que se
+    # emparejen los trabajos de sus lados. Sin codigo no hay contrato que
+    # comparar, y meter esas filas daria un Jaccard indefinido (0/0), no un cero.
+    hacia = trabajo.groupby("resume_id")["occupation_code"].shift(-1)
+    par = trabajo.loc[hacia.notna()].copy()
+    par["hacia_code"] = hacia.loc[par.index]
+    par = par.loc[par["occupation_code"].isin(por_oficio)
+                  & par["hacia_code"].isin(por_oficio)]
+
+    desde_conjuntos = [por_oficio[c] for c in par["occupation_code"]]
+    hacia_conjuntos = [por_oficio[c] for c in par["hacia_code"]]
+    compartidas = np.array([len(a & b) for a, b in zip(desde_conjuntos, hacia_conjuntos)])
+    uniones = np.array([len(a | b) for a, b in zip(desde_conjuntos, hacia_conjuntos)])
+    # Toda transicion emparejada tiene ambos cargos con competencias, asi que
+    # la union nunca es 0; el `where` esta para que un dato roto se vea como NaN
+    # en vez de become un error o un falso cero.
+    jaccard = np.where(uniones > 0, compartidas / uniones, np.nan)
+
+    detalle = pd.DataFrame({
+        "resume_id": par["resume_id"].to_numpy(),
+        "desde_code": par["occupation_code"].to_numpy(),
+        "desde_label": par["occupation_code"].map(etiquetas).to_numpy(),
+        "hacia_code": par["hacia_code"].to_numpy(),
+        "hacia_label": par["hacia_code"].map(etiquetas).to_numpy(),
+        "n_desde": [len(a) for a in desde_conjuntos],
+        "n_hacia": [len(b) for b in hacia_conjuntos],
+        "n_compartidas": compartidas,
+        "jaccard": jaccard,
+    })
+    mismo_cargo = int(detalle["desde_code"].eq(detalle["hacia_code"]).sum())
+    sin_compartir = int(detalle["n_compartidas"].eq(0).sum())
+    resumen: dict[str, float | int] = {
+        "personas": int(detalle["resume_id"].nunique()),
+        "transiciones": int(len(detalle)),
+        "mismo_cargo": mismo_cargo,
+        "%_mismo_cargo": round(100 * mismo_cargo / len(detalle), 2) if len(detalle) else np.nan,
+        "jaccard_mediana": float(np.median(jaccard)) if len(detalle) else np.nan,
+        "jaccard_p25": float(np.percentile(jaccard, 25)) if len(detalle) else np.nan,
+        "jaccard_p75": float(np.percentile(jaccard, 75)) if len(detalle) else np.nan,
+        "transiciones_sin_ninguna_compartida": sin_compartir,
+        "%_sin_ninguna_compartida": round(100 * sin_compartir / len(detalle), 2) if len(detalle) else np.nan,
+    }
+    return detalle, resumen
 
 
 def transiciones_consecutivas(df: pd.DataFrame, columna: str = "isco_group_label") -> pd.DataFrame:

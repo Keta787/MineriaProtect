@@ -85,7 +85,11 @@ Las 6 columnas de competencias responden "**cuántas competencias esenciales exi
 | `n_skills_sin_tipo` | Bucket de las 39 relaciones que la fuente entrega sin `skillType`; existe para que los tres anteriores sumen el total |
 | `veces_ese_oficio` | Cuántas experiencias tiene esta persona en **este** oficio. Resuelve la reincidencia: quien repite el mismo cargo 19 veces tiene 19 filas con `veces_ese_oficio = 19`, y sus competencias no se repiten |
 
-Solo se usan las relaciones `essential` (67.600 de 126.051): las `optional` son habilidades de nivelación, no el piso del cargo, y sumarlas volvería el conteo interpretable. Los **nombres** de las competencias no viven en el pipeline (solo hay contadores, para no multiplicar las filas ×21); se recuperan con `indicadores.skills_de_ocupacion()` o `indicadores.skills_de_persona()`, que resuelven el salto `code` → `occupationUri` (UUID) del puente ESCO.
+Solo se usan las relaciones `essential` (67.600 de 126.051): las `optional` son habilidades de nivelación, no el piso del cargo, y sumarlas volvería el conteo interpretable.
+
+**Dónde viven los nombres.** Los CSV del pipeline llevan **contadores**, no nombres: repetirlos por cada una de las 376.567 experiencias añadiría ~230 MB y multiplicaría el grano del dataset. Los nombres van en `data/03_processed/competencias_por_oficio.csv`, una tabla aparte con **una fila por (oficio, competencia)**: 67.600 filas, 3.039 oficios, 11.378 habilidades distintas. Se une con los demás CSV por `occupation_code` (que ya existe en los tres), así que el cruce es N:1 y no multiplica nada.
+
+Esa columna es la **regla de guardado, no la de lectura**: para mostrar el perfil de un cargo se agrupa por `occupation_code` y sale una línea con todas sus competencias. Es lo que hace `indicadores.perfil_persona()`, que arma la trayectoria completa de una persona (educación, cargos, periodos y las competencias que exigía cada contrato). `indicadores.salto_competencias()` mide el solapamiento entre las competencias de dos contratos consecutivos.
 
 > **Referencia completa del tema: [`docs/SKILLS.md`](docs/SKILLS.md).** Incluye las seis columnas
 > medidas una por una, por qué son contadores y no filas, qué se puede y qué no se puede sacar de
@@ -101,6 +105,7 @@ Solo se usan las relaciones `essential` (67.600 de 126.051): las `optional` son 
 | `SKILLS/occupationSkillRelations_en.csv` | 126.051 | 126.051 | 59 con `skillType` nulo conservados (bandera) |
 | `SKILLS/skills_en.csv` | 13.960 | 13.939 | −21 filas por `conceptUri` duplicado |
 | `empleos.csv` (integrado, unión test+val) | — | 376.567 × 17 (inmutable) | Integración validada (`integrar_empleos.py`); cruce N:1 por persona + 6 columnas de competencias |
+| `competencias_por_oficio.csv` | — | **67.600 × 4** | Tabla normalizada de competencias ESCO: 1 fila = 1 competencia de 1 oficio (`generar_competencias.py`); 3.039 oficios, 11.378 habilidades distintas |
 | `empleos_limpio.csv` (integrado) | 376.567 × 17 | **376.567 × 20** | Pipeline en 7 fases: 0 filas con fechas futuras en test+val (MCAR) + 3 banderas `es_*` |
 | `empleos_limpio_sin_outliers.csv` | 376.567 × 20 | 341.090 × 20 | Variante sin cola larga (`dur_Q ≥ 25`, IQR de Tukey); −35.477 filas / 24.687 personas |
 
@@ -124,6 +129,7 @@ JobPath/
 │   │   └── SKILLS/                 # puente de competencias limpio
 │   └── 03_processed/               # PREPROCESAMIENTO — integrado, formato exclusivo: CSV
 │       ├── empleos.csv             # 376.567 × 17 (unión test+val; inmutable)
+│       ├── competencias_por_oficio.csv  # 67.600 × 4 (1 fila = 1 competencia de 1 oficio)
 │       ├── empleos_limpio.csv      # 376.567 × 20 (limpio final, banderas es_*)
 │       └── empleos_limpio_sin_outliers.csv  # 341.090 × 20 (sin cola larga)
 ├── logs/                           # bitácoras de ejecución (solo en disco, no versionadas)
@@ -137,10 +143,12 @@ JobPath/
 └── src/                            # CODIGO REUTILIZABLE
     ├── filtro/                     # TRANSFORMACION (insumos) — análisis reutilizable
     │   ├── filtros.py              # selecciones: nivel, grupo ISCO, ocupación, periodo, vigencia
-    │   └── indicadores.py          # duración, IQR, transiciones, brechas, crosstabs, banderas
+    │   └── indicadores.py          # duración, IQR, transiciones, brechas, crosstabs, banderas,
+    │                               #   perfil de competencias por persona, salto de competencias
     └── limpieza/                   # PREPROCESAMIENTO/PREPARACION
         ├── limpiar_datos.py        # data/01_raw/ → data/02_interim/ (limpieza de fuentes)
         ├── integrar_empleos.py      # unión test+val + ESCO → data/03_processed/empleos.csv
+        ├── generar_competencias.py # ESCO → competencias_por_oficio.csv (tabla normalizada)
         ├── limpiar_empleos.py      # data/03_processed/empleos.csv → empleos_limpio.csv (7 fases)
         └── dividir_por_outliers.py # empleos_limpio.csv → empleos_limpio_sin_outliers.csv (IQR)
 ```
@@ -167,12 +175,14 @@ Limpia las 3 particiones CSV de JobHop (`train`/`test`/`val`: elimina filas sin 
 
 **`src/limpieza/integrar_empleos.py`** - integración: une las particiones limpias **test + val** de JobHop (train excluido), cruza `matched_code` con ESCO (`emparejado`: `ok` / `rescatado` / `unknown`), agrega los contadores de competencias ESCO y crea `data/03_processed/empleos.csv` (376.567 × 17, 71.061 personas).
 
+**`src/limpieza/generar_competencias.py`** — construye `competencias_por_oficio.csv`, la tabla normalizada de competencias ESCO (**una fila por oficio y competencia**, 67.600 × 4). Los nombres no pueden ir dentro de `empleos_limpio.csv` porque se repetirían ~376.000 veces (+230 MB) y multiplicarían el grano del dataset; al vivir en su propia tabla, se unirían por `occupation_code` (N:1, sin modificar ningún CSV existente). Resuelve el salto `code` → `occupationUri` (UUID) del puente ESCO, etiqueta las 39 relaciones sin `skillType` como `sin_tipo` y valida contra los contadores de `empleos.csv` antes de escribir.
+
 **`src/limpieza/limpiar_empleos.py`** — clase `LimpiadorEmpleos` con **7 fases** (`fase1_diagnostico` … `fase7_exportar`) sobre el integrado `empleos.csv` (CSV). Cada fase termina en un `assert` contra `EXPECTED` (umbrales de aceptación, criterio "funciones reutilizables + pruebas automáticas" de la rúbrica de la sesión 3):
 1. Diagnóstico (nada se toca) → 2. Duplicados (0 exactos; claves cortas = pluriempleo, se conservan) → 3. Categorías y caso MNAR (`'None'` y celdas vacías → `'No reportado'`) → 4. Faltantes por bandera (MAR + censura, sin imputar) → 5. Outliers IQR de Tukey + 0 fechas futuras en test+val (MCAR) → 6. Validación 6/6 → 7. Exportar CSV + bitácora.
 
 **`src/limpieza/dividir_por_outliers.py`** — genera la variante **sin cola larga** (`empleos_limpio_sin_outliers.csv`) con la misma convención IQR de la fase 5 (`dur_Q ≥ 25`), para comparar el impacto de la cola larga antes de elegir la técnica de minería.
 
-**`src/filtro/filtros.py` y `src/filtro/indicadores.py`** — biblioteca reutilizable de **transformación**: filtros (nivel educativo, grupo ISCO, ocupación, periodo, vigentes) e indicadores (duración trimestral inclusiva, distribución, medianas por grupo/nivel, crosstabs, transiciones consecutivas, proporción que conserva el grupo, primera→segunda ocupación, brechas entre empleos, personas solapadas, resumen de banderas). Son los insumos de la fase 3 (construcción de `Sₚ`).
+**`src/filtro/filtros.py` y `src/filtro/indicadores.py`** — biblioteca reutilizable de **transformación**: filtros (nivel educativo, grupo ISCO, ocupación, periodo, vigentes) e indicadores (duración trimestral inclusiva, distribución, medianas por grupo/nivel, crosstabs, transiciones consecutivas, proporción que conserva el grupo, primera→segunda ocupación, brechas entre empleos, personas solapadas, resumen de banderas). Sobre la tabla de competencias añaden `cargar_competencias()`, `perfil_persona()` (trayectoria de una persona con las competencias que exigía cada contrato) y `salto_competencias()` (índice de Jaccard entre contratos consecutivos). Son los insumos de la fase 3 (construcción de `Sₚ`).
 
 **`notebooks/`** — reproducen y exhiben cada fase con evidencia impresa y outputs persistidos: `1.0` (acta/diseño), `2.0` (selección de fuentes + carga defensiva + EDA + diagnóstico de calidad + API ESCO), `3.0` (pipeline de limpieza ejecutado en vivo, validación 6/6, bitácora, división con/sin cola larga). De la **sesión 4 (transformación)**, `4.0_transformacion.ipynb` (sobre `empleos_limpio.csv`, con cola larga) y `4.1_transformacion_sin_outliers.ipynb` (sobre la variante sin cola larga) comparten un pipeline parametrizado por `VERSION` (una celda de configuración elige el CSV):
 
@@ -186,7 +196,12 @@ Se ejecutan de principio a fin sin errores (núcleo `python3` 3.14.7) y entregan
 ## Decisiones técnicas clave
 
 - **Salida única en CSV para el cruce:** `empleos.csv`, `empleos_limpio.csv` y `empleos_limpio_sin_outliers.csv` se mantienen exclusivamente en CSV (`data/03_processed/`), regenerables desde los scripts. Los CSV no se versionan por tamaño (41–48 MB) y la estructura de la carpeta se conserva en git con `.gitkeep`.
+- **Competencias en tabla aparte, no en columna:** los nombres van en `competencias_por_oficio.csv` (1 fila = 1 competencia de 1 oficio) porque son un atributo del **oficio**, no de la persona: 2.855 oficios distintos para 376.567 experiencias. Guardarlos en cada fila los repetiría ~376.000 veces (+230 MB) y rompería la llave primaria. La unión es N:1 por `occupation_code`, que **ya existe en los tres CSV**: no hizo falta modificar ninguno.
+- **Una fila por competencia, no por oficio:** elegir la forma larga (67.600 filas) y no la ancha (3.039 filas con los nombres en un texto) permite preguntar *"¿qué oficios exigen `welding techniques`?"* con un `groupby` en vez de partir texto en 3.039 filas — que es justamente la pregunta de investigación. Cuesta 3 MiB más y evita el `str.split` en cada consulta.
+- **`n_skills_essential` es caché verificada, no un dato independiente:** se conserva (está dentro de la `X` de `4.0`/`4.1` y no cuesta nada) pero es derivable de la tabla de competencias —se comprobó que la reproduce en los 2.855 oficios, con 0 discrepancias—. `generar_competencias.py` lo contrasta en cada corrida: si el puente ESCO se rompiera, el pipeline cortaría con diagnóstico en vez de dejar dos números distintos circulando. La redundancia no se elimina, se vigila.
+- **La tabla de competencias es un superconjunto:** describe a ESCO (3.039 oficios, 3.693 competencias), no a JobHop (2.855 oficios). Los 184 oficios que nadie usó están a propósito, para poder ampliar sin volver a la fuente.
 - **CSV procesados también en Google Drive:** el integrado (`empleos.csv`), la versión limpia con outliers (`empleos_limpio.csv`) y la versión limpia sin outliers (`empleos_limpio_sin_outliers.csv`) se comparten en: https://drive.google.com/file/d/1NH-ibBT_wsehhnQNOKCpGJDx1UPmG1sC/view
+  Falta subir `competencias_por_oficio.csv` (5,02 MiB) al mismo enlace: es regenerable con `generar_competencias.py`, pero quien solo tenga el Drive no podrá reconstruir los nombres de las competencias.
 - **Banderas en lugar de imputación:** la ausencia es informativa; no se usa `fillna`. Nulos estructurales conservados con banderas: `es_unknown_ocupacion` (25.805), `es_rescatado` (2.499) y re-categorización de `'None'`/celdas vacías → `'No reportado'` (42.807).
 - **Censura (`Present`) explícita:** `es_vigente` (18.956) marca empleos vigentes al capturar el CV; no se inventa fecha de fin (censura por la derecha).
 - **Duración trimestral inclusiva:** `end − start + 1` (un empleo del mismo trimestre dura 1); Q1=2, mediana 5, Q3=11, IQR=9, máximo 160 (≈40 años).
@@ -216,6 +231,7 @@ Deudas formales heredadas para la fase de minería:
 
 - **Asserts por fase (nivel "Excepcional"):** `limpiar_empleos.py` valida cada fase contra cantidades verificadas de la fuente (`EXPECTED`), con tabla de umbrales 10/10 y bitácora de trazabilidad en `logs/`. Cuatro de esos umbrales son de las competencias: que el contador esté vacío exactamente cuando `saber_skills != 'ok'`, que nunca valga 0, que los tres buckets sumen el total, y que `veces_ese_oficio ≥ 1`.
 - **Cuadernos de diagnóstico:** `2.0`, `3.0`, `4.0` y `4.1` se ejecutan de principio a fin sin errores y reproducen los scripts con evidencia impresa (nbclient con núcleo `python3`).
+- **Las dos fuentes de las competencias no pueden separarse:** `generar_competencias.py` exige que contar las filas de `competencias_por_oficio.csv` por oficio reproduzca los cuatro contadores (`n_skills_essential`, `n_skills_competence`, `n_skills_knowledge`, `n_skills_sin_tipo`) de `empleos.csv` — **0 discrepancias en los 2.855 oficios**, y 0 pares (oficio, competencia) repetidos. `perfil_persona()` repite el contraste por persona, así que un perfil no puede mostrar un número que contradiga al pipeline.
 - **Sanidad de la matriz final (4.x):** `X_final` sin nulos y sin columnas no numéricas; mediana ≈ 0 en las robust, extremos 0/1 en la minmax; auditoría de outliers y varianza de PCA impresas en vivo.
 - **Comparación con/sin cola larga:** `dividir_por_outliers.py` cruza ambas versiones (filas, personas, mediana/máximo de `dur_Q`, vigentes) para cuantificar el impacto antes de elegir la técnica de minería.
 - **Idempotencia/regeneración:** los pipelines son deterministas (sin aleatoriedad) y regenerables desde `data/01_raw/`; cada cifra del informe se reproduce con los comandos de la sección siguiente.
@@ -226,13 +242,14 @@ Deudas formales heredadas para la fase de minería:
 ```bash
 python -m pip install -r requirements.txt
 
-python src/limpieza/limpiar_datos.py        # fuentes → data/02_interim/
-python src/limpieza/integrar_empleos.py     # unión test+val + ESCO + competencias → empleos.csv
-python src/limpieza/limpiar_empleos.py      # integrado → data/03_processed/empleos_limpio.csv
-python src/limpieza/dividir_por_outliers.py # limpio → empleos_limpio_sin_outliers.csv
+python src/limpieza/limpiar_datos.py         # fuentes → data/02_interim/
+python src/limpieza/integrar_empleos.py      # unión test+val + ESCO + competencias → empleos.csv
+python src/limpieza/generar_competencias.py  # ESCO → competencias_por_oficio.csv (+ contraste)
+python src/limpieza/limpiar_empleos.py       # integrado → data/03_processed/empleos_limpio.csv
+python src/limpieza/dividir_por_outliers.py  # limpio → empleos_limpio_sin_outliers.csv
 ```
 
-Los cuatro scripts son **deterministas y se ejecutan en ese orden**: `integrar_empleos.py` necesita el puente de competencias ya limpio, así que `limpiar_datos.py` va primero (además es quien crea las carpetas `ESCO/` y `SKILLS/` en `02_interim/`).
+Los cinco scripts son **deterministas y se ejecutan en ese orden**: `integrar_empleos.py` necesita el puente de competencias ya limpio, así que `limpiar_datos.py` va primero (además es quien crea las carpetas `ESCO/` y `SKILLS/` en `02_interim/`). `generar_competencias.py` va **después** de `integrar_empleos.py` porque su bloque de validación contrasta la tabla contra los contadores de `empleos.csv`; si ese archivo no estuviera, genera la tabla igual y **avisa en pantalla** de que el contraste se omitió (nunca lo omite en silencio).
 
 Los scripts resuelven la raíz del proyecto buscando hacia arriba la carpeta `data/`, por lo que se ejecutan desde cualquier directorio del repo (rutas relativas). Requiere **Python 3** (referencia: `.python-version` = 3.14.7, documento `requirements.txt`) y las dependencias declaradas (pandas, pyarrow, matplotlib, **scikit-learn** para la transformación `4.x`, nbconvert, ipykernel, jupyter-client).
 
@@ -243,7 +260,7 @@ Los scripts resuelven la raíz del proyecto buscando hacia arriba la carpeta `da
 
 ## Estado actual y siguientes pasos
 
-**Estado:** la limpieza está **100 % terminada y verificada** en los tres niveles — fuentes (`limpiar_datos.py`), integración (`integrar_empleos.py`) e integrado (`limpiar_empleos.py`). `empleos_limpio.csv` alcanzó **376.567 filas × 20 columnas** (71.061 personas), con validación final 10/10; la variante sin cola larga (341.090 × 20, 69.182 personas) queda lista para comparar. Las 6 columnas de competencias ESCO son **contadores por experiencia** (nunca filas: hacerlo multiplicaría el dataset ×21 y rompería la llave primaria), y los nombres de las competencias se recuperan bajo demanda con `indicadores.cargar_relaciones()`. La **transformación a features** (sesión 4) está terminada **e incluye las competencias ESCO**: `4.0` y `4.1` codifican (ordinal/one-hot), escalan (robust/minmax) y auditan PCA, entregando la **X** numérica lista para modelar. La `X` incorpora `n_skills_essential` y `veces_ese_oficio` con `RobustScaler` más el binario `reincide` sin escalar, y deja fuera de sí misma las 28.304 filas `no_clasificado` porque sus contadores están vacíos y `sklearn` no admite `NaN` (mediciones en `docs/SKILLS.md` §10).304 filas `no_clasificado` (ver `docs/SKILLS.md` §10, con las mediciones). Alineado con las sesiones 1–4: acta (1.0), fuentes/carga defensiva/EDA/API (2.0), pipeline de limpieza con rúbrica de código (3.0) y transformación (4.0/4.1).
+**Estado:** la limpieza está **100 % terminada y verificada** en los tres niveles — fuentes (`limpiar_datos.py`), integración (`integrar_empleos.py`) e integrado (`limpiar_empleos.py`). `empleos_limpio.csv` alcanzó **376.567 filas × 20 columnas** (71.061 personas), con validación final 10/10; la variante sin cola larga (341.090 × 20, 69.182 personas) queda lista para comparar. Las 6 columnas de competencias ESCO son **contadores por experiencia** (nunca filas: hacerlo multiplicaría el dataset ×21 y rompería la llave primaria), y los **nombres** viven en la tabla normalizada `competencias_por_oficio.csv` (67.600 × 4), produced por `generar_competencias.py`; se consultan con `indicadores.cargar_competencias()` o directamente de la fuente con `indicadores.cargar_relaciones()`. La **transformación a features** (sesión 4) está terminada **e incluye las competencias ESCO**: `4.0` y `4.1` codifican (ordinal/one-hot), escalan (robust/minmax) y auditan PCA, entregando la **X** numérica lista para modelar. La `X` incorpora `n_skills_essential` y `veces_ese_oficio` con `RobustScaler` más el binario `reincide` sin escalar, y deja fuera de sí misma las 28.304 filas `no_clasificado` porque sus contadores están vacíos y `sklearn` no admite `NaN` (mediciones en `docs/SKILLS.md` §10). Alineado con las sesiones 1–4: acta (1.0), fuentes/carga defensiva/EDA/API (2.0), pipeline de limpieza con rúbrica de código (3.0) y transformación (4.0/4.1).
 
 **Siguiente paso:** construir el **dataset de secuencias por persona** (`Sₚ`) sobre `empleos_limpio.csv`: orden estable por trimestre, unidad de análisis (ocupación ESCO / grupo ISCO), ventana temporal y manejo de pluriempleo y censura (ver `src/filtro/`). La **X** de los cuadernos 4.x habilita los modelos de sesiones 7–9 (KNN / K-means / árboles). Sobre esas secuencias se seleccionará y aplicará la técnica de minería, se evaluarán los patrones y se consolidará el conocimiento (fases 3–6 de la tabla metodológica).
 
