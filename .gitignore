@@ -20,6 +20,13 @@ logs/
 # Contextos de sesión (solo se conservan en disco, no se versionan)
 contexto_sesion*.md
 
+# Explicación del curso aplicada a este proyecto (notas personales de estudio).
+# No es documentación del proyecto: es el curso de sesiones 1-4 explicado con
+# los datos de MineríaProtect, en registro de lectura, no de especificación.
+# Se mantiene fuera de git a propósito -> se pueden nombrar los archivos como
+# contexto_sesion1.md, etc. sin pelearse con el patrón de la línea anterior.
+docs/explicacion/
+
 # Docs de la rama J3sT con cifras de la era train (solo en disco)
 docs/AUDITORIA_RAMA_PRUEBA.md
 docs/METODOLOGIA_KDD_CRISPDM.md
