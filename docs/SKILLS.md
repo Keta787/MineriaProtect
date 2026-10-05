@@ -540,8 +540,9 @@ trabajo, y por eso se excluyen (`BANDERAS_EXCLUIDAS`):
 - Sobre todo, **engaña la importancia de variables**: un modelo que les dé peso distinto
   de cero no está usando información, está usando el drop.
 
-No es un defecto del drop de la 2.5, es su consecuencia lógica. Las banderas son `True`
-exactamente cuando `occupation_code` está vacío, y el drop se lleva esas filas; como la
+No es un defecto del drop de la 2.5, es su consecuencia lógica. Las **dos** banderas
+excluidas son `True` exactamente cuando `occupation_code` está vacío, y el drop se lleva
+esas filas; como la
 `X` se construye solo con filas donde **sí** se conoce el oficio, «no se conoce el oficio»
 es `False` por construcción. La información no se pierde: se muda al hecho de que esas
 filas no están en la `X`, y las banderas siguen en el dataset, donde sí significan algo.
@@ -550,8 +551,30 @@ filas no están en la `X`, y las banderas siguen en el dataset, donde sí signif
 alguien cambia la regla del drop y dejan de serlo, el aviso salta ahí en vez de que la `X`
 cambie de forma silenciosa y todas las cifras citadas queden desactualizadas.
 
-(`emparejado_ok` es, por su parte, redundante con `occupation_code`, como ya se dice en la
-§9: eso es otro caso —redundancia entre variables con señal—, no el de una constante.)
+Queda una tercera columna constante en la `X`, y es **el mismo caso**, no uno distinto:
+`emparejado_ok`. Tras el recorte solo sobrevive `emparejado='ok'` —las otras dos categorías
+son exactamente las 28.304 filas que el recorte se lleva (25.805 `unknown` + 2.499
+`rescatado`)—, así que el one-hot devuelve una sola columna y es constante en las 50.000
+filas. La §9 lo cuenta como el caso (b), por la misma causa que el (a); esta nota decía antes
+que aquí no era el de una constante, y era falso. Al ser constante, tampoco aporta nada a la
+distancia.
+
+`armar_X()` tiene la otra mitad de la guardia. `version` es un parámetro **obligatorio**, sin
+valor por defecto: el número de columnas depende de ella (2.325 en `4.0`, 2.326 en `4.1`), y
+un valor por defecto dejaría la mitad de las llamadas sin comprobar sin que nadie lo notara. Al
+final hay cuatro `assert`: 0 nulos, 0 columnas no numéricas, una dummy por oficio presente en la
+submuestra, y la forma contra `FORMAS_X`. Las columnas de oficios no son un número fijo del
+código —salen de `get_dummies` sobre la submuestra—, así que sin esa comparación un cambio de
+codificación las movería en silencio.
+
+Las cuatro se probaron forzando el fallo una por una, y las cuatro saltan:
+
+```
+version equivocada -> La `X` de sin_outliers paso de 2326 a 2325 columnas
+dummy caida        -> Las dummies de oficios (2315) no son una por oficio presente (2316)
+NaN inyectado      -> La `X` tiene 1 nulos
+columna de texto   -> La `X` tiene 1 columnas no numericas
+```
 
 ### El escalamiento, que era la parte no obvia
 

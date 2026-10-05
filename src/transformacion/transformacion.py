@@ -61,6 +61,16 @@ SEED_MUESTRA = 42
 N_PARES = 300
 SEED_DIST = 42
 
+# El numero de columnas de la `X`, verificado en ejecucion y citado en
+# README.md y docs/SKILLS.md. No es un numero fijo del codigo: las columnas de
+# oficios salen de `get_dummies` sobre la submuestra, asi que un cambio de
+# codificacion o de datos las moveria. Para eso `armar_X` lo comprueba al final
+# y su mensaje obliga a actualizar las cifras en el MISMO commit.
+FORMAS_X = {
+    VERSION_CON_OUTLIERS: 2325,
+    VERSION_SIN_OUTLIERS: 2326,
+}
+
 TRIMESTRE_VALIDO = re.compile(r"^Q([1-4])\s+(\d{4})$")
 # 'Present' es censura por la derecha (el empleo sigue vigente): no se inventa su
 # fin, se ubica en el trimestre del proyecto (Q1 2026). El valor usa la misma
@@ -77,8 +87,10 @@ ORDEN_UNIV = {
     "PhD": 4,
 }
 
-# Las tres banderas del dataset limpio. Las tres son True exactamente cuando
-# `occupation_code` esta vacio.
+# Las tres banderas del dataset limpio. Las dos primeras son True exactamente
+# cuando `occupation_code` esta vacio. `es_vigente` NO sigue esa regla: es True
+# en 18.956 filas, de las cuales 18.832 si tienen oficio, asi que describe otra
+# cosa (el empleo que sigue vigente) y no la ausencia de dato.
 BANDERAS = ["es_unknown_ocupacion", "es_rescatado", "es_vigente"]
 
 # De las tres, solo UNA entra en la `X`. Las otras dos quedan constante False en el
@@ -323,15 +335,28 @@ def escalar(df_s: pd.DataFrame) -> dict:
             "competencias": competencias}
 
 
-def armar_X(escalado: dict, codificado: dict, df_s: pd.DataFrame) -> pd.DataFrame:
+def armar_X(escalado: dict, codificado: dict, df_s: pd.DataFrame,
+            version: str) -> pd.DataFrame:
     """Concatena las piezas en la `X` final, en el orden de `TODAS` mas las
     dummies y las banderas al final.
 
     Al final entra una sola bandera, `es_vigente`. Las otras dos del dataset son
     constante False aqui y se excluyen a proposito; el motivo esta en
     `BANDERAS_EN_X`.
+
+    `version` es obligatoria y no tiene valor por defecto a proposito: el numero
+    de columnas depende de ella (2.325 en `con_outliers`, 2.326 en
+    `sin_outliers`). Un valor por defecto dejaria sin comprobar la mitad de las
+    veces sin que nadie lo notara.
+
+    Al final hay comprobaciones de dos clases. Los `assert` de invariante atacan
+    bugs: cosas que tienen que ser verdad siempre. El ultimo compara contra la
+    cifra citada y su mensaje obliga a corregir README.md y docs/SKILLS.md en el
+    mismo commit en que la forma cambia, que es la unica forma de que las cifras
+    citadas no queden viejas en silencio (regla B8 de
+    docs/BUENAS_PRACTICAS_CODIGO.md).
     """
-    return pd.concat([
+    X = pd.concat([
         escalado["numericas"],   # start_ord_rob, end_ord_rob, dur_q_rob
         escalado["competencias"],  # n_skills_essential_rob, veces_ese_oficio_rob
         escalado["educacion"],   # university_mm
@@ -340,3 +365,32 @@ def armar_X(escalado: dict, codificado: dict, df_s: pd.DataFrame) -> pd.DataFram
         codificado["ocupacion"],  # occupation_<codigo>
         codificado["banderas"],   # solo es_vigente (ver BANDERAS_EN_X)
     ], axis=1)
+
+    nulos = int(X.isna().sum().sum())
+    assert nulos == 0, (
+        f"La `X` tiene {nulos} nulos. El universo de trabajo no debe traer filas "
+        f"sin dato de competencias: si las trae, el drop de la 2.5 no se esta "
+        f"aplicando. Sin ese drop no hay forma de distinguir un vacio honesto "
+        f"(no sabemos el oficio) de un 0 falso (el oficio no exige nada).")
+
+    no_num = X.select_dtypes(exclude=["number"]).shape[1]
+    assert no_num == 0, (
+        f"La `X` tiene {no_num} columnas no numericas. kNN, k-means y PCA las "
+        f"aceptan como categoricas, pero la distancia euclidea no: habria que "
+        f"decidir si se codifican o se descartan, no arrastrarlas por error.")
+
+    n_dummies = codificado["ocupacion"].shape[1]
+    n_oficios = int(df_s["occupation_code"].nunique())
+    assert n_dummies == n_oficios, (
+        f"Las dummies de oficios ({n_dummies}) no son una por oficio presente "
+        f"({n_oficios}). El one-hot cambio: si ahora dejara una categoria fuera, "
+        f"o una fila se quedara en todos 0, la `X` ya no describiria lo mismo "
+        f"sin que se note en la forma.")
+
+    assert X.shape[1] == FORMAS_X[version], (
+        f"La `X` de {version} paso de {FORMAS_X[version]} a {X.shape[1]} "
+        f"columnas. Con este assert, toda cifra citada sobre la `X` acaba de "
+        f"quedarse vieja: actualiza README.md y docs/SKILLS.md en este mismo "
+        f"commit y solo despues cambia `FORMAS_X`.")
+
+    return X
