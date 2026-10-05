@@ -193,7 +193,20 @@ Cuando el código esté en un cuaderno Jupyter, organizar las celdas de forma l�
 
 Evitar: imports repetidos, configuración dispersa, procesamiento duplicado, funciones gigantes y celdas con demasiadas responsabilidades independientes. Separar razonablemente procesamiento, validación, visualización y exportación. Validar que el cuaderno sea reproducible de arriba a abajo.
 
+## B8. Cifras y afirmaciones sobre los datos
+
+Ninguna cifra ni afirmación sobre los datos se escribe sin una medición ejecutada. Si un valor no está medido, se dice que no lo está. Una estimación razonada no se presenta como hecho.
+
+- No deducir una cifra a partir de otra. Si dos números deberían coincidir, comprobarlo en vez de suponer que coinciden.
+- Medir contra la fuente, no contra la memoria ni contra lo que afirma otro documento. En este repo, contra el CSV generado o contra un `assert` del pipeline: son dos fuentes independientes y por eso sirven de contraste.
+- Distinguir en el propio texto lo medido de lo deducido: «son 348.263» si se contó; «serían 348.263 si» si es una hipótesis.
+- Al escribir una cifra en un documento, confirmar que sigue vigente tras el cambio que la motivó. Una cifra citada es un compromiso con el repo, no decoración: si la `X` o una fila del pipeline se mueve, toda figura que dependa de ella pasa a ser falsa y hay que buscarla y corregirla en el mismo cambio.
+- Si una medición contradice una afirmación previa —propia o de otro documento—, corregir la afirmación en el sitio, anotar la evidencia y decirlo en la respuesta. No dejar la afirmación vieja conviviendo con el dato nuevo: es la forma cómo una suposición se convierte en cita falsa.
+- Si un hecho no se puede medir, dejarlo como hipótesis explícita, diciendo qué habría que medirse para convertirlo en afirmación.
+- Antes de un cambio que exija re-ejecutar el pipeline o alterar la forma de un artefacto, medir el alcance (cuántas cifras y archivos quedan afectados) y pedir autorización. Las adiciones son caras: planear antes de escribir.
+
 ---
+
 
 # C. Robustez
 
@@ -292,6 +305,7 @@ Regla de oro del curso (criterio "Reproducibilidad", 10 %): **rutas relativas + 
 Antes de modificar código: leer el código existente, entender su propósito, identificar dependencias, reglas de negocio y restricciones, y detectar qué comportamiento debe conservarse. No refactorizar basándose en fragmentos aislados si el contexto disponible es insuficiente.
 
 No inventar requisitos, resultados, datos, comportamientos, dependencias ni reglas de negocio. Si falta información necesaria para decidir correctamente, indicarlo.
+Ver **B8** para las afirmaciones y cifras sobre los datos.
 
 ## E2. Preservación del comportamiento
 
