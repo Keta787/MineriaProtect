@@ -42,8 +42,8 @@ Enriquecimiento de competencias (5 columnas, fase de integracion):
         conteo de competencias seria ambiguo entre "un cargo duro" y "muchos
         periodos en el mismo cargo".
 
-Salida (unica): `data/03_processed/empleos.csv` (16 columnas), canonica.
-`limpiar_empleos.py` la lee y exporta `empleos_limpio.csv` (19 columnas).
+Salida (unica): `data/03_processed/empleos.csv` (17 columnas), canonica.
+`limpiar_empleos.py` la lee y exporta `empleos_limpio.csv` (20 columnas).
 
 Como ejecutar:
     python src/limpieza/integrar_empleos.py
@@ -95,7 +95,7 @@ SALIDA = PROC / "empleos.csv"
 # 'optional' son telemetria de jerarquia y se descartan por decision de alcance.
 RELACION_KEPT = "essential"
 
-# Orden de columnas canonico del integrado (16 columnas).
+# Orden de columnas canonico del integrado (17 columnas).
 COLUMNAS = [
     "resume_id",
     "start_date",

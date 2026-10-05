@@ -118,7 +118,7 @@ EXPECTED = {
     "duracion_iqr_superior": 24.5,
     "duracion_maxima": 160,
     # Enriquecimiento de competencias: las cifras verificadas al regenerar
-    # `empleos.csv` con integrar_empleos.py (16 columnas).
+    # `empleos.csv` con integrar_empleos.py (17 columnas).
     "filas_saber_skills_ok": 348_263,
     "filas_sin_oficio": 28_304,
     "max_veces_ese_oficio": 19,

@@ -576,6 +576,8 @@ NaN inyectado      -> La `X` tiene 1 nulos
 columna de texto   -> La `X` tiene 1 columnas no numericas
 ```
 
+En el dataset, en cambio, las tres banderas se quedan. Se evaluó borrar también las dos constantes de ahí y no compensa. No es que guarden algo que no haya en otra parte: medido sobre las 376.567 filas, `es_unknown_ocupacion` es exactamente `emparejado == 'unknown'` (y también `matched_code == 'unknown'`), `es_rescatado` es exactamente `emparejado == 'rescatado'`, y las dos juntas equivalen a `occupation_code` vacío. La distinción entre las dos situaciones malas tampoco se pierde: `isco_group` está vacío en las 25.805 filas `unknown` y lleno en las 2.499 `rescatado`. Lo que sí cuesta es el preprocesamiento entero —el dataset pasa de 20 a 18 columnas, hay que rehacer los tres CSV, y la verificación de `limpiar_empleos.py` L440-442 usa las dos banderas como instrumento—. Se quedan porque en el dataset no son ruido, y porque las 28.304 filas del recorte (25.805 + 2.499) quedan nombradas por una columna y no por una regla de aritmética.
+
 ### El escalamiento, que era la parte no obvia
 
 Agregadas **sin** escalar, las skills rompen la métrica. Medido sobre la submuestra de 50.000 filas
