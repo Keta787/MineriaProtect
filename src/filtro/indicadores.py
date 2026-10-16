@@ -1,6 +1,6 @@
 """Indicadores reutilizables para el análisis de los cuadernos del proyecto.
 
-Derivados calculados en vivo a partir de `data/03_processed/empleos_limpio.csv`:
+Derivados calculados en vivo a partir de `data/03_processed/empleos_con_competencias_limpio.csv`:
 
 - Duración de cada experiencia en trimestres (fórmula inclusiva; `Present` → NaN).
 - Distribuciones (IQR de Tukey) y concentración por ocupación / grupo ISCO.
@@ -12,8 +12,9 @@ Y los nombres de las competencias ESCO, que no viven en los CSV del pipeline
 (allí solo hay contadores, para no multiplicar las filas). Hay dos caminos:
 
 - `cargar_competencias()`: lee `data/03_processed/competencias_por_oficio.csv`,
-  la tabla normalizada que produce `src/limpieza/generar_competencias.py`
-  (1 fila = 1 competencia de 1 oficio). Es la vía preferida.
+  la tabla agrupada que produce `src/limpieza/generar_competencias.py`
+  (1 fila = 1 oficio). Es la vía preferida; la función la expande a formato
+  largo para mantener estable el resto de la API.
 - `cargar_relaciones()`: lee el puente ESCO crudo y resuelve el salto
   `code` -> `occupationUri` (UUID) en el momento. Sin ese salto el cruce no es
   posible y falla en silencio devolviendo 0 filas; se conserva como lectura
@@ -66,6 +67,11 @@ RELACION_KEPT = "essential"
 BANDERAS = ("es_unknown_ocupacion", "es_rescatado", "es_vigente")
 
 
+def _ausente(serie: pd.Series) -> pd.Series:
+    """Indica ausencia tanto en CSV leído como texto como en DataFrame con NaN."""
+    return serie.isna() | serie.astype("string").str.strip().eq("")
+
+
 def cargar_relaciones() -> pd.DataFrame:
     """ÚNICA función con I/O del módulo: lee el puente de competencias.
 
@@ -92,7 +98,7 @@ def skills_de_ocupacion(relaciones: pd.DataFrame, occupation_code: str) -> pd.Da
     """Competencias esenciales que exige un cargo (tabla de `cargar_relaciones`).
 
     Devuelve una fila por competencia, ordenada por tipo. Se llama con el
-    `occupation_code` de `empleos_limpio.csv`; ese código coincide con
+    `occupation_code` de `empleos_con_competencias_limpio.csv`; ese código coincide con
     `n_skills_essential`, así que el conteo y la lista son consistentes.
     """
     sub = relaciones.loc[relaciones["occupation_code"].eq(occupation_code)]
@@ -145,10 +151,8 @@ def cargar_competencias() -> pd.DataFrame:
     """Lee la tabla de competencias por oficio (produce `generar_competencias.py`).
 
     Devuelve columnas `occupation_code`, `occupation_label`, `habilidad_nombre` y
-    `habilidad_tipo`. Es la vía preferida para consultar nombres: el archivo ya
-    existe, el salto `code` -> `occupationUri` ya está hecho y validado contra
-    `n_skills_essential`, y leerlo no depende de que la fuente ESCO siga donde
-    estaba.
+    `habilidad_tipo` en formato largo, aunque el archivo persistido usa una fila
+    por oficio y listas separadas por `|`.
 
     `cargar_relaciones()` se conserva como lectura directa de la fuente ESCO, que
     es la que usaba el pipeline antes de que existiera esta tabla.
@@ -160,8 +164,30 @@ def cargar_competencias() -> pd.DataFrame:
         f"Falta la tabla de competencias: {RUTA_COMPETENCIAS}\n"
         "Generala con: python src/limpieza/generar_competencias.py"
     )
-    return pd.read_csv(RUTA_COMPETENCIAS, dtype=str, encoding="utf-8",
-                       keep_default_na=False, na_values=[""])
+    agrupada = pd.read_csv(RUTA_COMPETENCIAS, dtype=str, encoding="utf-8",
+                           keep_default_na=False, na_values=[""])
+    esperadas = {"occupation_code", "occupation_label", "skills", "knowledge", "sin_tipo"}
+    assert esperadas.issubset(agrupada.columns), (
+        f"Esquema inesperado en competencias_por_oficio.csv: {list(agrupada.columns)}"
+    )
+    partes = []
+    for columna, tipo in (
+        ("skills", "skill/competence"),
+        ("knowledge", "knowledge"),
+        ("sin_tipo", "sin_tipo"),
+    ):
+        sub = agrupada[["occupation_code", "occupation_label", columna]].copy()
+        sub["habilidad_nombre"] = sub[columna].str.split("|")
+        sub["habilidad_tipo"] = tipo
+        sub = sub.explode("habilidad_nombre")
+        sub = sub.loc[
+            sub["habilidad_nombre"].notna()
+            & sub["habilidad_nombre"].ne("")
+        ]
+        partes.append(sub[[
+            "occupation_code", "occupation_label", "habilidad_nombre", "habilidad_tipo"
+        ]])
+    return pd.concat(partes, ignore_index=True)
 
 
 def competencias_por_oficio(competencias: pd.DataFrame) -> dict[str, list[str]]:
@@ -248,7 +274,7 @@ def distribucion_duracion(df: pd.DataFrame) -> pd.DataFrame:
 def duracion_mediana_por_grupo(df: pd.DataFrame, top: int = 15) -> pd.DataFrame:
     """Mediana de duración por grupo ISCO (grupos más frecuentes)."""
     grupo = df[["isco_group_label", "start_date", "end_date", "resume_id"]].copy()
-    grupo = grupo.dropna(subset=["isco_group_label"])
+    grupo = grupo.loc[~_ausente(grupo["isco_group_label"])]
     grupo = grupo.assign(dur=duracion_trimestres(grupo)).dropna(subset=["dur"])
     resumen = (
         grupo.groupby("isco_group_label")["dur"]
@@ -272,8 +298,9 @@ def duracion_mediana_por_nivel(df: pd.DataFrame) -> pd.DataFrame:
 
 def top_valores(serie: pd.Series, n: int = 10) -> pd.DataFrame:
     """Top n de una columna categórica (% sobre el total con etiqueta)."""
-    vc = serie.dropna().value_counts().head(n).rename("n")
-    total = int(serie.notna().sum())
+    valores = serie.loc[~_ausente(serie)]
+    vc = valores.value_counts().head(n).rename("n")
+    total = int(len(valores))
     out = vc.to_frame()
     out["%_de_con_etiqueta"] = (out["n"] / total * 100).round(2)
     return out
@@ -281,7 +308,7 @@ def top_valores(serie: pd.Series, n: int = 10) -> pd.DataFrame:
 
 def crosstab_nivel_grupo(df: pd.DataFrame, top: int = 30) -> pd.DataFrame:
     """% de filas por fila-nivel: frecuencia relativa de grupos ISCO por nivel."""
-    top_grupos = df["isco_group_label"].dropna().value_counts().head(top).index
+    top_grupos = df.loc[~_ausente(df["isco_group_label"]), "isco_group_label"].value_counts().head(top).index
     sub = df[df["isco_group_label"].isin(top_grupos)]
     cruce = pd.crosstab(sub["university_level"], sub["isco_group_label"])
     return (cruce.div(cruce.sum(axis=1), axis=0) * 100).round(2)
@@ -316,9 +343,9 @@ def resumen_perfil(empleos: pd.DataFrame, resume_id: str) -> pd.DataFrame:
     """
     ruta = empleos.loc[empleos["resume_id"].eq(resume_id)]
     assert not ruta.empty, f"La persona {resume_id!r} no tiene experiencias"
-    niveles = ruta["university_level"].dropna().unique()
+    niveles = ruta.loc[~_ausente(ruta["university_level"]), "university_level"].unique()
     veces = pd.to_numeric(ruta["veces_ese_oficio"], errors="coerce")
-    sin_oficio = int(ruta["occupation_code"].isna().sum())
+    sin_oficio = int(_ausente(ruta["occupation_code"]).sum())
     return pd.DataFrame([{
         "persona": resume_id,
         "nivel_educativo": niveles[0] if len(niveles) else "No reportado",
@@ -368,7 +395,7 @@ def perfil_persona(
     trabajo = trabajo.reset_index(drop=True)
 
     por_oficio = competencias_por_oficio(competencias)
-    sin_oficio = trabajo["occupation_code"].isna()
+    sin_oficio = _ausente(trabajo["occupation_code"])
 
     salida = trabajo.assign(
         # 'Present' no tiene fin observado: su duración es NaN (censura), nunca 0.
@@ -379,7 +406,7 @@ def perfil_persona(
         orden=range(1, len(trabajo) + 1),
     )
     salida["competencias"] = [
-        por_oficio[code] if pd.notna(code) else []
+        por_oficio[code] if pd.notna(code) and str(code).strip() else []
         for code in salida["occupation_code"]
     ]
     salida["n_competencias"] = salida["competencias"].apply(len)

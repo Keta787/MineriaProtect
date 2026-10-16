@@ -1,8 +1,8 @@
 """
 generar_competencias.py
 =======================
-Construye `data/03_processed/competencias_por_oficio.csv`: la tabla
-normalizada de competencias ESCO, con UNA FILA POR (OFICIO, COMPETENCIA).
+Construye `data/03_processed/competencias_por_oficio.csv`: una fila por
+oficio, con sus competencias agrupadas por tipo.
 
 Por que una tabla aparte y no una columna dentro de `empleos_limpio.csv`
 -----------------------------------------------------------------------
@@ -16,10 +16,9 @@ La tabla aparte se une despues con un cruce N:1 por `occupation_code`, que YA
 existe en los tres CSV del pipeline (`empleos.csv`, `empleos_limpio.csv`,
 `empleos_limpio_sin_outliers.csv`). No hay que modificar ni un byte de ellos.
 
-"1 fila = 1 competencia de 1 oficio" es la regla de GUARDADO, no la de LECTURA.
-Para mostrar el perfil de un cargo se agrupa por `occupation_code` y sale una
-linea con todas sus competencias: ver `src/filtro/indicadores.py`
-(`perfil_persona`, `cargar_competencias`).
+La fuente se valida en formato largo (una fila por competencia), pero la salida
+guarda una sola fila por `occupation_code`. Las columnas `skills`, `knowledge`
+y `sin_tipo` contienen listas separadas por `|`.
 
 Que significa "competencia de una persona" (leer antes de usar)
 ---------------------------------------------------------------
@@ -47,7 +46,7 @@ de seguridad: si el puente ESCO se rompe, el bloque de validacion corta la
 ejecucion con diagnostico en vez de dejar dos numeros distintos circulando por
 el proyecto.
 
-Salida (unica): `data/03_processed/competencias_por_oficio.csv` (4 columnas)
+Salida (unica): `data/03_processed/competencias_por_oficio.csv` (5 columnas)
 
 Como ejecutar:
     python src/limpieza/generar_competencias.py
@@ -95,7 +94,10 @@ SKILL_RELATIONS = INTERIM / "SKILLS" / "occupationSkillRelations_en_limpio.csv"
 PROC = RAIZ / "data" / "03_processed"
 # `empleos.csv` no es un insumo: se lee solo para CONTRASTAR la tabla contra los
 # contadores que el pipeline ya calculo. Si no esta, se genera igual y se avisa.
-EMPLEOS = PROC / "empleos.csv"
+EMPLEOS_CANDIDATOS = (
+    PROC / "empleos.csv",
+    PROC / "empleos_con_competencias.csv",
+)
 SALIDA = PROC / "competencias_por_oficio.csv"
 LOGS_DIR = RAIZ / "logs"
 BITACORA = LOGS_DIR / "bitacora_generar_competencias.csv"
@@ -105,16 +107,21 @@ BITACORA = LOGS_DIR / "bitacora_generar_competencias.csv"
 # `integrar_empleos.py`.
 RELACION_KEPT = "essential"
 
-# Orden de columnas de la salida. La clave del par es
-# (`occupation_code`, `habilidad_nombre`); `occupation_label` va en medio porque es
-# lo que se lee al inspeccionar el archivo a ojo, y `habilidad_tipo` al final
-# porque es lo unico que se puede filtrar.
+# Columnas de la salida: una sola fila por occupation_code.
 COLUMNAS = [
+    "occupation_code",
+    "occupation_label",
+    "skills",
+    "knowledge",
+    "sin_tipo",
+]
+COLUMNAS_LARGAS = [
     "occupation_code",
     "occupation_label",
     "habilidad_nombre",
     "habilidad_tipo",
 ]
+SEPARADOR_COMPETENCIAS = "|"
 
 # 39 de las 67.600 relaciones 'essential' llegan sin `skillType` (defecto
 # conocido de la fuente, documentado en el README). No se dejan vacias: se
@@ -180,11 +187,15 @@ def _validar_contra_empleos(conteo: pd.DataFrame) -> bool:
     184 oficios que ESCO publica y JobHop no usa no tienen contraparte, y
     compararlos daria NaN != NaN (falso positivo, ver `docs/SKILLS.md`).
     """
-    if not EMPLEOS.exists():
+    empleos = next((ruta for ruta in EMPLEOS_CANDIDATOS if ruta.exists()), None)
+    if empleos is None:
         print("=" * 78)
         print("AVISO: contraste de consistencia OMITIDO")
         print("=" * 78)
-        print(f"No existe {EMPLEOS}, asi que no se puede contrastar la tabla")
+        print(
+            "No existe ninguno de los datasets de contraste: "
+            + ", ".join(str(ruta) for ruta in EMPLEOS_CANDIDATOS)
+        )
         print("contra `n_skills_essential`. La tabla se genero, pero su consistencia")
         print("con el pipeline NO quedo verificada en esta corrida.")
         print("Ejecuta antes: python src/limpieza/integrar_empleos.py")
@@ -192,8 +203,8 @@ def _validar_contra_empleos(conteo: pd.DataFrame) -> bool:
 
     # Solo las columnas de los contadores: leer 376.567 x 17 para usar cuatro
     # columnas seria gastar memoria a cambio de nada.
-    emp = _cargar(EMPLEOS, usecols=list(CONTADORES) + ["occupation_code"])
-    emp = emp.loc[emp["occupation_code"].notna()]
+    emp = _cargar(empleos, usecols=list(CONTADORES) + ["occupation_code"])
+    emp = emp.loc[emp["occupation_code"].notna() & emp["occupation_code"].ne("")]
     emp = emp.drop_duplicates(subset="occupation_code").set_index("occupation_code")
 
     comunes = emp.index
@@ -277,19 +288,10 @@ def main() -> None:
         "difieren de occupations; la fuente se actualizo sin re-limpiar"
     )
     par["habilidad_tipo"] = par["habilidad_tipo"].where(par["habilidad_tipo"].notna(), TIPO_SIN_DEFINIR)
-    tabla = par[COLUMNAS]
+    tabla = par[COLUMNAS_LARGAS]
 
-    # Orden determinista: el archivo se lee estable entre corridas y cada oficio
-    # queda con sus competencias en filas contiguas, asi que el CSV crudo tambien
-    # sirve para inspeccionar un cargo a ojo.
-    #
-    # El tipo NO se ordena alfabeticamente: como 'sin_tipo' empieza por 'i', el
-    # orden alfabetico lo pondria antes que 'skill/competence'. Aqui se usa el
-    # orden de los buckets que el pipeline ya declaro en `COLUMNAS` de
-    # `integrar_empleos.py` (competence -> knowledge -> sin_tipo), que deja los
-    # 39 pares sin tipo al final, donde se notan. La columna auxiliar se descarta
-    # para no dejar `habilidad_tipo` como categorica: se propagaria al
-    # `pivot_table` de abajo y contaminaria el conteo con categorias no vistas.
+    # Orden determinista del formato largo antes de agrupar. La deduplicacion
+    # final se hace por identificadores ESCO, no por etiquetas.
     orden_tipo = {t: i for i, t in enumerate((*TIPOS_ESCO, TIPO_SIN_DEFINIR))}
     tabla = tabla.assign(_tipo=tabla["habilidad_tipo"].map(orden_tipo))
     tabla = (
@@ -363,23 +365,53 @@ def main() -> None:
     assert desbalance == 0, f"{desbalance} oficios no cierran competence+knowledge+sin_tipo"
     print(f"Cierre competence+knowledge+sin_tipo por oficio: {desbalance} oficios descuadrados")
 
-    # 5. Contraste con los contadores del pipeline (red de seguridad de la
-    #    desnormalizacion de `n_skills_essential`).
+    # 5. Agrupar para la salida final: el codigo queda una sola vez por oficio
+    # y cada bucket conserva sus nombres en orden estable.
+    assert not tabla["habilidad_nombre"].str.contains(r"\|", regex=True).any(), (
+        "Una competencia contiene '|', que es el separador reservado de las listas"
+    )
+    agrupada = (
+        tabla.assign(
+            _skill=tabla["habilidad_nombre"].where(
+                tabla["habilidad_tipo"].eq("skill/competence"), ""
+            ),
+            _knowledge=tabla["habilidad_nombre"].where(
+                tabla["habilidad_tipo"].eq("knowledge"), ""
+            ),
+            _sin_tipo=tabla["habilidad_nombre"].where(
+                tabla["habilidad_tipo"].eq(TIPO_SIN_DEFINIR), ""
+            ),
+        )
+        .groupby(["occupation_code", "occupation_label"], sort=True, as_index=False)
+        .agg(
+            skills=("_skill", lambda s: SEPARADOR_COMPETENCIAS.join(x for x in s if x)),
+            knowledge=("_knowledge", lambda s: SEPARADOR_COMPETENCIAS.join(x for x in s if x)),
+            sin_tipo=("_sin_tipo", lambda s: SEPARADOR_COMPETENCIAS.join(x for x in s if x)),
+        )
+    )
+    assert agrupada["occupation_code"].is_unique, "occupation_code no es unico en la salida"
+    assert len(agrupada) == ESPERADO["oficios_esco"], (
+        f"Filas de salida: {len(agrupada):,} != {ESPERADO['oficios_esco']:,}"
+    )
+    assert not agrupada["occupation_label"].eq("").any(), "Hay oficios sin etiqueta"
+
+    # 6. Contraste con los contadores del pipeline (red de seguridad de la
+    # desnormalizacion de `n_skills_essential`).
     validado = _validar_contra_empleos(conteo)
 
-    # 6. Exportar.
+    # 7. Exportar.
     SALIDA.parent.mkdir(parents=True, exist_ok=True)
-    tabla.to_csv(SALIDA, index=False, encoding="utf-8")
+    agrupada[COLUMNAS].to_csv(SALIDA, index=False, encoding="utf-8")
     print("=" * 78)
     print("SALIDA")
     print("=" * 78)
     print(f"Escrito: {SALIDA} ({SALIDA.stat().st_size / 1e6:.1f} MB)")
-    print(f"Filas: {len(tabla):,} | Oficios: {tabla['occupation_code'].nunique():,} | "
+    print(f"Filas: {len(agrupada):,} | Oficios: {agrupada['occupation_code'].nunique():,} | "
           f"Columnas: {', '.join(COLUMNAS)}")
     print("Se une con los CSV del pipeline por `occupation_code` (N:1). Ningun CSV")
     print("existente fue modificado.")
 
-    # 7. Bitacora de ejecucion.
+    # 8. Bitacora de ejecucion.
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
     nuevo = not BITACORA.exists()
     fila = {

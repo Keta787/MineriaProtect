@@ -14,6 +14,10 @@ __pycache__/
 data/03_processed/*
 !data/03_processed/.gitkeep
 
+# Derivados CSV generados durante la preparacion intermedia.
+# Se regeneran desde data/01_raw/ y no deben entrar en el commit.
+data/02_interim/*.csv
+
 # bitácora de ejecución de los pipelines (trazabilidad en ejecución)
 logs/
 

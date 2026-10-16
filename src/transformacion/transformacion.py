@@ -1,4 +1,4 @@
-"""Transformacion de `data/03_processed/empleos_limpio*.csv` a una matriz `X`.
+"""Transformacion de `data/03_processed/empleos_con_competencias*.csv` a `X`.
 
 Este modulo es el codigo de la fase de Transformacion (KDD / CRISP-DM) que hasta
 ahora vivia suelto dentro de `notebooks/4.0_transformacion.ipynb` y
@@ -50,8 +50,8 @@ PROC = RAIZ / "data" / "03_processed"
 VERSION_CON_OUTLIERS = "con_outliers"
 VERSION_SIN_OUTLIERS = "sin_outliers"
 CSV_POR_VERSION = {
-    VERSION_CON_OUTLIERS: "empleos_limpio.csv",
-    VERSION_SIN_OUTLIERS: "empleos_limpio_sin_outliers.csv",
+    VERSION_CON_OUTLIERS: "empleos_con_competencias_limpio.csv",
+    VERSION_SIN_OUTLIERS: "empleos_con_competencias_limpio_sin_outliers.csv",
 }
 
 # Submuestra de trabajo: las dummies de ocupacion son ~2.800 columnas densas y
@@ -66,10 +66,7 @@ SEED_DIST = 42
 # oficios salen de `get_dummies` sobre la submuestra, asi que un cambio de
 # codificacion o de datos las moveria. Para eso `armar_X` lo comprueba al final
 # y su mensaje obliga a actualizar las cifras en el MISMO commit.
-FORMAS_X = {
-    VERSION_CON_OUTLIERS: 2325,
-    VERSION_SIN_OUTLIERS: 2326,
-}
+FORMAS_X = {VERSION_CON_OUTLIERS: 2328, VERSION_SIN_OUTLIERS: 2329}
 
 TRIMESTRE_VALIDO = re.compile(r"^Q([1-4])\s+(\d{4})$")
 # 'Present' es censura por la derecha (el empleo sigue vigente): no se inventa su
@@ -98,7 +95,7 @@ BANDERAS = ["es_unknown_ocupacion", "es_rescatado", "es_vigente"]
 #
 #   - no aporta nada a una distancia euclidea (KNN, k-means, PCA): todas las filas
 #     estan a la misma distancia de ella, luego la dimension colapsa a 0;
-#   - infla el conteo de features (2.327 -> 2.325);
+#   - infla el conteo de features (2.330 -> 2.328);
 #   - sobre todo, ENGAÑA cualquier lectura de importancia de variables: un modelo
 #     que le de peso distinto de cero a una constante no esta usando informacion,
 #     esta usando un artefacto del drop.
@@ -124,6 +121,8 @@ BANDERAS_EXCLUIDAS = ["es_unknown_ocupacion", "es_rescatado"]
 # numero y la tabla de descriptivos. Son las mismas dos columnas.
 SKILLS = ["n_skills_essential", "veces_ese_oficio"]
 CONTADORES = SKILLS
+SKILL_LISTAS = ["skills", "knowledge", "sin_tipo"]
+SKILL_FLAGS = ["tiene_skills", "tiene_knowledge", "tiene_sin_tipo"]
 
 # Columnas agrupadas por el escalador que les corresponde. El agrupamiento no es
 # estetico: es la decision de la seccion de escalado, y las medidas de aporte a la
@@ -164,11 +163,11 @@ def fusionar_rescatado(df: pd.DataFrame) -> pd.DataFrame:
 
     En la sesion 3, `limpieza` marco como `es_rescatado` las filas a las que se
     les recupero un codigo por prefijo (grupo ISCO de 4 digitos). Esas filas
-    llegaron a `empleos_limpio.csv` con `occupation_code` vacio, asi que aqui se
+    llegaron al dataset limpio con `occupation_code` vacio, asi que aqui se
     les reponte el codigo recuperado y dejan de ser 'sin ocupacion'.
     """
     ocup = df["occupation_code"].copy()
-    fusion = ocup.isna() & (df["matched_code"] != "unknown")
+    fusion = ocup.fillna("").eq("") & df["matched_code"].ne("unknown")
     ocup.loc[fusion] = df.loc[fusion, "matched_code"]
     return df.assign(occupation_code=ocup)
 
@@ -190,7 +189,30 @@ def fechas_ordinales(df: pd.DataFrame) -> pd.DataFrame:
 
 def educacion_ordinal(df: pd.DataFrame) -> pd.DataFrame:
     """Anade `univ_ord`, la version ordinal de `university_level`."""
-    return df.assign(univ_ord=df["university_level"].map(ORDEN_UNIV))
+    nivel = df["university_level"].map(ORDEN_UNIV)
+    desconocidos = (
+        df["university_level"].notna()
+        & df["university_level"].ne("")
+        & nivel.isna()
+    )
+    if desconocidos.any():
+        valores = sorted(df.loc[desconocidos, "university_level"].astype(str).unique())
+        raise ValueError(f"Niveles educativos no reconocidos: {valores}")
+    return df.assign(univ_ord=nivel.fillna(ORDEN_UNIV["No reportado"]))
+
+
+def derivar_skills(df: pd.DataFrame) -> pd.DataFrame:
+    """Deriva presencia de perfiles ESCO sin convertir listas de texto en X."""
+    faltantes = [c for c in SKILL_LISTAS if c not in df.columns]
+    if faltantes:
+        raise ValueError(
+            f"El dataset canónico no contiene las listas de skills: {faltantes}"
+        )
+    return df.assign(
+        tiene_skills=df["skills"].fillna("").ne("").astype(np.uint8),
+        tiene_knowledge=df["knowledge"].fillna("").ne("").astype(np.uint8),
+        tiene_sin_tipo=df["sin_tipo"].fillna("").ne("").astype(np.uint8),
+    )
 
 
 def universo_con_competencias(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
@@ -214,6 +236,7 @@ def universo_con_competencias(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFr
     - `df`        el universo de trabajo.
     - `informe`   lo que se perdio, ya medido.
     """
+    df = derivar_skills(df)
     for c in CONTADORES:
         df = df.assign(**{c: pd.to_numeric(df[c], errors="coerce")})
 
@@ -289,9 +312,11 @@ def codificar(df_s: pd.DataFrame) -> dict:
     flags = (df_s[BANDERAS_EN_X]
              .replace({"True": 1, "False": 0})
              .astype(np.uint8))
+    skills = df_s[SKILL_FLAGS].astype(np.uint8)
     return {"emparejado": dummies_emparejado,
             "ocupacion": dummies_ocupacion,
-            "banderas": flags}
+            "banderas": flags,
+            "skills": skills}
 
 
 def escalar(df_s: pd.DataFrame) -> dict:
@@ -363,6 +388,7 @@ def armar_X(escalado: dict, codificado: dict, df_s: pd.DataFrame,
         df_s[BINARIA],           # 0/1, sin escalar
         codificado["emparejado"],  # emparejado_ok
         codificado["ocupacion"],  # occupation_<codigo>
+        codificado["skills"],  # presencia de perfiles ESCO
         codificado["banderas"],   # solo es_vigente (ver BANDERAS_EN_X)
     ], axis=1)
 
@@ -387,10 +413,12 @@ def armar_X(escalado: dict, codificado: dict, df_s: pd.DataFrame,
         f"o una fila se quedara en todos 0, la `X` ya no describiria lo mismo "
         f"sin que se note en la forma.")
 
-    assert X.shape[1] == FORMAS_X[version], (
-        f"La `X` de {version} paso de {FORMAS_X[version]} a {X.shape[1]} "
-        f"columnas. Con este assert, toda cifra citada sobre la `X` acaba de "
-        f"quedarse vieja: actualiza README.md y docs/SKILLS.md en este mismo "
-        f"commit y solo despues cambia `FORMAS_X`.")
+    esperada = FORMAS_X[version]
+    if esperada is not None:
+        assert X.shape[1] == esperada, (
+            f"La `X` de {version} paso de {esperada} a {X.shape[1]} columnas."
+        )
+    assert set(SKILL_FLAGS).issubset(X.columns), (
+        "La X enriquecida debe conservar las tres banderas de presencia de skills.")
 
     return X
