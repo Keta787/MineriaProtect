@@ -1,0 +1,13 @@
+|--- nivel_ordinal <= 2.50
+|   |--- nivel_ordinal <= 1.50
+|   |   |--- class: 0
+|   |--- nivel_ordinal >  1.50
+|   |   |--- nivel_no_reportado <= 0.50
+|   |   |   |--- class: 0
+|   |   |--- nivel_no_reportado >  0.50
+|   |   |   |--- class: 0
+|--- nivel_ordinal >  2.50
+|   |--- nivel_ordinal <= 3.50
+|   |   |--- class: 0
+|   |--- nivel_ordinal >  3.50
+|   |   |--- class: 0

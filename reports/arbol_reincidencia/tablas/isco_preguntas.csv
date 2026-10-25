@@ -1,0 +1,4 @@
+#,pregunta,regla,profundidad,n_nodo,tasa_nodo,n_izq,tasa_izq,n_der,tasa_der,lift_izq,lift_der,delta_pp_izq,delta_pp_der
+1,¿Pertenece al grupo ISCO 5?,isco_5 > 0.5,0,261197,30.51,203927,29.28,57270,34.89,0.96,1.144,-1.23,4.38
+2,¿Pertenece al grupo ISCO 3?,isco_3 > 0.5,1,203927,29.28,153922,27.91,50005,33.49,0.915,1.098,-2.6,2.98
+3,¿Pertenece al grupo ISCO 9?,isco_9 > 0.5,2,153922,27.91,118250,26.3,35672,33.25,0.862,1.09,-4.21,2.74

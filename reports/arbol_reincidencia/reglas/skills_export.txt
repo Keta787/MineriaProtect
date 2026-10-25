@@ -1,0 +1,22 @@
+|--- n_skills_competence <= 18.50
+|   |--- n_skills_essential <= 10.50
+|   |   |--- n_skills_essential <= 9.50
+|   |   |   |--- class: 0
+|   |   |--- n_skills_essential >  9.50
+|   |   |   |--- class: 0
+|   |--- n_skills_essential >  10.50
+|   |   |--- n_skills_competence <= 13.50
+|   |   |   |--- class: 0
+|   |   |--- n_skills_competence >  13.50
+|   |   |   |--- class: 0
+|--- n_skills_competence >  18.50
+|   |--- n_skills_essential <= 20.50
+|   |   |--- n_skills_knowledge <= 0.50
+|   |   |   |--- class: 0
+|   |   |--- n_skills_knowledge >  0.50
+|   |   |   |--- class: 1
+|   |--- n_skills_essential >  20.50
+|   |   |--- n_skills_knowledge <= 25.50
+|   |   |   |--- class: 0
+|   |   |--- n_skills_knowledge >  25.50
+|   |   |   |--- class: 1
