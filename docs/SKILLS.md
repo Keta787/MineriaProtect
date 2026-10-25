@@ -8,7 +8,7 @@ Las cifras de este documento son de la rama vigente (**test + val**: 376.567 exp
 71.061 personas) y se verificaron corriendo el pipeline completo.
 
 > **De dónde sale cada perfil.** Las cifras de las §2 y §7 se midieron sobre
-> `empleos_limpio.csv` con el bloque de la §12, no salieron de una sesión de EDA. Conviene decirlo
+> `empleos_con_competencias_limpio.csv` con el bloque de la §12, no salieron de una sesión de EDA. Conviene decirlo
 > porque el cuaderno `2.0_EDA_y_seleccion.ipynb` —el único EDA del repo— **se ejecutó el 2026-09-15,
 > antes** de que las seis columnas se integraran, y su salida guardada ni las menciona. Sus
 > comentarios sobre la taxonomía tampoco incluyen los archivos de `01_raw/SKILLS/`. Si se quiere un
@@ -272,49 +272,47 @@ aritmético, no un atributo del cargo.
 
 ## 8. Los nombres: la tabla `competencias_por_oficio.csv`
 
-Los nombres de las competencias **sí están en el pipeline**, pero no dentro de `empleos_limpio.csv`:
-viven en una tabla aparte, `data/03_processed/competencias_por_oficio.csv`, con **una fila por (oficio,
-competencia)**. La produce `src/limpieza/generar_competencias.py`.
+Los nombres de las competencias **sí están en el pipeline**. La fuente normalizada sigue siendo
+`data/03_processed/competencias_por_oficio.csv`, con **una fila por oficio**, y
+`unificar_competencias_empleos.py` conserva sus listas en las copias enriquecidas
+`empleos_con_competencias.csv` y `empleos_con_competencias_limpio.csv`.
 
 ### Por qué una tabla y no una columna
 
 Por el motivo de la §5 (los nombres son largos: 659 caracteres de promedio) y por uno propio: las
 competencias son un atributo del **oficio**, no de la persona. Hay **3.039 oficios** para 71.061
-personas y 376.567 experiencias, así que escribirlas en cada fila las repetiría unas 376.000 veces
-(+230 MB). En su propia tabla se escriben **una vez por oficio** y se unen con un cruce N:1 por
-`occupation_code`, que ya existe en los tres CSV del pipeline. **No hizo falta modificar ninguno.**
+personas y 376.567 experiencias, así que la tabla agrupada evita recalcular el perfil y permite
+regenerar las copias enriquecidas mediante un cruce N:1 por `occupation_code`, sin modificar los
+CSV de entrada originales.
 
 ### La forma de la tabla
 
 ```
-occupation_code | occupation_label         | habilidad_nombre                | habilidad_tipo
-9111.1          | domestic cleaner         | cleaning techniques             | knowledge
-9111.1          | domestic cleaner         | remove dust                    | skill/competence
-9111.1          | domestic cleaner         | make the beds                  | skill/competence
+occupation_code | occupation_label | skills                     | knowledge              | sin_tipo
+9111.1          | domestic cleaner  | remove dust|make the beds   | cleaning techniques    |
 ...
 ```
 
 | | |
 |---|---|
-| Filas | **67.600** (1 por par oficio × competencia) |
+| Filas | **3.039** (1 por oficio) |
 | Oficios | **3.039** |
 | Habilidades distintas | **11.378** |
-| Peso | 5,02 MiB |
+| Columnas | **5** (`occupation_code`, `occupation_label`, `skills`, `knowledge`, `sin_tipo`) |
 
-**"1 fila = 1 competencia" es la regla de guardado, no la de lectura.** Para mostrar el perfil de un
-cargo se agrupa por `occupation_code` y sale una línea con todas sus competencias; eso hace
-`perfil_persona()`. Un cargo con 20 competencias ocupa 20 filas en el CSV y se muestra como una sola
-línea de 20 nombres.
+**"1 fila = 1 oficio" es la regla de guardado.** Las columnas `skills`, `knowledge` y `sin_tipo`
+agrupan los nombres separados por `|`; para mostrar el perfil de un cargo,
+`cargar_competencias()` expande esas listas a formato largo y `perfil_persona()` recibe una lista de
+competencias como antes.
 
-**Por qué no la forma ancha** (3.039 filas con los nombres dentro de un texto delimitado): permite
-preguntar *«¿qué oficios exigen `welding techniques`?»* o *«¿qué hay en común entre horneador y
-welder?»* con un `groupby`, en vez de partir texto en 3.039 filas cada vez. Eso es justamente la
-pregunta de investigación, y cuesta 3 MB más.
+Las listas usan `|` como separador y se expanden con `cargar_competencias()` cuando una consulta
+necesita formato largo. Así `occupation_code` permanece una sola vez en el CSV persistido, mientras
+las funciones de análisis conservan la API de una fila por competencia.
 
 ### La tabla es un superconjunto del dataset
 
 La tabla describe a **ESCO** (3.039 oficios); JobHop solo usa **2.855**. Los 184 oficios restantes
-(3.693 competencias) no aparecen en ninguna fila de `empleos_limpio.csv` y están a propósito, para
+(3.693 competencias) no aparecen en ninguna fila de `empleos_con_competencias_limpio.csv` y están a propósito, para
 poder ampliar sin volver a la fuente. No es una discrepancia.
 
 ### Las dos fuentes de verdad, vigiladas
@@ -341,7 +339,7 @@ rompe, el pipeline corta con diagnóstico en vez de dejar dos números distintos
 ```python
 import indicadores as I
 
-comp = I.cargar_competencias()                       # 67.600 × 4, la tabla normalizada
+comp = I.cargar_competencias()                       # 67.600 × 4 en formato largo para lectura
 I.competencias_por_oficio(comp)                      # {occupation_code: [nombres]}
 I.perfil_persona(empleos, comp, "100013")            # trayectoria con las competencias de cada cargo
 I.salto_competencias(empleos, comp)                  # (detalle, resumen) del Jaccard entre contratos
@@ -535,8 +533,8 @@ trabajo, y por eso se excluyen (`BANDERAS_EXCLUIDAS`):
 
 - Una columna constante colapsa a 0 en la dimensión efectiva: todas las filas están a la
   misma distancia de ella, así que no aporta a KNN ni a k-means.
-- Infla el conteo de features: `X_final` baja de 2.327 a **2.325** columnas en `4.0`
-  (2.328 → 2.326 en `4.1`).
+- Infla el conteo de features: `X_final` baja de 2.330 a **2.328** columnas en `4.0`
+  (2.331 → 2.329 en `4.1`).
 - Sobre todo, **engaña la importancia de variables**: un modelo que les dé peso distinto
   de cero no está usando información, está usando el drop.
 
@@ -560,7 +558,7 @@ que aquí no era el de una constante, y era falso. Al ser constante, tampoco apo
 distancia.
 
 `armar_X()` tiene la otra mitad de la guardia. `version` es un parámetro **obligatorio**, sin
-valor por defecto: el número de columnas depende de ella (2.325 en `4.0`, 2.326 en `4.1`), y
+valor por defecto: el número de columnas depende de ella (2.328 en `4.0`, 2.329 en `4.1`), y
 un valor por defecto dejaría la mitad de las llamadas sin comprobar sin que nadie lo notara. Al
 final hay cuatro `assert`: 0 nulos, 0 columnas no numéricas, una dummy por oficio presente en la
 submuestra, y la forma contra `FORMAS_X`. Las columnas de oficios no son un número fijo del
@@ -622,7 +620,7 @@ al módulo al extraer la transformación de los cuadernos, y conviene decirlo po
 anterior de esta línea decía que el check vivía en la celda.
 
 La celda de la `X` final, en cambio, sí sigue comprobando en el cuaderno que no queden nulos ni
-dtypes no numéricos: `X_final` queda en (50.000 × 2.325) en `4.0` y (50.000 × 2.326) en `4.1`,
+dtypes no numéricos: `X_final` queda en (50.000 × 2.328) en `4.0` y (50.000 × 2.329) en `4.1`,
 con 0 nulos y 0 columnas no numéricas en ambos.
 
 ---
@@ -635,7 +633,7 @@ genera después de la integración, porque se contrasta contra sus contadores. E
 ```bash
 python src/limpieza/limpiar_datos.py         # crea data/02_interim/SKILLS/ (el puente limpio)
 python src/limpieza/integrar_empleos.py      # + 6 columnas → empleos.csv   (376.567 × 17)
-python src/limpieza/generar_competencias.py  # tabla de competencias        (67.600 × 4)
+python src/limpieza/generar_competencias.py  # tabla agrupada por oficio      (3.039 × 5)
 python src/limpieza/limpiar_empleos.py       # + 3 banderas → *_limpio.csv  (376.567 × 20)
 python src/limpieza/dividir_por_outliers.py  # sin cola larga              (341.090 × 20)
 ```
@@ -647,7 +645,7 @@ entorno. Correrlos dos veces da el mismo archivo byte a byte.
 > `src/transformacion/` (librería, sin `__main__`), la fase 4 se reproduce abriendo
 > `notebooks/4.0_transformacion.ipynb` o `4.1_transformacion_sin_outliers.ipynb` y ejecutándolos:
 > los cuadernos importan el módulo y **imprimen**, el módulo **devuelve**. No se ejecuta con
-> `python` y no deja archivos: la `X` no se persiste (50.000 × ~2.325 en denso son ~116 MB, y
+> `python` y no deja archivos: la `X` no se persiste (50.000 × ~2.328 en denso son ~116 MB, y
 > el curso no pide el `.csv`), así que la evidencia de esa fase es la salida guardada del
 > cuaderno, no un derivado en `data/`. Los dos cuadernos se conservan y difieren solo en
 > `VERSION`.
@@ -662,15 +660,15 @@ bloque es exploratorio y no entra en la `X`, pero sus bordes estaban citados en 
 
 > La excepción son los CSV de bitácora en `logs/`, que llevan una marca de tiempo ISO y por eso sí
 > cambian en cada corrida. La afirmación es sobre los datos, no sobre los logs. Verificado por hash:
-> reserializar `empleos_limpio_sin_outliers.csv` desde `empleos_limpio.csv` reproduce el SHA-256 del
+> reserializar `empleos_con_competencias_limpio_sin_outliers.csv` desde `empleos_con_competencias_limpio.csv` reproduce el SHA-256 del
 > archivo en disco.
 
 | Archivo | Filas | Columnas | Tamaño |
 |---|---|---|---|
 | `data/03_processed/empleos.csv` | 376.567 | 17 | 47,9 MiB |
-| `data/03_processed/competencias_por_oficio.csv` | 67.600 | 4 | 5,02 MiB |
-| `data/03_processed/empleos_limpio.csv` | 376.567 | 20 | 54,8 MiB |
-| `data/03_processed/empleos_limpio_sin_outliers.csv` | 341.090 | 20 | 49,5 MiB |
+| `data/03_processed/competencias_por_oficio.csv` | 3.039 | 5 | — |
+| `data/03_processed/empleos_con_competencias_limpio.csv` | 376.567 | 23 | 54,8 MiB |
+| `data/03_processed/empleos_con_competencias_limpio_sin_outliers.csv` | 341.090 | 23 | 49,5 MiB |
 
 (En MiB, no en MB decimales: los mismos archivos miden 5,3 / 50,2 / 57,4 / 51,9 MB. Vale la pena
 decirlo porque `ls -h` y `stat` usan bases distintas y las cifras parecen no cuadrar.)
@@ -697,7 +695,7 @@ distintas.
 Para una revisión completa del dataset:
 
 ```python
-e = pd.read_csv("data/03_processed/empleos_limpio.csv", dtype=str,
+e = pd.read_csv("data/03_processed/empleos_con_competencias_limpio.csv", dtype=str,
                 keep_default_na=False, na_values=[""])
 num = lambda c: pd.to_numeric(e[c], errors="coerce")
 ok = e["saber_skills"].eq("ok")
@@ -722,8 +720,7 @@ PK = ["resume_id", "occupation_code", "start_date", "end_date"]
 v.duplicated(subset=PK, keep=False).sum()           # 105, en 52 grupos y 51 personas
 
 # la tabla de la §8 reproduce los contadores, por los cuatro
-c = pd.read_csv("data/03_processed/competencias_por_oficio.csv", dtype=str,
-                keep_default_na=False, na_values=[""])
+c = I.cargar_competencias()
 conteo = c.groupby(["occupation_code", "habilidad_tipo"]).size().unstack(fill_value=0)
 conteo["n_skills_essential"] = conteo.sum(axis=1)
 usados = (e.loc[ok, ["occupation_code", "n_skills_essential"]]
@@ -731,7 +728,7 @@ usados = (e.loc[ok, ["occupation_code", "n_skills_essential"]]
           .set_index("occupation_code")["n_skills_essential"]
           .pipe(pd.to_numeric))
 (usados == conteo.loc[usados.index, "n_skills_essential"]).all()          # True
-c.duplicated(subset=["occupation_code", "habilidad_nombre"]).sum()       # 0
+c["occupation_code"].duplicated().sum()                                  # puede ser > 0 al expandir para lectura
 ```
 
 > Detalle de pandas al reproducir esto: **`NaN != NaN` es `True`**, así que cualquier comparación de

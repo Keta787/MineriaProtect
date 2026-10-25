@@ -1,6 +1,7 @@
 """Filtros reutilizables para el análisis de los cuadernos del proyecto.
 
-Todo se aplica sobre `data/03_processed/empleos_limpio.csv` (solo lectura).
+Todo se aplica sobre un DataFrame cargado desde una salida limpia, preferiblemente
+`data/03_processed/empleos_con_competencias_limpio.csv` (solo lectura).
 El CSV se carga con `dtype=str` —regla del proyecto para no perder los ceros a
 la izquierda de los códigos ESCO—, lo que deja las banderas `es_*` como texto
 'True'/'False'; `_como_bool` las normaliza para que el módulo funcione con y sin
@@ -21,6 +22,11 @@ import pandas as pd
 
 TRIMESTRE_VALIDO = re.compile(r"^Q([1-4])\s+(\d{4})$")
 NIVELES_EDUCATIVOS = {"Secondary school", "Bachelor", "Master", "PhD", "No reportado"}
+
+
+def _ausente(serie: pd.Series) -> pd.Series:
+    """Indica ausencia tanto en CSV leído como texto como en DataFrame con NaN."""
+    return serie.isna() | serie.astype("string").str.strip().eq("")
 
 
 def _como_bool(serie: pd.Series) -> pd.Series:
@@ -78,7 +84,7 @@ def filtrar_por_grupo_isco(df: pd.DataFrame, grupo: str) -> pd.DataFrame:
 
 def filtrar_sin_area_isco(df: pd.DataFrame) -> pd.DataFrame:
     """Experiencias cuya ocupación no tiene grupo ISCO asignado (unknown)."""
-    return df.loc[df["isco_group"].isna()].copy()
+    return df.loc[_ausente(df["isco_group"])].copy()
 
 
 def filtrar_por_ocupacion(df: pd.DataFrame, ocupacion: str) -> pd.DataFrame:
@@ -120,7 +126,7 @@ def resumen(df: pd.DataFrame, segmento: str) -> pd.DataFrame:
             "filas": [len(df)],
             "personas": [df["resume_id"].nunique()],
             "vigentes": [int(_como_bool(df["es_vigente"]).sum())],
-            "sin_area_isco": [int(df["isco_group"].isna().sum())],
-            "sin_ocupacion": [int(df["occupation_label"].isna().sum())],
+            "sin_area_isco": [int(_ausente(df["isco_group"]).sum())],
+            "sin_ocupacion": [int(_ausente(df["occupation_code"]).sum())],
         }
     )

@@ -45,6 +45,11 @@ COLUMNAS_TUKEY = ["variable", "Q1", "Q3", "IQR", "lim_inf", "lim_sup",
                   "outliers", "prop_outliers"]
 
 
+def _ausente(serie: pd.Series) -> pd.Series:
+    """Indica ausencia tanto en CSV leído como texto como en DataFrame con NaN."""
+    return serie.isna() | serie.astype("string").str.strip().eq("")
+
+
 def comprobaciones_cruce(df: pd.DataFrame) -> dict:
     """Verifica que el cruce con ESCO sea 1:1 y que las banderas sean coherentes.
 
@@ -53,8 +58,8 @@ def comprobaciones_cruce(df: pd.DataFrame) -> dict:
     un dia sale >1, la tabla de competencias quedaria mal atribuida.
     """
     ok = df[df["emparejado"] == "ok"]
-    g = df.dropna(subset=["occupation_code", "occupation_label"])
-    g2 = df.dropna(subset=["isco_group", "isco_group_label"])
+    g = df.loc[~(_ausente(df["occupation_code"]) | _ausente(df["occupation_label"]))]
+    g2 = df.loc[~(_ausente(df["isco_group"]) | _ausente(df["isco_group_label"]))]
     return {
         "code_coincide": round(
             float((ok["matched_code"] == ok["occupation_code"]).mean()), 4),
@@ -64,8 +69,8 @@ def comprobaciones_cruce(df: pd.DataFrame) -> dict:
             g2.groupby("isco_group")["isco_group_label"].nunique().max()),
         "isco_level_valores": df["isco_level"].dropna().unique().tolist(),
         "isco_nan_coincide": int(
-            (df["isco_level"].isna()
-             == (df["es_unknown_ocupacion"] == "True")).all()),
+            (_ausente(df["isco_level"])
+             == df["emparejado"].eq("unknown")).all()),
         "matched_unknown": df.loc[
             df["emparejado"] == "unknown", "matched_code"].unique()[:3],
         "matched_rescatado": df.loc[
