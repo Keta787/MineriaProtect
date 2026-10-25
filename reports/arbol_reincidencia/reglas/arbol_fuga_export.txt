@@ -1,0 +1,13 @@
+|--- isco_mayor_5 <= 0.50
+|   |--- isco_mayor_3 <= 0.50
+|   |   |--- isco_mayor_9 <= 0.50
+|   |   |   |--- isco_mayor_2 <= 0.50
+|   |   |   |   |--- class: 0
+|   |   |   |--- isco_mayor_2 >  0.50
+|   |   |   |   |--- class: 0
+|   |   |--- isco_mayor_9 >  0.50
+|   |   |   |--- class: 0
+|   |--- isco_mayor_3 >  0.50
+|   |   |--- class: 0
+|--- isco_mayor_5 >  0.50
+|   |--- class: 0

@@ -1,0 +1,3 @@
+modelo,accuracy
+Baseline_most_frequent,0.7178411336066792
+DecisionTree_max_depth4,0.7178411336066792
