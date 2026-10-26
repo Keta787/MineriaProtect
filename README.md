@@ -148,6 +148,9 @@ JobPath/
 │       ├── empleos_con_competencias.csv        # 376.567 × 20 (entrada enriquecida)
 │       ├── empleos_con_competencias_limpio.csv # 376.567 × 23 (limpio final)
 │       └── empleos_con_competencias_limpio_sin_outliers.csv # 341.090 × 23
+├── analysis/                       # sesiones EDA reproducibles y sus salidas
+│   └── <fecha>-<analisis>/         # journal, scripts, plots y controles de la sesión
+├── docs/                           # documentación, informes y reglas de negocio
 ├── logs/                           # bitácoras de ejecución (solo en disco, no versionadas)
 ├── notebooks/                      # COMPRENSION/EXPLORACION — unidad por fase
 │   ├── 1.0_comprension_negocio.md         # acta de constitución analítica (sesión 1)
@@ -156,27 +159,34 @@ JobPath/
 │   ├── 4.0_transformacion.ipynb           # codificación ordinal/one-hot + escalado + PCA (sesión 4, con cola)
 │   ├── 4.1_transformacion_sin_outliers.ipynb  # ídem sobre la variante sin cola larga
 │   └── ENTREGAMINERIA.pdf                 # informe de entrega (marco KDD–CRISP-DM)
+├── reports/                        # resultados generados y artefactos de evaluación
+│   ├── arbol_reincidencia/         # experimento histórico, conservado para trazabilidad
+│   └── arbol_reincidencia_corregido/ # protocolo corregido y sus evidencias
+├── scripts/                        # puntos de entrada ejecutables
+│   ├── pipeline/limpieza/          # preparación e integración de datos
+│   ├── arbol_reincidencia/         # entrenamiento de árboles de reincidencia
+│   └── notebook_tools/             # mantenimiento de notebooks
 └── src/                            # CODIGO REUTILIZABLE
     ├── src.md                      # guía técnica de scripts, módulos y notebooks
     ├── filtro/                     # TRANSFORMACION (insumos) — análisis reutilizable
     │   ├── filtros.py              # selecciones: nivel, grupo ISCO, ocupación, periodo, vigencia
     │   └── indicadores.py          # duración, IQR, transiciones, brechas, crosstabs, banderas,
     │                               #   perfil de competencias por persona, salto de competencias
-    ├── limpieza/                   # PREPROCESAMIENTO/PREPARACION
-    │   ├── limpiar_datos.py        # data/01_raw/ → data/02_interim/ (limpieza de fuentes)
-    │   ├── integrar_empleos.py      # unión test+val + ESCO → data/03_processed/empleos.csv
-    │   ├── generar_competencias.py # ESCO → competencias_por_oficio.csv (tabla normalizada)
-    │   ├── limpiar_empleos.py      # flujo histórico del integrado de 17 columnas
-    │   ├── unificar_competencias_empleos.py # unión N:1 de perfiles ESCO
-    │   ├── limpiar_empleos_con_competencias.py # valida y limpia el dataset enriquecido
-    │   ├── dividir_competencias_por_outliers.py # limpio enriquecido → variante IQR
-    │   └── dividir_por_outliers.py # flujo histórico de comparación
     └── transformacion/             # TRANSFORMACION (sesión 4) — la X
         ├── transformacion.py       # features, codificación, escalado, ensamble de X_final
         └── diagnostico.py          # Tukey, aporte a la distancia, PCA, comprobaciones del cruce
 ```
 
-Reglas de oro: originales intocables · derivados regenerables (pipelines **deterministas**) · rutas relativas (la raíz se resuelve buscando `data/` hacia arriba) · salida del cruce única en **CSV** · toda decisión de negocio documentada en bitácora (`logs/`).
+Las presentaciones `presentacion_pitch_jobpath.html` y
+`presentacion_pitch_jobpathVF.html` permanecen en la raíz porque son
+entregables directamente navegables y contienen sus referencias relativas a
+`reports/`.
+
+Reglas de oro: originales intocables · derivados regenerables (pipelines
+**deterministas**) · rutas relativas (la raíz se resuelve buscando `data/` hacia
+arriba) · salida del cruce única en **CSV** · toda decisión de negocio
+documentada en bitácora (`logs/`) · cada sesión EDA conserva su journal,
+scripts, plots y controles dentro de `analysis/<sesion>/`.
 
 ## Cómo orientarse en el repositorio
 
@@ -188,10 +198,10 @@ El proyecto se puede leer en tres capas:
 2. **Evidencia:** `notebooks/` explica y demuestra cada fase. Los notebooks no
    son la fuente principal de la lógica: muestran decisiones, resultados y
    validaciones reproducibles.
-3. **Código:** `src/` contiene la lógica reutilizable. `src/limpieza/` prepara
-   los CSV, `src/filtro/` contiene filtros e indicadores para el análisis de
-   trayectorias y competencias, y `src/transformacion/` convierte los datos
-   enriquecidos en una matriz numérica `X`.
+3. **Código:** `src/` contiene la lógica reutilizable. `scripts/pipeline/limpieza/`
+   prepara los CSV, `src/filtro/` contiene filtros e indicadores para el
+   análisis de trayectorias y competencias, y `src/transformacion/` convierte
+   los datos enriquecidos en una matriz numérica `X`.
 
 ### Flujo canónico vigente
 
@@ -254,19 +264,19 @@ El marco rector completo (mapeo KDD ↔ CRISP-DM por corte, criterios de éxito,
 
 ## Lo que se hizo en el código
 
-**`src/limpieza/limpiar_datos.py`** — limpieza de fuentes: `data/01_raw/` → `data/02_interim/`.
+**`scripts/pipeline/limpieza/limpiar_datos.py`** — limpieza de fuentes: `data/01_raw/` → `data/02_interim/`.
 Limpia las 3 particiones CSV de JobHop (`train`/`test`/`val`: elimina filas sin `start_date` y duplicados, ordena por persona/trimestre) y los cuatro CSV de ESCO en `ESCO/` + `SKILLS/` (duplicados por `code`/`conceptUri`, columnas 100 % nulas). Función `validar(...)` audita cada archivo; bitácora de cambios por ejecución.
 
-**`src/limpieza/integrar_empleos.py`** - integración: une las particiones limpias **test + val** de JobHop (train excluido), cruza `matched_code` con ESCO (`emparejado`: `ok` / `rescatado` / `unknown`), agrega los contadores de competencias ESCO y crea `data/03_processed/empleos.csv` (376.567 × 17, 71.061 personas).
+**`scripts/pipeline/limpieza/integrar_empleos.py`** - integración: une las particiones limpias **test + val** de JobHop (train excluido), cruza `matched_code` con ESCO (`emparejado`: `ok` / `rescatado` / `unknown`), agrega los contadores de competencias ESCO y crea `data/03_processed/empleos.csv` (376.567 × 17, 71.061 personas).
 
-**`src/limpieza/generar_competencias.py`** — construye `competencias_por_oficio.csv`, una tabla agrupada (**una fila por oficio**, 3.039 × 5). Las competencias se distribuyen en `skills`, `knowledge` y `sin_tipo`, con nombres separados por `|`. Esta tabla es la fuente normalizada; después `unificar_competencias_empleos.py` copia las listas a la entrada canónica enriquecida mediante una unión N:1, sin modificar los CSV originales ni multiplicar el grano del dataset. Resuelve el salto `code` → `occupationUri` (UUID) del puente ESCO y valida contra los contadores del integrado disponible (`empleos.csv` o, si aún no se regeneró, `empleos_con_competencias.csv`) antes de escribir.
+**`scripts/pipeline/limpieza/generar_competencias.py`** — construye `competencias_por_oficio.csv`, una tabla agrupada (**una fila por oficio**, 3.039 × 5). Las competencias se distribuyen en `skills`, `knowledge` y `sin_tipo`, con nombres separados por `|`. Esta tabla es la fuente normalizada; después `unificar_competencias_empleos.py` copia las listas a la entrada canónica enriquecida mediante una unión N:1, sin modificar los CSV originales ni multiplicar el grano del dataset. Resuelve el salto `code` → `occupationUri` (UUID) del puente ESCO y valida contra los contadores del integrado disponible (`empleos.csv` o, si aún no se regeneró, `empleos_con_competencias.csv`) antes de escribir.
 
-**`src/limpieza/unificar_competencias_empleos.py`** — crea la entrada enriquecida independiente `empleos_con_competencias.csv` mediante una unión `left` por `occupation_code`. Conserva intactos los archivos originales, sus filas y sus nombres de columnas; solo agrega `skills`, `knowledge` y `sin_tipo`. Las filas sin oficio clasificado permanecen sin competencias. La limpieza posterior y las banderas `es_*` se regeneran con `limpiar_empleos_con_competencias.py`.
+**`scripts/pipeline/limpieza/unificar_competencias_empleos.py`** — crea la entrada enriquecida independiente `empleos_con_competencias.csv` mediante una unión `left` por `occupation_code`. Conserva intactos los archivos originales, sus filas y sus nombres de columnas; solo agrega `skills`, `knowledge` y `sin_tipo`. Las filas sin oficio clasificado permanecen sin competencias. La limpieza posterior y las banderas `es_*` se regeneran con `limpiar_empleos_con_competencias.py`.
 
-**`src/limpieza/limpiar_empleos.py`** — clase `LimpiadorEmpleos` con **7 fases** (`fase1_diagnostico` … `fase7_exportar`) sobre el integrado histórico `empleos.csv` (CSV). Cada fase termina en un `assert` contra `EXPECTED` (umbrales de aceptación, criterio "funciones reutilizables + pruebas automáticas" de la rúbrica de la sesión 3). Para el flujo vigente enriquecido se utiliza `limpiar_empleos_con_competencias.py`:
+**`scripts/pipeline/limpieza/limpiar_empleos.py`** — clase `LimpiadorEmpleos` con **7 fases** (`fase1_diagnostico` … `fase7_exportar`) sobre el integrado histórico `empleos.csv` (CSV). Cada fase termina en un `assert` contra `EXPECTED` (umbrales de aceptación, criterio "funciones reutilizables + pruebas automáticas" de la rúbrica de la sesión 3). Para el flujo vigente enriquecido se utiliza `limpiar_empleos_con_competencias.py`:
 1. Diagnóstico (nada se toca) → 2. Duplicados (0 exactos; claves cortas = pluriempleo, se conservan) → 3. Categorías y caso MNAR (`'None'` y celdas vacías → `'No reportado'`) → 4. Faltantes por bandera (MAR + censura, sin imputar) → 5. Outliers IQR de Tukey + 0 fechas futuras en test+val (MCAR) → 6. Validación 6/6 → 7. Exportar CSV + bitácora.
 
-**`src/limpieza/dividir_competencias_por_outliers.py`** — genera la variante enriquecida **sin cola larga** (`empleos_con_competencias_limpio_sin_outliers.csv`) con la misma convención IQR de la fase 5 (`dur_Q ≥ 25`), para comparar el impacto de la cola larga antes de elegir la técnica de minería. `dividir_por_outliers.py` se conserva como flujo histórico del integrado sin skills.
+**`scripts/pipeline/limpieza/dividir_competencias_por_outliers.py`** — genera la variante enriquecida **sin cola larga** (`empleos_con_competencias_limpio_sin_outliers.csv`) con la misma convención IQR de la fase 5 (`dur_Q ≥ 25`), para comparar el impacto de la cola larga antes de elegir la técnica de minería. `dividir_por_outliers.py` se conserva como flujo histórico del integrado sin skills.
 
 **`src/filtro/filtros.py` y `src/filtro/indicadores.py`** — biblioteca reutilizable de análisis: filtros (nivel educativo, grupo ISCO, ocupación, periodo, vigentes) e indicadores (duración trimestral inclusiva, distribución, medianas por grupo/nivel, crosstabs, transiciones consecutivas, proporción que conserva el grupo, primera→segunda ocupación, brechas entre empleos, personas solapadas, resumen de banderas). Sobre la tabla de competencias añaden `cargar_competencias()`, `perfil_persona()` (trayectoria de una persona con las competencias que exigía cada contrato) y `salto_competencias()` (índice de Jaccard entre contratos consecutivos). En este corte se documentan como insumos reutilizables; no se usan todavía para construir `Sₚ`.
 
@@ -333,12 +343,12 @@ Deudas formales heredadas para la fase de minería:
 ```bash
 python -m pip install -r requirements.txt
 
-python src/limpieza/limpiar_datos.py         # fuentes → data/02_interim/
-python src/limpieza/integrar_empleos.py      # unión test+val + ESCO + competencias → empleos.csv
-python src/limpieza/generar_competencias.py  # ESCO → competencias_por_oficio.csv (+ contraste)
-python src/limpieza/unificar_competencias_empleos.py
-python src/limpieza/limpiar_empleos_con_competencias.py
-python src/limpieza/dividir_competencias_por_outliers.py
+python scripts/pipeline/limpieza/limpiar_datos.py         # fuentes → data/02_interim/
+python scripts/pipeline/limpieza/integrar_empleos.py      # unión test+val + ESCO + competencias → empleos.csv
+python scripts/pipeline/limpieza/generar_competencias.py  # ESCO → competencias_por_oficio.csv (+ contraste)
+python scripts/pipeline/limpieza/unificar_competencias_empleos.py
+python scripts/pipeline/limpieza/limpiar_empleos_con_competencias.py
+python scripts/pipeline/limpieza/dividir_competencias_por_outliers.py
 ```
 
 Los scripts del bloque canónico son **deterministas y se ejecutan en ese orden**:
@@ -408,7 +418,7 @@ una etapa ya ejecutada.
 4. `notebooks/2.0_EDA_y_seleccion.ipynb` — fuentes, carga defensiva, EDA y diagnóstico.
 5. `notebooks/3.0_preprocesamiento.ipynb` — pipeline de limpieza, validación y bitácora.
 6. `notebooks/4.0_transformacion.ipynb` y `4.1_transformacion_sin_outliers.ipynb` — transformación a features (codificación, escalado, PCA) en ambas versiones.
-7. **Código:** `src/limpieza/` (pipelines), `src/filtro/` (análisis reutilizable) y `src/transformacion/` (la `X` de la sesión 4).
+7. **Código:** `scripts/pipeline/limpieza/` (pipelines), `src/filtro/` (análisis reutilizable) y `src/transformacion/` (la `X` de la sesión 4).
 
 ## Referencias
 

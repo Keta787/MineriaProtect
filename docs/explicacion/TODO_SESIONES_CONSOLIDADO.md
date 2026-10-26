@@ -1,4 +1,4 @@
-﻿
+
 # contexto_sesion1.md
 
 # SesiÃ³n 1 Â· QuÃ© es minerÃ­a de datos
@@ -769,7 +769,7 @@ reglas sirven para mirar, no para borrar.
 
 ## 6. CÃ³mo estÃ¡ organizado el pipeline
 
-El archivo `src/limpieza/limpiar_empleos.py` hace el trabajo en **siete pasos**, siempre en
+El archivo `scripts/pipeline/limpieza/limpiar_empleos.py` hace el trabajo en **siete pasos**, siempre en
 el mismo orden:
 
 | Paso | QuÃ© hace | Por quÃ© en ese orden |

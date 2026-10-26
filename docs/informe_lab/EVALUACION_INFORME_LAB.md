@@ -55,7 +55,7 @@
 | § | Exigencia de la rúbrica | Evidencia en este repositorio |
 |---|---|---|
 | **1** | Integrantes, pregunta de negocio, objetivos | Portada del `Informe_...docx` · `notebooks/1.0_comprension_negocio.md` §1-§3 (acta: pregunta de negocio, pregunta técnica, objetivo, criterios de éxito) · `README.md` §Objetivo |
-| **2** | Nulos, duplicados, outliers y decisiones | `notebooks/2.1_EDA_informe.ipynb` **§6** (imprime nulos por columna, regla *vacío ≠ 0*, censura `Present`, pluriempleo) · `notebooks/3.0_preprocesamiento.ipynb` (pipeline de 7 fases, validación 6/6) · `src/limpieza/limpiar_empleos_con_competencias.py` · `README.md` §Datasets y calidad |
+| **2** | Nulos, duplicados, outliers y decisiones | `notebooks/2.1_EDA_informe.ipynb` **§6** (imprime nulos por columna, regla *vacío ≠ 0*, censura `Present`, pluriempleo) · `notebooks/3.0_preprocesamiento.ipynb` (pipeline de 7 fases, validación 6/6) · `scripts/pipeline/limpieza/limpiar_empleos_con_competencias.py` · `README.md` §Datasets y calidad |
 | **3** | Tablas descriptivas + ≥4 gráficos interpretados | `notebooks/2.1_EDA_informe.ipynb` **§2**: tabla de medidas (media, mediana, moda, sd, Q1/Q3, IQR, asimetría, curtosis) + figuras **01–05** y **13** |
 | **4** | Correlaciones, cruces, heatmap | `notebooks/2.1_EDA_informe.ipynb` **§3-§5**: figuras **06–12** (correlaciones, dispersión, reincidencia, demanda) y **heatmap** de correlaciones (fig. **09**) · `docs/img/eda_nivel_por_oficio.png` (cruce *oficio × nivel educativo*) |
 | **5** | ≥3 hallazgos evidencia-acción para no técnicos | `notebooks/2.1_EDA_informe.ipynb` **§7 «Hallazgos accionables»** (H1…) · §5 del informe Word |

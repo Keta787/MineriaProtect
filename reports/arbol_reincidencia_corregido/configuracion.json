@@ -1,0 +1,10 @@
+{
+  "max_depth": 3,
+  "class_weight": "balanced",
+  "criterion": "gini",
+  "min_samples_leaf": 100,
+  "split": "GroupShuffleSplit por resume_id",
+  "threshold": "mejor F1 en validacion",
+  "clase_positiva": "veces_ese_oficio >= 2",
+  "data": "data\\03_processed\\empleos_con_competencias_limpio.csv"
+}

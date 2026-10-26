@@ -1,0 +1,13 @@
+|--- skills_no_reportadas <= 0.50
+|   |--- n_skills_competence <= 18.50
+|   |   |--- n_skills_competence <= 13.50
+|   |   |   |--- class: 0
+|   |   |--- n_skills_competence >  13.50
+|   |   |   |--- class: 0
+|   |--- n_skills_competence >  18.50
+|   |   |--- n_skills_competence <= 19.50
+|   |   |   |--- class: 1
+|   |   |--- n_skills_competence >  19.50
+|   |   |   |--- class: 1
+|--- skills_no_reportadas >  0.50
+|   |--- class: 0

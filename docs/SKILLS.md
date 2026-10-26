@@ -631,11 +631,11 @@ Las skills entran en la fase de integración, antes de cualquier limpieza. La ta
 genera después de la integración, porque se contrasta contra sus contadores. El orden importa:
 
 ```bash
-python src/limpieza/limpiar_datos.py         # crea data/02_interim/SKILLS/ (el puente limpio)
-python src/limpieza/integrar_empleos.py      # + 6 columnas → empleos.csv   (376.567 × 17)
-python src/limpieza/generar_competencias.py  # tabla agrupada por oficio      (3.039 × 5)
-python src/limpieza/limpiar_empleos.py       # + 3 banderas → *_limpio.csv  (376.567 × 20)
-python src/limpieza/dividir_por_outliers.py  # sin cola larga              (341.090 × 20)
+python scripts/pipeline/limpieza/limpiar_datos.py         # crea data/02_interim/SKILLS/ (el puente limpio)
+python scripts/pipeline/limpieza/integrar_empleos.py      # + 6 columnas → empleos.csv   (376.567 × 17)
+python scripts/pipeline/limpieza/generar_competencias.py  # tabla agrupada por oficio      (3.039 × 5)
+python scripts/pipeline/limpieza/limpiar_empleos.py       # + 3 banderas → *_limpio.csv  (376.567 × 20)
+python scripts/pipeline/limpieza/dividir_por_outliers.py  # sin cola larga              (341.090 × 20)
 ```
 
 Los cinco scripts son deterministas: sin aleatoriedad, sin fechas, sin orden dependiente del

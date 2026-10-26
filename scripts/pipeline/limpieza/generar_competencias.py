@@ -49,7 +49,7 @@ el proyecto.
 Salida (unica): `data/03_processed/competencias_por_oficio.csv` (5 columnas)
 
 Como ejecutar:
-    python src/limpieza/generar_competencias.py
+    python scripts/pipeline/limpieza/generar_competencias.py
 
 Debe correr DESPUES de `integrar_empleos.py`, porque el bloque de validacion
 contrasta esta tabla contra los contadores de `data/03_processed/empleos.csv`.
@@ -198,7 +198,7 @@ def _validar_contra_empleos(conteo: pd.DataFrame) -> bool:
         )
         print("contra `n_skills_essential`. La tabla se genero, pero su consistencia")
         print("con el pipeline NO quedo verificada en esta corrida.")
-        print("Ejecuta antes: python src/limpieza/integrar_empleos.py")
+        print("Ejecuta antes: python scripts/pipeline/limpieza/integrar_empleos.py")
         return False
 
     # Solo las columnas de los contadores: leer 376.567 x 17 para usar cuatro
@@ -246,7 +246,7 @@ def main() -> None:
         raise FileNotFoundError(
             "Faltan las fuentes limpias de ESCO en data/02_interim/: "
             + ", ".join(p.name for p in faltantes)
-            + "\nEjecuta primero: python src/limpieza/limpiar_datos.py"
+            + "\nEjecuta primero: python scripts/pipeline/limpieza/limpiar_datos.py"
         )
 
     print("=" * 78)

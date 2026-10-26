@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "scientific-eda": {
+      "source": "ericmjl/skills",
+      "sourceType": "github",
+      "skillPath": "skills/scientific-eda/SKILL.md",
+      "computedHash": "0dfa91057e2833fed880e64f727591474c9d00e4731f1ffa8ad261c293a24037"
+    }
+  }
+}
