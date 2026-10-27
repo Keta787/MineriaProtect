@@ -345,7 +345,7 @@ Aplicar únicamente la regla solicitada y las correcciones necesarias relacionad
 
 ```
 CORREGIR:
-archivo: src/limpieza/limpiar_empleos.py
+archivo: scripts/pipeline/limpieza/limpiar_empleos.py
 problema: función superior a 100 líneas
 objetivo: reducir complejidad sin cambiar comportamiento
 ```

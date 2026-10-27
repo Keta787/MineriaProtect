@@ -4,6 +4,9 @@
 pandas>=2.0
 pyarrow>=14.0
 matplotlib>=3.8  # graficas de la fase de mineria
+seaborn>=0.13  # visualizaciones estadísticas del EDA
+plotly>=6.0  # figuras interactivas del EDA de columnas objetivo (HTML)
+kaleido>=1.0  # exportación estática de las figuras Plotly a WebP
 scikit-learn>=1.6  # transformacion 4.0/4.1: escalado (Robust/MinMax), KBins, one-hot, PCA
 
 nbconvert>=7.17

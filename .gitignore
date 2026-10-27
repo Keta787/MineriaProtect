@@ -10,13 +10,16 @@ __pycache__/
 # data/03_processed/*.csv pesan 156-184 MB cada uno (>100 MB = limite
 # duro de GitHub) -> NO se versionan. Solo se sube la estructura
 # de la carpeta mediante .gitkeep (los CSV se regeneran localmente
-# ejecutando src/limpieza/*.py sobre data/01_raw/).
+# ejecutando scripts/pipeline/limpieza/*.py sobre data/01_raw/).
 data/03_processed/*
 !data/03_processed/.gitkeep
 
 # Derivados CSV generados durante la preparacion intermedia.
 # Se regeneran desde data/01_raw/ y no deben entrar en el commit.
 data/02_interim/*.csv
+
+# Salida preparada del EDA (supera el límite de tamaño de GitHub).
+analysis/2026-10-25T16-00-00-eda-columnas-objetivo/empleos_preparado_columnas_objetivo.csv
 
 # bitácora de ejecución de los pipelines (trazabilidad en ejecución)
 logs/

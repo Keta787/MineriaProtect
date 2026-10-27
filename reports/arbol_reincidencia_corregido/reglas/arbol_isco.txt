@@ -1,0 +1,10 @@
+|--- isco_mayor_No reportado <= 0.50
+|   |--- isco_mayor_5 <= 0.50
+|   |   |--- isco_mayor_4 <= 0.50
+|   |   |   |--- class: 1
+|   |   |--- isco_mayor_4 >  0.50
+|   |   |   |--- class: 0
+|   |--- isco_mayor_5 >  0.50
+|   |   |--- class: 1
+|--- isco_mayor_No reportado >  0.50
+|   |--- class: 0

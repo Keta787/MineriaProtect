@@ -46,7 +46,7 @@ Salida (unica): `data/03_processed/empleos.csv` (17 columnas), canonica.
 `limpiar_empleos.py` la lee y exporta `empleos_limpio.csv` (20 columnas).
 
 Como ejecutar:
-    python src/limpieza/integrar_empleos.py
+    python scripts/pipeline/limpieza/integrar_empleos.py
 
 Requisitos:
     pandas (CSV como texto: dtype=str + keep_default_na=False para conservar
@@ -155,14 +155,14 @@ def main() -> None:
     if faltantes:
         raise FileNotFoundError(
             "Faltan limpias de JobHop en data/02_interim/: " + ", ".join(faltantes)
-            + "\nEjecuta primero: python src/limpieza/limpiar_datos.py"
+            + "\nEjecuta primero: python scripts/pipeline/limpieza/limpiar_datos.py"
         )
     if not OCCUPATIONS.exists() or not ISCO_GROUPS.exists():
         raise FileNotFoundError("Faltan las limpias de ESCO en data/02_interim/ESCO/.")
     if not SKILL_RELATIONS.exists():
         raise FileNotFoundError(
             f"Falta el puente de competencias: {SKILL_RELATIONS}\n"
-            "Ejecuta primero: python src/limpieza/limpiar_datos.py"
+            "Ejecuta primero: python scripts/pipeline/limpieza/limpiar_datos.py"
         )
 
     print("=" * 78)

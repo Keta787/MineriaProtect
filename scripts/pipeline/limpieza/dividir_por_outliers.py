@@ -17,7 +17,7 @@ Uso de las dos versiones: cruzar descriptivos con/sin cola larga para validar el
 impacto de esos atipicos antes de elegir la tecnica de mineria de trayectorias.
 
 Como ejecutar:
-    python src/limpieza/dividir_por_outliers.py
+    python scripts/pipeline/limpieza/dividir_por_outliers.py
 
 Requisitos:
     pandas (el CSV se lee como texto: dtype=str + keep_default_na=False para no
@@ -69,7 +69,7 @@ def main() -> None:
     if not ORIGEN.exists():
         raise FileNotFoundError(
             f"No existe el limpio de empleos: {ORIGEN}\n"
-            "Ejecuta primero src/limpieza/limpiar_empleos.py."
+            "Ejecuta primero scripts/pipeline/limpieza/limpiar_empleos.py."
         )
 
     print("=" * 78)

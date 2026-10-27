@@ -32,7 +32,7 @@ cada assert compara el valor obtenido contra ese canon y, si difiere, reporta
 obtenido vs esperado.
 
 Como ejecutar:
-    python src/limpieza/limpiar_empleos.py
+    python scripts/pipeline/limpieza/limpiar_empleos.py
 
 Requisitos:
     pandas   (ver requirements.txt; este script no necesita pyarrow)

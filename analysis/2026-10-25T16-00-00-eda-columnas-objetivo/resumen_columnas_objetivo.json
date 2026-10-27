@@ -1,0 +1,675 @@
+{
+  "archivo": "empleos_limpio_con_competencias .csv",
+  "filas": 376567,
+  "columnas": 18,
+  "personas": 71061,
+  "exp_por_persona": {
+    "media": 5.3,
+    "mediana": 5.0,
+    "p90": 9.0,
+    "p99": 15.0,
+    "max": 20,
+    "una_sola": 4369,
+    "una_sola_pct": 6.15,
+    "top10_pct_de_filas": 0.05,
+    "top1pct_personas_pct_filas": 3.11
+  },
+  "top10_personas": {
+    "104955": 20,
+    "127470": 20,
+    "137989": 20,
+    "139459": 20,
+    "164697": 20,
+    "165790": 20,
+    "170999": 20,
+    "177137": 20,
+    "212372": 20,
+    "22924": 20
+  },
+  "experiencias_por_persona_vc": {
+    "1": 4369,
+    "2": 7686,
+    "3": 10148,
+    "4": 10613,
+    "5": 9594,
+    "6": 7957,
+    "7": 6281,
+    "8": 4448,
+    "9": 3282,
+    "10": 2319,
+    "11": 1445,
+    "12": 992,
+    "13": 684,
+    "14": 449,
+    "15": 293
+  },
+  "periodo": {
+    "start_year_min": 1965,
+    "start_year_max": 2021,
+    "end_year_min": 1970,
+    "end_year_max": 2025,
+    "n_present": 18956,
+    "pct_present": 5.03,
+    "n_duracion_observada": 357611,
+    "dur_mediana_trim": 5.0,
+    "dur_media_trim": 9.96,
+    "dur_q1": 2.0,
+    "dur_q3": 11.0,
+    "dur_max_trim": 160,
+    "dur_mediana_anios": 1.25,
+    "pct_dur_1trim": 0.0,
+    "pct_dur_le_4trim": 36.28,
+    "pct_anios_antes_2000": 13.18,
+    "pct_anios_2010_mas": 55.63,
+    "anio_inicio_top": {
+      "2012": 29066,
+      "2011": 28389,
+      "2013": 27457,
+      "2014": 26282,
+      "2010": 24339,
+      "2015": 24261,
+      "2016": 20916,
+      "2009": 20069
+    },
+    "top_period_time": {
+      "Q1 2011 - Q1 2012": 7310,
+      "Q1 2012 - Q1 2013": 7303,
+      "Q1 2013 - Q1 2014": 6909,
+      "Q1 2014 - Q1 2015": 6758,
+      "Q1 2010 - Q1 2011": 6140,
+      "Q1 2015 - Q1 2016": 6082,
+      "Q1 2016 - Q1 2017": 5086,
+      "Q1 2009 - Q1 2010": 4985,
+      "Q1 2008 - Q1 2009": 4578,
+      "Q1 2007 - Q1 2008": 3896
+    }
+  },
+  "university_level": {
+    "No reportado": {
+      "n": 42807,
+      "pct": 11.37
+    },
+    "Secondary school": {
+      "n": 147904,
+      "pct": 39.28
+    },
+    "Bachelor": {
+      "n": 129507,
+      "pct": 34.39
+    },
+    "Master": {
+      "n": 54697,
+      "pct": 14.53
+    },
+    "PhD": {
+      "n": 1652,
+      "pct": 0.44
+    },
+    "_sin_normalizar_na": 0
+  },
+  "isco": {
+    "grupos_unicos": 424,
+    "sin_grupo": 0,
+    "top5_pct": 22.56,
+    "top10_pct": 31.24,
+    "top20_pct": 41.09,
+    "top50_pct": 56.92,
+    "top15": {
+      "Shop sales assistants": 30241,
+      "Administrative and executive secretaries": 24440,
+      "Freight handlers": 13736,
+      "Secondary education teachers": 8743,
+      "Waiters": 7778,
+      "Social work associate professionals": 7559,
+      "Child care workers": 6590,
+      "Cleaners and helpers in offices, hotels and other establishments": 6573,
+      "Cashiers and ticket clerks": 6057,
+      "Kitchen helpers": 5940,
+      "Retail and wholesale trade managers": 4761,
+      "Manufacturing labourers not elsewhere classified": 4658,
+      "Advertising and marketing professionals": 4280,
+      "Accounting associate professionals": 3786,
+      "Accounting and bookkeeping clerks": 3552
+    },
+    "mayores": {
+      "5 · Servicios y vendedores": {
+        "n": 76375,
+        "pct": 20.28
+      },
+      "3 · Técnicos y profesionales asociados": {
+        "n": 68222,
+        "pct": 18.12
+      },
+      "2 · Profesionales y científicos": {
+        "n": 62102,
+        "pct": 16.49
+      },
+      "9 · Ocupaciones elementales": {
+        "n": 47483,
+        "pct": 12.61
+      },
+      "4 · Personal de apoyo administrativo": {
+        "n": 28113,
+        "pct": 7.47
+      },
+      "SIN_GRUPO": {
+        "n": 25805,
+        "pct": 6.85
+      },
+      "7 · Oficiales y artesanos": {
+        "n": 25052,
+        "pct": 6.65
+      },
+      "1 · Gerentes y directivos": {
+        "n": 20945,
+        "pct": 5.56
+      },
+      "8 · Operadores de máquinas": {
+        "n": 20323,
+        "pct": 5.4
+      },
+      "6 · Agricultura y pesca": {
+        "n": 1296,
+        "pct": 0.34
+      },
+      "0 · Fuerzas armadas": {
+        "n": 851,
+        "pct": 0.23
+      }
+    }
+  },
+  "skills": {
+    "n_skills_competence_num": {
+      "n_validos": 348263,
+      "n_na": 28304,
+      "media": 19.24,
+      "mediana": 18.0,
+      "std": 11.18,
+      "min": 0.0,
+      "p25": 12.0,
+      "p75": 23.0,
+      "p95": 38.0,
+      "max": 69.0,
+      "pct_cero": 0.0
+    },
+    "n_skills_knowledge_num": {
+      "n_validos": 348263,
+      "n_na": 28304,
+      "media": 4.01,
+      "mediana": 3.0,
+      "std": 4.36,
+      "min": 0.0,
+      "p25": 1.0,
+      "p75": 6.0,
+      "p95": 10.0,
+      "max": 45.0,
+      "pct_cero": 10.25
+    },
+    "n_skills_essential_num": {
+      "n_validos": 348263,
+      "n_na": 28304,
+      "media": 23.26,
+      "mediana": 20.0,
+      "std": 13.32,
+      "min": 4.0,
+      "p25": 15.0,
+      "p75": 28.0,
+      "p95": 45.0,
+      "max": 99.0,
+      "pct_cero": 0.0
+    },
+    "n_skills_sin_tipo_num": {
+      "n_validos": 348263,
+      "n_na": 28304,
+      "media": 0.01,
+      "mediana": 0.0,
+      "std": 0.11,
+      "min": 0.0,
+      "p25": 0.0,
+      "p75": 0.0,
+      "p95": 0.0,
+      "max": 2.0,
+      "pct_cero": 99.09
+    },
+    "veces_ese_oficio_num": {
+      "n_validos": 348263,
+      "n_na": 28304,
+      "media": 1.56,
+      "mediana": 1.0,
+      "std": 1.15,
+      "min": 1.0,
+      "p25": 1.0,
+      "p75": 2.0,
+      "p95": 4.0,
+      "max": 19.0,
+      "pct_cero": 0.0
+    }
+  },
+  "correlaciones": {
+    "n_skills_competence_num": {
+      "n_skills_competence_num": 1.0,
+      "n_skills_knowledge_num": 0.343,
+      "n_skills_essential_num": 0.951,
+      "n_skills_sin_tipo_num": -0.016
+    },
+    "n_skills_knowledge_num": {
+      "n_skills_competence_num": 0.343,
+      "n_skills_knowledge_num": 1.0,
+      "n_skills_essential_num": 0.616,
+      "n_skills_sin_tipo_num": 0.119
+    },
+    "n_skills_essential_num": {
+      "n_skills_competence_num": 0.951,
+      "n_skills_knowledge_num": 0.616,
+      "n_skills_essential_num": 1.0,
+      "n_skills_sin_tipo_num": 0.034
+    },
+    "n_skills_sin_tipo_num": {
+      "n_skills_competence_num": -0.016,
+      "n_skills_knowledge_num": 0.119,
+      "n_skills_essential_num": 0.034,
+      "n_skills_sin_tipo_num": 1.0
+    }
+  },
+  "skills_por_nivel": {
+    "No reportado": {
+      "n": 42807,
+      "competence_mediana": 18.0,
+      "knowledge_mediana": 3.0,
+      "essential_mediana": 20.0
+    },
+    "Secondary school": {
+      "n": 147904,
+      "competence_mediana": 18.0,
+      "knowledge_mediana": 2.0,
+      "essential_mediana": 20.0
+    },
+    "Bachelor": {
+      "n": 129507,
+      "competence_mediana": 18.0,
+      "knowledge_mediana": 3.0,
+      "essential_mediana": 20.0
+    },
+    "Master": {
+      "n": 54697,
+      "competence_mediana": 17.0,
+      "knowledge_mediana": 4.0,
+      "essential_mediana": 21.0
+    },
+    "PhD": {
+      "n": 1652,
+      "competence_mediana": 20.0,
+      "knowledge_mediana": 6.0,
+      "essential_mediana": 27.0
+    }
+  },
+  "skills_por_major": {
+    "0 · Fuerzas armadas": {
+      "n": 851,
+      "competence_mediana": 8.0,
+      "knowledge_mediana": 4.0,
+      "essential_mediana": 12.0
+    },
+    "1 · Gerentes y directivos": {
+      "n": 20945,
+      "competence_mediana": 20.0,
+      "knowledge_mediana": 5.0,
+      "essential_mediana": 26.0
+    },
+    "2 · Profesionales y científicos": {
+      "n": 62102,
+      "competence_mediana": 19.0,
+      "knowledge_mediana": 6.0,
+      "essential_mediana": 27.0
+    },
+    "3 · Técnicos y profesionales asociados": {
+      "n": 68222,
+      "competence_mediana": 18.0,
+      "knowledge_mediana": 2.0,
+      "essential_mediana": 20.0
+    },
+    "4 · Personal de apoyo administrativo": {
+      "n": 28113,
+      "competence_mediana": 11.0,
+      "knowledge_mediana": 2.0,
+      "essential_mediana": 14.0
+    },
+    "5 · Servicios y vendedores": {
+      "n": 76375,
+      "competence_mediana": 20.0,
+      "knowledge_mediana": 3.0,
+      "essential_mediana": 22.0
+    },
+    "6 · Agricultura y pesca": {
+      "n": 1296,
+      "competence_mediana": 22.0,
+      "knowledge_mediana": 11.0,
+      "essential_mediana": 33.0
+    },
+    "7 · Oficiales y artesanos": {
+      "n": 25052,
+      "competence_mediana": 15.0,
+      "knowledge_mediana": 4.0,
+      "essential_mediana": 19.0
+    },
+    "8 · Operadores de máquinas": {
+      "n": 20323,
+      "competence_mediana": 15.0,
+      "knowledge_mediana": 3.0,
+      "essential_mediana": 18.0
+    },
+    "9 · Ocupaciones elementales": {
+      "n": 47483,
+      "competence_mediana": 20.0,
+      "knowledge_mediana": 2.0,
+      "essential_mediana": 20.0
+    }
+  },
+  "cruce_top12": {
+    "Administrative and executive secretaries": {
+      "No reportado": 9.5,
+      "Secondary school": 38.57,
+      "Bachelor": 38.17,
+      "Master": 13.56,
+      "PhD": 0.2
+    },
+    "Cashiers and ticket clerks": {
+      "No reportado": 10.43,
+      "Secondary school": 49.02,
+      "Bachelor": 31.72,
+      "Master": 8.73,
+      "PhD": 0.1
+    },
+    "Child care workers": {
+      "No reportado": 9.85,
+      "Secondary school": 40.2,
+      "Bachelor": 41.84,
+      "Master": 8.06,
+      "PhD": 0.06
+    },
+    "Cleaners and helpers in offices, hotels and other establishments": {
+      "No reportado": 19.02,
+      "Secondary school": 60.78,
+      "Bachelor": 16.22,
+      "Master": 3.93,
+      "PhD": 0.06
+    },
+    "Freight handlers": {
+      "No reportado": 15.51,
+      "Secondary school": 57.89,
+      "Bachelor": 21.72,
+      "Master": 4.82,
+      "PhD": 0.07
+    },
+    "Kitchen helpers": {
+      "No reportado": 18.57,
+      "Secondary school": 57.96,
+      "Bachelor": 18.96,
+      "Master": 4.43,
+      "PhD": 0.08
+    },
+    "Manufacturing labourers not elsewhere classified": {
+      "No reportado": 15.82,
+      "Secondary school": 60.69,
+      "Bachelor": 17.99,
+      "Master": 5.47,
+      "PhD": 0.02
+    },
+    "Retail and wholesale trade managers": {
+      "No reportado": 11.76,
+      "Secondary school": 34.53,
+      "Bachelor": 38.98,
+      "Master": 14.49,
+      "PhD": 0.23
+    },
+    "Secondary education teachers": {
+      "No reportado": 2.31,
+      "Secondary school": 4.63,
+      "Bachelor": 55.04,
+      "Master": 36.91,
+      "PhD": 1.11
+    },
+    "Shop sales assistants": {
+      "No reportado": 12.28,
+      "Secondary school": 49.39,
+      "Bachelor": 29.85,
+      "Master": 8.41,
+      "PhD": 0.06
+    },
+    "Social work associate professionals": {
+      "No reportado": 6.46,
+      "Secondary school": 24.17,
+      "Bachelor": 54.5,
+      "Master": 14.62,
+      "PhD": 0.25
+    },
+    "Waiters": {
+      "No reportado": 11.56,
+      "Secondary school": 44.2,
+      "Bachelor": 33.71,
+      "Master": 10.45,
+      "PhD": 0.08
+    }
+  },
+  "cruce_top12_n": {
+    "Administrative and executive secretaries": 24440,
+    "Cashiers and ticket clerks": 6057,
+    "Child care workers": 6590,
+    "Cleaners and helpers in offices, hotels and other establishments": 6573,
+    "Freight handlers": 13736,
+    "Kitchen helpers": 5940,
+    "Manufacturing labourers not elsewhere classified": 4658,
+    "Retail and wholesale trade managers": 4761,
+    "Secondary education teachers": 8743,
+    "Shop sales assistants": 30241,
+    "Social work associate professionals": 7559,
+    "Waiters": 7778
+  },
+  "cramers_v_nivel_major": 0.2086,
+  "cramers_v_nivel_isco": 0.2737,
+  "nivel_por_decada": {
+    "1970": {
+      "No reportado": 17.02,
+      "Secondary school": 64.12,
+      "Bachelor": 15.91,
+      "Master": 2.84,
+      "PhD": 0.11
+    },
+    "1980": {
+      "No reportado": 14.92,
+      "Secondary school": 51.91,
+      "Bachelor": 24.86,
+      "Master": 8.04,
+      "PhD": 0.27
+    },
+    "1990": {
+      "No reportado": 14.26,
+      "Secondary school": 46.86,
+      "Bachelor": 27.82,
+      "Master": 10.62,
+      "PhD": 0.43
+    },
+    "2000": {
+      "No reportado": 11.8,
+      "Secondary school": 40.61,
+      "Bachelor": 32.5,
+      "Master": 14.46,
+      "PhD": 0.62
+    },
+    "2010": {
+      "No reportado": 10.36,
+      "Secondary school": 36.18,
+      "Bachelor": 37.35,
+      "Master": 15.76,
+      "PhD": 0.35
+    },
+    "2020": {
+      "No reportado": 0.0,
+      "Secondary school": 40.0,
+      "Bachelor": 60.0,
+      "Master": 0.0,
+      "PhD": 0.0
+    }
+  },
+  "nivel_por_decada_n": {
+    "1970": 2709,
+    "1980": 13602,
+    "1990": 33280,
+    "2000": 117466,
+    "2010": 209472,
+    "2020": 15
+  },
+  "cruce_nivel_isco_major_pct": {
+    "0 · Fuerzas armadas": {
+      "Bachelor": 27.38,
+      "Master": 12.22,
+      "No reportado": 12.93,
+      "PhD": 0.0,
+      "Secondary school": 47.47
+    },
+    "1 · Gerentes y directivos": {
+      "Bachelor": 39.47,
+      "Master": 24.62,
+      "No reportado": 9.64,
+      "PhD": 0.83,
+      "Secondary school": 25.44
+    },
+    "2 · Profesionales y científicos": {
+      "Bachelor": 46.94,
+      "Master": 32.35,
+      "No reportado": 5.71,
+      "PhD": 1.57,
+      "Secondary school": 13.42
+    },
+    "3 · Técnicos y profesionales asociados": {
+      "Bachelor": 41.87,
+      "Master": 15.3,
+      "No reportado": 9.33,
+      "PhD": 0.33,
+      "Secondary school": 33.17
+    },
+    "4 · Personal de apoyo administrativo": {
+      "Bachelor": 39.95,
+      "Master": 14.08,
+      "No reportado": 9.69,
+      "PhD": 0.15,
+      "Secondary school": 36.13
+    },
+    "5 · Servicios y vendedores": {
+      "Bachelor": 33.05,
+      "Master": 8.74,
+      "No reportado": 11.88,
+      "PhD": 0.1,
+      "Secondary school": 46.23
+    },
+    "6 · Agricultura y pesca": {
+      "Bachelor": 22.69,
+      "Master": 10.49,
+      "No reportado": 15.66,
+      "PhD": 0.15,
+      "Secondary school": 51.0
+    },
+    "7 · Oficiales y artesanos": {
+      "Bachelor": 18.53,
+      "Master": 4.24,
+      "No reportado": 16.62,
+      "PhD": 0.08,
+      "Secondary school": 60.53
+    },
+    "8 · Operadores de máquinas": {
+      "Bachelor": 15.93,
+      "Master": 3.97,
+      "No reportado": 18.1,
+      "PhD": 0.08,
+      "Secondary school": 61.92
+    },
+    "9 · Ocupaciones elementales": {
+      "Bachelor": 19.19,
+      "Master": 5.07,
+      "No reportado": 17.0,
+      "PhD": 0.05,
+      "Secondary school": 58.69
+    },
+    "SIN_GRUPO": {
+      "Bachelor": 36.93,
+      "Master": 14.96,
+      "No reportado": 11.03,
+      "PhD": 0.38,
+      "Secondary school": 36.7
+    }
+  },
+  "calidad": {
+    "saber_skills": {
+      "ok": 348263,
+      "no_clasificado": 28304
+    },
+    "nulos": {
+      "resume_id": {
+        "n": 0,
+        "pct": 0.0
+      },
+      "start_date": {
+        "n": 0,
+        "pct": 0.0
+      },
+      "end_date": {
+        "n": 0,
+        "pct": 0.0
+      },
+      "university_level": {
+        "n": 0,
+        "pct": 0.0
+      },
+      "isco_group": {
+        "n": 25805,
+        "pct": 6.85
+      },
+      "isco_group_label": {
+        "n": 25805,
+        "pct": 6.85
+      },
+      "n_skills_competence": {
+        "n": 28304,
+        "pct": 7.52
+      },
+      "n_skills_knowledge": {
+        "n": 28304,
+        "pct": 7.52
+      },
+      "n_skills_essential": {
+        "n": 28304,
+        "pct": 7.52
+      }
+    },
+    "es_vigente": {
+      "False": 357611,
+      "True": 18956
+    },
+    "es_unknown": {
+      "False": 350762,
+      "True": 25805
+    },
+    "es_rescatado": {
+      "False": 374068,
+      "True": 2499
+    },
+    "filas_duplicadas_exactas": 0
+  },
+  "ocupaciones": {
+    "unicas": 2855,
+    "top10_pct": 19.61,
+    "top10": {
+      "administrative assistant": 16864,
+      "sales assistant": 10017,
+      "shop assistant": 9676,
+      "warehouse worker": 7106,
+      "cashier": 5990,
+      "kitchen assistant": 5747,
+      "waiter/waitress": 5347,
+      "building cleaner": 4785,
+      "factory hand": 4654,
+      "supply chain assistant": 3675
+    },
+    "pct_una_sola_experiencia_por_ocupacion": 4.2
+  }
+}

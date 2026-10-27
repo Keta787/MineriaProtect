@@ -1,8 +1,9 @@
 # Guía técnica de `src`
 
-Este documento explica qué realiza cada script de `src/`, qué archivos utiliza,
-qué produce y cómo se relaciona con los notebooks. La carpeta `src/` contiene
-la lógica reutilizable del proyecto; los notebooks presentan la explicación,
+Este documento explica qué realiza cada módulo reutilizable y cada script del
+pipeline, qué archivos utiliza, qué produce y cómo se relaciona con los
+notebooks. La carpeta `src/` contiene la lógica reutilizable; los puntos de
+entrada están en `scripts/`, y los notebooks presentan la explicación,
 las decisiones metodológicas y la evidencia de ejecución.
 
 ## 1. Principio de organización
@@ -11,9 +12,13 @@ El código está separado por responsabilidad:
 
 ```text
 src/
-├── limpieza/        Preparación, integración y validación de CSV
 ├── filtro/          Filtros e indicadores reutilizables para análisis
 └── transformacion/ Conversión del dataset enriquecido a una matriz numérica X
+
+scripts/
+├── pipeline/limpieza/  Preparación, integración y validación de CSV
+├── arbol_reincidencia/ Entrenamiento de modelos de reincidencia
+└── notebook_tools/     Mantenimiento de notebooks
 ```
 
 El flujo canónico vigente es:
@@ -21,27 +26,27 @@ El flujo canónico vigente es:
 ```text
 data/01_raw/
     │
-    └── limpiar_datos.py
+    └── scripts/pipeline/limpieza/limpiar_datos.py
             ↓
 data/02_interim/
     │
-    └── integrar_empleos.py
+    └── scripts/pipeline/limpieza/integrar_empleos.py
             ↓
 data/03_processed/empleos.csv
     │
-    ├── generar_competencias.py
+    ├── scripts/pipeline/limpieza/generar_competencias.py
     │       ↓
     │   competencias_por_oficio.csv
     │
-    └── unificar_competencias_empleos.py
+    └── scripts/pipeline/limpieza/unificar_competencias_empleos.py
             ↓
         empleos_con_competencias.csv
             │
-            └── limpiar_empleos_con_competencias.py
+            └── scripts/pipeline/limpieza/limpiar_empleos_con_competencias.py
                     ↓
                 empleos_con_competencias_limpio.csv
                     │
-                    └── dividir_competencias_por_outliers.py
+                    └── scripts/pipeline/limpieza/dividir_competencias_por_outliers.py
                             ↓
                         empleos_con_competencias_limpio_sin_outliers.csv
                             │
@@ -67,7 +72,7 @@ Los notebooks son la **narrativa y evidencia**. La lógica que debe poder
 reutilizarse está en `src/`. Por eso los notebooks 4.0 y 4.1 importan el mismo
 módulo de transformación y cambian solamente la versión del CSV.
 
-## 3. Módulo `src/limpieza/`
+## 3. Scripts `scripts/pipeline/limpieza/`
 
 ### `limpiar_datos.py`
 
@@ -335,12 +340,12 @@ Desde la raíz del proyecto:
 ```powershell
 python -m pip install -r requirements.txt
 
-python src\limpieza\limpiar_datos.py
-python src\limpieza\integrar_empleos.py
-python src\limpieza\generar_competencias.py
-python src\limpieza\unificar_competencias_empleos.py
-python src\limpieza\limpiar_empleos_con_competencias.py
-python src\limpieza\dividir_competencias_por_outliers.py
+python scripts\pipeline\limpieza\limpiar_datos.py
+python scripts\pipeline\limpieza\integrar_empleos.py
+python scripts\pipeline\limpieza\generar_competencias.py
+python scripts\pipeline\limpieza\unificar_competencias_empleos.py
+python scripts\pipeline\limpieza\limpiar_empleos_con_competencias.py
+python scripts\pipeline\limpieza\dividir_competencias_por_outliers.py
 ```
 
 Después se pueden ejecutar los notebooks:
@@ -389,4 +394,3 @@ Todavía no se implementa en esta fase:
 - selección de algoritmo de minería;
 - entrenamiento;
 - evaluación o interpretación de patrones.
-

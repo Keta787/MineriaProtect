@@ -31,7 +31,7 @@ Reglas generales:
       filas: NO se eliminan filas solo porque un codigo se repita muchas veces.
 
 Como ejecutar:
-    python src/limpieza/limpiar_datos.py
+    python scripts/pipeline/limpieza/limpiar_datos.py
 
 Requisitos:
     pandas, pyarrow

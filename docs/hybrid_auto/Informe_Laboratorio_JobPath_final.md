@@ -220,13 +220,13 @@ Limitaciones Declaradas del Análisis
 
 ## 2. Calidad de Datos
 
-La calidad se diagnosticó en las sesiones 3 y 4 mediante un pipeline de 7 fases con validaciones automáticas (src/limpieza/limpiar_empleos_con_competencias.py): diagnóstico → duplicados → categorías → faltantes por bandera → outliers → validación → exportar. En este EDA se re-mide el estado real del archivo que se analiza y se explicita cada decisión. Regla rectora heredada: la limpieza de este proyecto agrega información, no la borra (el archivo entra con 376.567 filas y sale con 376.567; lo único que hace es añadir columnas de bandera).
+La calidad se diagnosticó en las sesiones 3 y 4 mediante un pipeline de 7 fases con validaciones automáticas (scripts/pipeline/limpieza/limpiar_empleos_con_competencias.py): diagnóstico → duplicados → categorías → faltantes por bandera → outliers → validación → exportar. En este EDA se re-mide el estado real del archivo que se analiza y se explicita cada decisión. Regla rectora heredada: la limpieza de este proyecto agrega información, no la borra (el archivo entra con 376.567 filas y sale con 376.567; lo único que hace es añadir columnas de bandera).
 
 ![Diagrama del pipeline de calidad de siete fases con las validaciones automáticas y el linaje de datos, desde las 376.567 filas de entrada hasta la variante sin cola larga de 341.090 filas](images/pipeline_calidad_linaje_jobpath.png)
 
 **Figura 2.** Pipeline de calidad del proyecto JobPath (7 fases) y linaje de datos.
 
-*Fuente.* Elaboración propia a partir del pipeline `src/limpieza/limpiar_empleos_con_competencias.py` (proyecto JobPath).
+*Fuente.* Elaboración propia a partir del pipeline `scripts/pipeline/limpieza/limpiar_empleos_con_competencias.py` (proyecto JobPath).
 
 *Qué se ve:* en la fila superior, las siete fases del pipeline en orden (diagnóstico, duplicados, categorías, faltantes por bandera, outliers, validación y exportar) y, debajo, el banner de validaciones automáticas: 6/6 reglas críticas y 10 umbrales de limpieza. Abajo aparece el linaje: la entrada de 376.567 filas y 23 columnas (JobHop v2 test + val integrado con ESCO), el recuento sin cambios tras la limpieza (que solo añade columnas de bandera) y la variante sin cola larga de 341.090 filas (−35.477 por la regla IQR de Tukey).
 
@@ -767,7 +767,7 @@ El notebook resuelve la ruta del CSV buscando la carpeta `data/` hacia arriba, n
 | Figuras del notebook (13) | `docs/explicacion/report/01_…` a `13_…` |
 | Informe EDA complementario | `docs/INFORME_EDA.md` |
 | Acta de constitución analítica (marco KDD/CRISP-DM) | `notebooks/1.0_comprension_negocio.md` |
-| Pipeline de limpieza con validaciones | `src/limpieza/limpiar_empleos_con_competencias.py` |
+| Pipeline de limpieza con validaciones | `scripts/pipeline/limpieza/limpiar_empleos_con_competencias.py` |
 
 ---
 

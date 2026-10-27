@@ -16,7 +16,7 @@ from pathlib import Path
 import pandas as pd
 
 
-BASE = Path(__file__).resolve().parents[2]
+BASE = Path(__file__).resolve().parents[3]
 PROCESADOS = BASE / "data" / "03_processed"
 ENTRADA = PROCESADOS / "empleos_con_competencias.csv"
 SALIDA = PROCESADOS / "empleos_con_competencias_limpio.csv"
