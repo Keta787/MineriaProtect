@@ -1,0 +1,5 @@
+#,pregunta,regla,profundidad,n_nodo,tasa_nodo,n_izq,tasa_izq,n_der,tasa_der,lift_izq,lift_der,delta_pp_izq,delta_pp_der
+1,¿n_skills_competence <= 18.5?,n_skills_competence <= 18.5,0,261197,30.51,136501,24.77,124696,36.79,0.812,1.206,-5.74,6.28
+2,¿n_skills_essential <= 10.5?,n_skills_essential <= 10.5,1,136501,24.77,29811,28.9,106690,23.62,0.947,0.774,-1.61,-6.89
+3,¿n_skills_essential <= 9.5?,n_skills_essential <= 9.5,2,29811,28.9,13103,21.6,16708,34.63,0.708,1.135,-8.91,4.12
+4,¿n_skills_competence <= 13.5?,n_skills_competence <= 13.5,2,106690,23.62,54260,20.83,52430,26.5,0.683,0.869,-9.68,-4.0

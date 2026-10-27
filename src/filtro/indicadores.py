@@ -12,7 +12,7 @@ Y los nombres de las competencias ESCO, que no viven en los CSV del pipeline
 (allí solo hay contadores, para no multiplicar las filas). Hay dos caminos:
 
 - `cargar_competencias()`: lee `data/03_processed/competencias_por_oficio.csv`,
-  la tabla agrupada que produce `src/limpieza/generar_competencias.py`
+  la tabla agrupada que produce `scripts/pipeline/limpieza/generar_competencias.py`
   (1 fila = 1 oficio). Es la vía preferida; la función la expande a formato
   largo para mantener estable el resto de la API.
 - `cargar_relaciones()`: lee el puente ESCO crudo y resuelve el salto
@@ -47,7 +47,8 @@ RAIZ = Path(__file__).resolve().parents[2]
 RUTA_RELACIONES = RAIZ / "data" / "02_interim" / "SKILLS" / "occupationSkillRelations_en_limpio.csv"
 RUTA_OCCUPATIONS = RAIZ / "data" / "02_interim" / "ESCO" / "occupations_en_limpio.csv"
 
-# Tabla normalizada de competencias (produce `src/limpieza/generar_competencias.py`).
+# Tabla normalizada de competencias (produce
+# `scripts/pipeline/limpieza/generar_competencias.py`).
 # Ya viene con el salto `code` -> `occupationUri` resuelto y contrastada contra los
 # contadores del pipeline, asi que consultarla no obliga a rehacer ese cruce.
 RUTA_COMPETENCIAS = RAIZ / "data" / "03_processed" / "competencias_por_oficio.csv"
@@ -158,11 +159,11 @@ def cargar_competencias() -> pd.DataFrame:
     es la que usaba el pipeline antes de que existiera esta tabla.
 
     Si la fuente ESCO cambia, hay que regenerar el archivo antes de usar esto:
-        python src/limpieza/generar_competencias.py
+        python scripts/pipeline/limpieza/generar_competencias.py
     """
     assert RUTA_COMPETENCIAS.exists(), (
         f"Falta la tabla de competencias: {RUTA_COMPETENCIAS}\n"
-        "Generala con: python src/limpieza/generar_competencias.py"
+        "Generala con: python scripts/pipeline/limpieza/generar_competencias.py"
     )
     agrupada = pd.read_csv(RUTA_COMPETENCIAS, dtype=str, encoding="utf-8",
                            keep_default_na=False, na_values=[""])

@@ -1,5 +1,0 @@
-#,Pregunta,Regla árbol (export_text),Rama,Clientes (train),Tasa reincidencia rama IZQ,Tasa reincidencia rama DER,Lift rama DER / global,Ganancia/intuición
-1,¿Pertenece al grupo ISCO 5 (Service and sales workers)?,isco_mayor_5 <= 0.50 => NO,Izq = NO pertenece a ISCO 5 | Der = SÍ pertenece a ISCO 5,225099,0.265,0.348,1.234,Mayor separación: grupo 5 eleva la tasa respecto al global
-2,¿Pertenece al grupo ISCO 3 (Technicians and associate professionals)? (sigue rama NO grupo 5),isco_mayor_3 <= 0.50 => NO,Izq = NO pertenece a ISCO 3 | Der = SÍ pertenece a ISCO 3,173814,0.248,0.325,1.152,"Dentro de NO grupo 5, grupo 3 aumenta la tasa"
-3,"¿Pertenece al grupo ISCO 9 (Elementary occupations)? (sigue NO5, NO3)",isco_mayor_9 <= 0.50 => NO,Izq = NO pertenece a ISCO 9 | Der = SÍ pertenece a ISCO 9,138131,0.226,0.333,1.181,Grupo 9 eleva la tasa en esta subpoblación
-4,"¿Pertenece al grupo ISCO 2 (Professionals)? (sigue NO5, NO3, NO9)",isco_mayor_2 <= 0.50 => NO,Izq = NO pertenece a ISCO 2 | Der = SÍ pertenece a ISCO 2,91428,0.184,0.307,1.088,Grupo 2 también muestra mayor propensión
