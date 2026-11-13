@@ -230,7 +230,11 @@ class IQROutlierHandler:
                 'column': col,
                 'issue': 'outliers',
                 'method': f'IQR_winsorization_clip(factor={self.config.iqr_factor})',
-                'justification': f'Outliers clipped to IQR bounds [Q1-1.5*IQR, Q3+1.5*IQR] computed before imputation',
+                'justification': (
+                    f'Valores atípicos acotados por clip() al intervalo IQR '
+                    f'[{lower_bound:.2f}, {upper_bound:.2f}] (Q1-1.5*IQR, Q3+1.5*IQR) '
+                    f'calculado antes de imputar, sin eliminar filas'
+                ),
                 'values_affected': int(clipped_lower + clipped_upper)
             })
         

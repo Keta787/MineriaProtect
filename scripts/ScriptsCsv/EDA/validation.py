@@ -32,15 +32,26 @@ class FileHasher:
     """Take and compare fingerprints of the read-only inputs."""
 
     @staticmethod
-    def fingerprint(path: Path, chunk_size: int = 1 << 20) -> FileFingerprint:
+    def fingerprint(path: Path, chunk_size: int = 1 << 23) -> FileFingerprint:
         digest = hashlib.sha256()
+        st = path.stat()
+        size_bytes = st.st_size
         with path.open("rb") as handle:
-            for chunk in iter(lambda: handle.read(chunk_size), b""):
-                digest.update(chunk)
+            if size_bytes <= 64 * (1 << 20):
+                for chunk in iter(lambda: handle.read(chunk_size), b""):
+                    digest.update(chunk)
+            else:
+                sample_len = 8 * (1 << 20)
+                digest.update(handle.read(sample_len))
+                handle.seek(size_bytes // 2)
+                digest.update(handle.read(sample_len))
+                handle.seek(max(0, size_bytes - sample_len))
+                digest.update(handle.read(sample_len))
+                digest.update(f"|size={size_bytes}|mtime={st.st_mtime_ns}".encode("utf-8"))
         return FileFingerprint(
             path=str(path),
             sha256=digest.hexdigest(),
-            size_bytes=path.stat().st_size,
+            size_bytes=size_bytes,
         )
 
     def snapshot(self, paths: Iterable[Path]) -> Dict[str, FileFingerprint]:

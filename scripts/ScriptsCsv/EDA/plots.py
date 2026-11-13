@@ -32,7 +32,7 @@ PALETTE: Sequence[str] = (
     "#000000",
 )
 SOURCE_NOTE = "Fuente: JobPath · experiencias laborales (datos seudonimizados)."
-SOURCE_A = "Datos: empleos_limpio_con_competencias.csv · versión A (con outliers)."
+SOURCE_A = "Datos: empleos_unificado_limpio.csv · versión A (con outliers)."
 SOURCE_B = (
     "Datos: empleos_limpio_con_competencias_sin_outliers.csv · "
     "versión B (sin outliers, IQR)."

@@ -87,8 +87,9 @@ class JobPathLoader:
         """
         path = self._config.clean_paths[version]
         stats: List[TextColumnStats] = []
+        frame_txt = pd.read_csv(path, usecols=list(TEXT_COLUMNS), dtype="string", low_memory=False)
         for column in TEXT_COLUMNS:
-            series = pd.read_csv(path, usecols=[column], dtype="string")[column]
+            series = frame_txt[column]
             nulls = int(series.isna().sum())
             stats.append(
                 TextColumnStats(
@@ -99,7 +100,7 @@ class JobPathLoader:
                     max_length=int(series.str.len().max()) if series.notna().any() else 0,
                 )
             )
-            del series
+        del frame_txt
         return stats
 
     # ------------------------------------------------------------------
@@ -122,7 +123,10 @@ class JobPathLoader:
         missing = [c for c in columns if c not in available]
         if missing:
             raise KeyError(f"Columnas ausentes en {path.name}: {missing}")
-        return pd.read_csv(path, usecols=list(columns))
+        try:
+            return pd.read_csv(path, usecols=list(columns), engine="pyarrow")
+        except Exception:
+            return pd.read_csv(path, usecols=list(columns))
 
     def load_transformers(self, version: str):
         """Load the fitted transformers (read-only, never modified)."""

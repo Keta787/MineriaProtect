@@ -40,14 +40,14 @@ No carga la matriz `X` completa ni el `X_test.csv`.
 
 ## 4. Qué es `X`
 
-- Una fila por **experiencia laboral con oficio clasificado**.
-- **2.839 columnas** numéricas (2.828 `int64`, 11 `float64`):
-  - 2.821 dummies `occupation_code_*` (one-hot del oficio);
+- Una fila por **experiencia laboral con oficio clasificado** (`1.738.738` experiencias y `352.093` personas en total).
+- **2.985 columnas** numéricas (2.974 `uint8`/`int64`, 11 `float64`):
+  - 2.967 dummies `occupation_code_*` (one-hot del oficio ajustado en `train`);
   - 18 columnas de duración, competencias, calendario, nivel educativo,
     banderas y bins.
 - **No contiene `resume_id`**: la persona no entra como feature.
-- Dimensiones: train 278.987 filas; test 69.276 filas.
-- A y B comparten las mismas 2.839 columnas y las mismas filas.
+- Dimensiones: train **1.391.018** filas (`281.674` personas); test **347.720** filas (`70.419` personas).
+- A y B comparten las mismas 2.985 columnas y las mismas filas.
 
 Las 18 columnas que no son dummies de oficio son:
 
@@ -62,8 +62,8 @@ Las 18 columnas que no son dummies de oficio son:
 - Una sola columna: `reincide`, binaria 0/1.
 - `1` si la persona ya había tenido ese mismo oficio (`veces_ese_oficio > 1`);
   `0` en caso contrario.
-- Train: 85.147 positivos de 278.987 (30,52 %).
-- Test: 21.103 positivos de 69.276 (30,46 %).
+- Train: **417.471** positivos de **1.391.018** (**30,01 %**, IC 95 %: `29,94 % – 30,09 %`).
+- Test: **104.225** positivos de **347.720** (**29,97 %**).
 - En el EDA se renombra solo en RAM a `is_repeated_occupation`; los archivos
   no se modifican.
 
@@ -77,7 +77,7 @@ Las 18 columnas que no son dummies de oficio son:
 
 ## 7. Qué no se usó y por qué
 
-- **`X` completo:** 1.539 MB en train y 382 MB en test; 2.839 columnas. El EDA
+- **`X` completo:** ~7.674 MB en train y ~1.918 MB en test; 2.985 columnas. El EDA
   es descriptivo y no necesita la matriz completa.
 - **`X_test.csv`:** no se lee para no contaminar decisiones con test.
 - **`transformers.joblib`:** no se carga; solo se verifica su huella. Reajustar

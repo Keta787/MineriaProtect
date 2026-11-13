@@ -24,7 +24,7 @@ VERSION_LABELS: Mapping[str, str] = {
 }
 
 CLEAN_FILES: Mapping[str, str] = {
-    VERSION_WITH_OUTLIERS: "empleos_limpio_con_competencias.csv",
+    VERSION_WITH_OUTLIERS: "empleos_unificado_limpio.csv",
     VERSION_WITHOUT_OUTLIERS: "empleos_limpio_con_competencias_sin_outliers.csv",
 }
 

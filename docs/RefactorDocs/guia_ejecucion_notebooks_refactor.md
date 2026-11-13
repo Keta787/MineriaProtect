@@ -38,7 +38,7 @@ G24).
 |---|---|---|---|
 | **1.0** | Es un documento de texto con el planteamiento del trabajo. No se ejecuta. | No | No |
 | **2.0** | Limpia el archivo de datos: revisa duplicados, valores vacíos y valores extremos. | **Sí**: reescribe `data\03_processed\empleos_limpio_con_competencias_sin_outliers.csv` | **Sí.** Lo reescribe sin preguntar |
-| **3.0** | Convierte los datos limpios en tablas numéricas listas para analizar. Es el paso más largo. | **Sí**: reescribe los 8 archivos de `data\04_transformed` (unos 3,8 GB) y 2 archivos de configuración | **Sí.** También sin preguntar |
+| **3.0** | Convierte los datos limpios en tablas numéricas listas para analizar. Es el paso más largo. | **Sí**: reescribe los 8 archivos de `data\04_transformed` (unos 19,2 GB en total) y 2 archivos de configuración | **Sí.** También sin preguntar |
 | **4.0** | Diagnóstico de control sobre una muestra de 10.000 filas. | No, solo lee | No |
 | **4.1** | El mismo diagnóstico sobre una muestra de 50.000 filas. | No, solo lee | No |
 | **5.0** | Explora los datos y genera las 28 figuras y la tabla del reparto train/test. | **Sí**, pero solo dentro de `reports\eda_jobpath\` | No. No toca `data\` |
@@ -87,7 +87,7 @@ Get-ChildItem data\03_processed,data\04_transformed -Recurse -File |
 
 - El primero te sitúa en la carpeta del proyecto.
 - El segundo crea una carpeta con la fecha y la hora de hoy dentro de `backup\`.
-- El tercero copia las dos carpetas de datos (unos 4,4 GB; puede tardar varios
+- El tercero copia las dos carpetas de datos (unos 22 GB; puede tardar varios
   minutos).
 - El cuarto guarda una "huella digital" de cada archivo (un código que cambia si
   el archivo cambia). Sirve para comprobar después, sin abrirlos, si algo se
@@ -185,10 +185,10 @@ Debe aparecer:
 
 | Versión | Conjunto | Columnas | Filas | Casos con valor 1 |
 |---|---|---|---|---|
-| con_outliers | train | 2.839 | 278.987 | 85.147 |
-| con_outliers | test | 2.839 | 69.276 | 21.103 |
-| sin_outliers | train | 2.839 | 278.987 | 85.147 |
-| sin_outliers | test | 2.839 | 69.276 | 21.103 |
+| con_outliers | train | 2.985 | 1.391.018 | 417.471 |
+| con_outliers | test | 2.985 | 347.720 | 104.225 |
+| sin_outliers | train | 2.985 | 1.391.018 | 417.471 |
+| sin_outliers | test | 2.985 | 347.720 | 104.225 |
 
 Las dos versiones tienen que dar **exactamente lo mismo** en filas y en casos
 con valor 1. Solo cambian algunos valores extremos, no el número de filas.
@@ -243,7 +243,7 @@ estaban antes de empezar.
 
 ## 8. Reglas de oro (para no romper nada)
 
-1. **No borres** `data\03_processed\empleos_limpio_con_competencias.csv`. Es el
+1. **No borres** `data\03_processed\empleos_unificado_limpio.csv`. Es el
    archivo de partida y ningún cuaderno lo vuelve a crear.
 2. **No actives** las casillas de los cuadernos 2.0 que dicen "solo ejecutar si
    aprueba" (`APPROVE_KEY_DUPLICATES`, `APPROVE_CATEGORY_NORMALIZATION`).

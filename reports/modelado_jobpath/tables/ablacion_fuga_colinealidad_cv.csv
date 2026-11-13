@@ -1,0 +1,4 @@
+esquema_features,n_columnas,pr_auc_cv_media,pr_auc_cv_std,roc_auc_cv_media,f1_pos_cv_media,recall_pos_cv_media,precision_pos_cv_media,balanced_acc_cv_media
+1. Con fuga (prohibido),2985,1.0,0.0,1.0,1.0,1.0,1.0,1.0
+"2. Sin fuga (2,983 cols)",2983,0.5111,0.0027,0.7131,0.5338,0.6304,0.4635,0.6584
+"3. Sin fuga + sin colinealidad (2,981 cols)",2981,0.5113,0.0029,0.7132,0.534,0.6313,0.4635,0.6586
