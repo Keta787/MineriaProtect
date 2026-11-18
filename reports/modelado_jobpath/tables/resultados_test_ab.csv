@@ -1,0 +1,7 @@
+version,modelo,pr_auc_test,roc_auc_test,f1_pos_test,recall_pos_test,precision_pos_test,balanced_acc_test,brier_test
+A · con outliers,Baseline (Prior),0.2997,0.5,0.0,0.0,0.0,0.5,0.2099
+A · con outliers,"Logística Regularizada (OHE 2,981 cols)",0.5109,0.7133,0.5321,0.6147,0.4691,0.6585,0.2108
+A · con outliers,HistGradientBoosting (14 cols densas),0.4951,0.6936,0.5151,0.6109,0.4453,0.6426,0.2211
+B · sin outliers (IQR),Baseline (Prior),0.2997,0.5,0.0,0.0,0.0,0.5,0.2099
+B · sin outliers (IQR),"Logística Regularizada (OHE 2,981 cols)",0.5109,0.7132,0.5325,0.6162,0.4688,0.6587,0.2111
+B · sin outliers (IQR),HistGradientBoosting (14 cols densas),0.4888,0.6912,0.5134,0.6129,0.4417,0.6407,0.2219

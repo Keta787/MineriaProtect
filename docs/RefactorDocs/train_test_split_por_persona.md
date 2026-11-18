@@ -18,11 +18,11 @@ Por ejemplo, el nivel educativo, la trayectoria y los oficios de una persona se 
 
 ## Como se verifica
 
-- `shared_persons = 0`.
+- `shared_persons = 0` (`281.674` personas y `1.391.018` filas en `train`; `70.419` personas y `347.720` filas en `test`; `3.215` personas sin ningún oficio clasificado excluidas del universo modelable).
 - `resume_id` no entra como feature en `X`.
-- Las columnas de `X_train` y `X_test` son identicas.
+- Las columnas de `X_train` y `X_test` son identicas (`2.985` columnas).
 - `mean/std/min/max` de las columnas escaladas se imprimen para train y se comparan con test.
-- La prevalencia de `reincide` se reporta por conjunto para detectar desbalances visibles.
+- La prevalencia de `reincide` se reporta por conjunto para detectar desbalances visibles (`30,01 %` en `train` y `29,97 %` en `test`).
 
 ## Cuando no hace falta
 
@@ -30,5 +30,4 @@ En este proyecto la validacion formal acostumbra a usar este split para estabili
 
 ## Conexion con el notebook
 
-Ver `notebooks/refactor/3.0_transformacion.ipynb`, secciones 9 y 10: split por persona, validacion y exportacion de `X_train`, `X_test` por version.
-PY
+Ver `notebooks/refactor/3.0_transformacion.ipynb`, secciones 9 y 10: split por persona, validacion y exportacion de `X_train`, `X_test` por version, y `reports/eda_jobpath/tables/split_map_resume_id.csv` generado por `notebooks/refactor/5.0_EDA_jobpath.ipynb`.
