@@ -40,6 +40,7 @@ class PipelineConfig:
         "id", "ID", "Id",
         # Códigos ESCO/ocupación
         "occupation_code", "isco_code", "esco_code", "matched_code",
+        "isco_group",  # codigo de area: no es magnitud medible
         # Códigos postales
         "postal_code", "zip_code", "cp",
         # Año/fecha
