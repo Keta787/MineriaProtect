@@ -1,0 +1,46 @@
+|--- diff_competence_knowledge <= 16.50
+|   |--- n_skills_essential <= 10.50
+|   |   |--- n_skills_essential <= 9.50
+|   |   |   |--- prop_knowledge_essential <= 0.21
+|   |   |   |   |--- weights: [31215.00, 6750.00] class: 0
+|   |   |   |--- prop_knowledge_essential >  0.21
+|   |   |   |   |--- weights: [23864.00, 7959.00] class: 0
+|   |   |--- n_skills_essential >  9.50
+|   |   |   |--- prop_knowledge_essential <= 0.35
+|   |   |   |   |--- weights: [55511.00, 29816.00] class: 0
+|   |   |   |--- prop_knowledge_essential >  0.35
+|   |   |   |   |--- weights: [2671.00, 487.00] class: 0
+|   |--- n_skills_essential >  10.50
+|   |   |--- n_skills_essential <= 16.50
+|   |   |   |--- ratio_competence_knowledge <= 12.50
+|   |   |   |   |--- weights: [177622.00, 42074.00] class: 0
+|   |   |   |--- ratio_competence_knowledge >  12.50
+|   |   |   |   |--- weights: [31743.00, 11172.00] class: 0
+|   |   |--- n_skills_essential >  16.50
+|   |   |   |--- ratio_competence_knowledge <= 5.50
+|   |   |   |   |--- weights: [237211.00, 79324.00] class: 0
+|   |   |   |--- ratio_competence_knowledge >  5.50
+|   |   |   |   |--- weights: [27262.00, 12539.00] class: 0
+|--- diff_competence_knowledge >  16.50
+|   |--- prop_competence_essential <= 0.95
+|   |   |--- ratio_competence_knowledge <= 3.44
+|   |   |   |--- prop_competence_essential <= 0.79
+|   |   |   |   |--- weights: [34358.00, 17101.00] class: 0
+|   |   |   |--- prop_competence_essential >  0.79
+|   |   |   |   |--- weights: [22374.00, 23298.00] class: 1
+|   |   |--- ratio_competence_knowledge >  3.44
+|   |   |   |--- n_skills_competence <= 23.50
+|   |   |   |   |--- weights: [84412.00, 48734.00] class: 0
+|   |   |   |--- n_skills_competence >  23.50
+|   |   |   |   |--- weights: [115036.00, 40610.00] class: 0
+|   |--- prop_competence_essential >  0.95
+|   |   |--- prop_knowledge_essential <= 0.05
+|   |   |   |--- n_skills_essential <= 31.50
+|   |   |   |   |--- weights: [68611.00, 33783.00] class: 0
+|   |   |   |--- n_skills_essential >  31.50
+|   |   |   |   |--- weights: [10013.00, 9880.00] class: 0
+|   |   |--- prop_knowledge_essential >  0.05
+|   |   |   |--- diff_competence_knowledge <= 27.00
+|   |   |   |   |--- weights: [35855.00, 41055.00] class: 1
+|   |   |   |--- diff_competence_knowledge >  27.00
+|   |   |   |   |--- weights: [15789.00, 12889.00] class: 0

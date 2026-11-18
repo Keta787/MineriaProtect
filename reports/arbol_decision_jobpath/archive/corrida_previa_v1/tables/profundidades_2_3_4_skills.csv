@@ -1,0 +1,4 @@
+max_depth,profundidad_alcanzada,n_leaves,train_acc,test_acc,gap_train_test,train_f1_clase_1,test_precision_clase_1,test_recall_clase_1,test_f1_clase_1
+2,2,4,0.5671,0.5672,-0.0002,0.4441,0.3609,0.5759,0.4438
+3,3,8,0.547,0.5473,-0.0002,0.4623,0.3589,0.6488,0.4621
+4,4,15,0.5783,0.5777,0.0005,0.4577,0.3715,0.5909,0.4562

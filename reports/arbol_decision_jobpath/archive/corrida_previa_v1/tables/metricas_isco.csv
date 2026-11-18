@@ -1,0 +1,3 @@
+arbol,particion,profundidad_efectiva,n_hojas,accuracy,precision_clase_1,recall_clase_1,f1_clase_1,tn,fp,fn,tp
+Árbol 1 · ISCO,Train (80%),4,5,0.4451,0.3258,0.7939,0.462,287697,685850,86044,331427
+Árbol 1 · ISCO,Test (20%),4,5,0.4443,0.3254,0.7961,0.462,71512,171983,21250,82975

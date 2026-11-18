@@ -1,0 +1,4 @@
+particion,filas_totales,violaciones_4_terminos_A,filas_exactas_E_igual_C_mas_K_en_A,pct_exactas_E_igual_C_mas_K_en_A,filas_con_sin_tipo_mayor_0_en_A,pct_sin_tipo_mayor_0_en_A,filas_con_algun_recorte_iqr_en_B,pct_algun_recorte_iqr_en_B,recortadas_essential_gt_47_5_en_B,recortadas_competence_gt_39_5_en_B,recortadas_knowledge_gt_13_5_en_B,violaciones_E_igual_C_mas_K_en_B_total,pct_violaciones_E_igual_C_mas_K_en_B,violaciones_en_B_causadas_solo_por_recorte_iqr,pct_violaciones_en_B_solo_por_recorte_iqr
+Train (80%),1391018,0,1378491,99.1,12527,0.9,82067,5.9,70249,68851,28034,91003,6.54,78476,5.64
+Test (20%),347720,0,344637,99.11,3083,0.89,20304,5.84,17288,16985,6936,22528,6.48,19445,5.59
+Total Clasificado (100%),1738738,0,1723128,99.1,15610,0.9,102371,5.89,87537,85836,34970,113531,6.53,97921,5.63

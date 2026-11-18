@@ -1,0 +1,7 @@
+version_datos,arbol,punto_operacion,max_depth,profundidad_alcanzada,n_leaves,train_acc,test_acc,gap_train_test,train_f1_clase_1,test_precision_clase_1,test_recall_clase_1,test_f1_clase_1,test_roc_auc
+Versión B · SIN outliers,Árbol 2 · Education level,class_weight=None (Exactitud),2,2,4,0.6999,0.7003,-0.0004,0.0,0.0,0.0,0.0,0.5209
+Versión B · SIN outliers,Árbol 2 · Education level,class_weight=None (Exactitud),3,3,5,0.6999,0.7003,-0.0004,0.0,0.0,0.0,0.0,0.5208
+Versión B · SIN outliers,Árbol 2 · Education level,class_weight=None (Exactitud),4,3,5,0.6999,0.7003,-0.0004,0.0,0.0,0.0,0.0,0.5208
+Versión B · SIN outliers,Árbol 2 · Education level,class_weight='balanced' (Recall),2,2,4,0.3752,0.376,-0.0008,0.457,0.3088,0.8738,0.4564,0.5209
+Versión B · SIN outliers,Árbol 2 · Education level,class_weight='balanced' (Recall),3,3,5,0.3752,0.376,-0.0008,0.457,0.3088,0.8738,0.4564,0.5208
+Versión B · SIN outliers,Árbol 2 · Education level,class_weight='balanced' (Recall),4,3,5,0.3752,0.376,-0.0008,0.457,0.3088,0.8738,0.4564,0.5208

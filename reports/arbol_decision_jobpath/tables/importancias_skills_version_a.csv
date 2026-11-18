@@ -1,0 +1,8 @@
+version_datos,variable,importancia,importancia_pct,descripcion_variable,lectura_metodologica
+Versión A · CON outliers,diff_competence_knowledge,0.5772,57.72,Diferencia neta entre competencias prácticas y conocimientos teóricos (n_skills_competence - n_skills_knowledge),Qué miró este árbol para reducir impureza en sus nodos (NO implica causalidad)
+Versión A · CON outliers,n_skills_essential,0.2093,20.93,Conteo total (en unidades reales ESCO) de competencias esenciales exigidas por el oficio,Qué miró este árbol para reducir impureza en sus nodos (NO implica causalidad)
+Versión A · CON outliers,prop_knowledge_essential,0.0874,8.74,Proporción de conocimientos teóricos sobre el total esencial (n_skills_knowledge / n_skills_essential),Qué miró este árbol para reducir impureza en sus nodos (NO implica causalidad)
+Versión A · CON outliers,n_skills_knowledge,0.0606,6.06,Conteo (en unidades reales ESCO) de conocimientos teóricos/disciplinares ('saber') del oficio,Qué miró este árbol para reducir impureza en sus nodos (NO implica causalidad)
+Versión A · CON outliers,ratio_competence_knowledge,0.0331,3.31,Razón entre competencias prácticas y conocimientos teóricos (n_skills_competence / (n_skills_knowledge + 1)),Qué miró este árbol para reducir impureza en sus nodos (NO implica causalidad)
+Versión A · CON outliers,n_skills_competence,0.0323,3.23,Conteo (en unidades reales ESCO) de competencias prácticas/operativas ('saber hacer') del oficio,Qué miró este árbol para reducir impureza en sus nodos (NO implica causalidad)
+Versión A · CON outliers,prop_competence_essential,0.0,0.0,Proporción de competencias prácticas sobre el total esencial (n_skills_competence / n_skills_essential),No utilizada por el árbol en profundidad <= 4

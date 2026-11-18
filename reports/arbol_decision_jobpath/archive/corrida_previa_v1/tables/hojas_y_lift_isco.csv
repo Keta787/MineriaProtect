@@ -1,0 +1,6 @@
+hoja_id,profundidad,predice_reincide,n_train,pct_train,tasa_clase1_train,tasa_base_train,lift_train,n_test,pct_test,tasa_clase1_test,tasa_base_test,lift_test,condiciones_hoja_es
+4,4,1,1017277,73.13,0.3258,0.3001,1.086,254958,73.32,0.3254,0.2997,1.086,"NO pertenece a [4 · Personal de apoyo administrativo] Y NO pertenece a [1 · Directores y gerentes] Y NO pertenece a [7 · Oficiales, operarios y artesanos] Y NO pertenece a [8 · Operadores de instalaciones y máquinas]"
+5,4,0,80665,5.8,0.2466,0.3001,0.822,20103,5.78,0.2471,0.2997,0.824,"NO pertenece a [4 · Personal de apoyo administrativo] Y NO pertenece a [1 · Directores y gerentes] Y NO pertenece a [7 · Oficiales, operarios y artesanos] Y SÍ pertenece a [8 · Operadores de instalaciones y máquinas]"
+6,3,0,100371,7.22,0.2311,0.3001,0.77,25002,7.19,0.2308,0.2997,0.77,"NO pertenece a [4 · Personal de apoyo administrativo] Y NO pertenece a [1 · Directores y gerentes] Y SÍ pertenece a [7 · Oficiales, operarios y artesanos]"
+8,1,0,111705,8.03,0.2246,0.3001,0.748,27784,7.99,0.2255,0.2997,0.752,SÍ pertenece a [4 · Personal de apoyo administrativo]
+7,2,0,81000,5.82,0.2207,0.3001,0.735,19873,5.72,0.2137,0.2997,0.713,NO pertenece a [4 · Personal de apoyo administrativo] Y SÍ pertenece a [1 · Directores y gerentes]

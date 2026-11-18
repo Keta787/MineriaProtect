@@ -1,0 +1,11 @@
+version_datos,segmento,filas,porcentaje_filas,personas_unicas,decision_proyecto
+Versión A · CON outliers,Total unificado limpio (03_processed),1871014,100.0,355308.0,Universo completo en disco (inmutable)
+Versión A · CON outliers,Con ocupación ESCO estandarizada (n_skills_essential no nulo),1738738,92.93,352093.0,Incluido en modelado (Decisión D07)
+Versión A · CON outliers,Sin ocupación ESCO estandarizada (total excluido en RAM),132276,7.07,3215.0,Excluido en RAM antes del split (sin perfil ESCO)
+Versión A · CON outliers,  └─ Desglose: emparejado == 'unknown',128981,6.89,,Texto libre sin correspondencia ESCO
+Versión A · CON outliers,  └─ Desglose: emparejado == 'rescatado' sin padre ESCO,3295,0.18,,Rescate léxico sin perfil de competencias ESCO
+Versión B · SIN outliers,Total unificado limpio (03_processed),1871014,100.0,355308.0,Universo completo en disco (inmutable)
+Versión B · SIN outliers,Con ocupación ESCO estandarizada (n_skills_essential no nulo),1738738,92.93,352093.0,Incluido en modelado (Decisión D07)
+Versión B · SIN outliers,Sin ocupación ESCO estandarizada (total excluido en RAM),132276,7.07,3215.0,Excluido en RAM antes del split (sin perfil ESCO)
+Versión B · SIN outliers,  └─ Desglose: emparejado == 'unknown',128981,6.89,,Texto libre sin correspondencia ESCO
+Versión B · SIN outliers,  └─ Desglose: emparejado == 'rescatado' sin padre ESCO,3295,0.18,,Rescate léxico sin perfil de competencias ESCO

@@ -1,0 +1,13 @@
+occupation_code,occupation_label,isco_group,isco_major,gran_grupo_isco_es,isco_group_label,filas_train,pct_hoja_train,tasa_clase1_train,filas_test,pct_hoja_test,tasa_clase1_test,filas_total,pct_hoja_total,tasa_clase1_total
+3343.1,administrative assistant,3343,3,3 · Técnicos y profesionales de nivel medio,Administrative and executive secretaries,66819,86.88,0.5702,16691,86.87,0.5656,83510,86.88,0.5693
+9111.1,domestic cleaner,9111,9,9 · Ocupaciones elementales,Domestic cleaners and helpers,7264,9.44,0.2978,1835,9.55,0.3134,9099,9.47,0.3009
+5414.1,security guard,5414,5,5 · Trabajadores de los servicios y vendedores,Security guards,2122,2.76,0.3228,508,2.64,0.252,2630,2.74,0.3091
+1411.1,accommodation manager,1411,1,1 · Directores y gerentes,Hotel managers,384,0.5,0.1875,98,0.51,0.2041,482,0.5,0.1909
+7412.10,power tool repair technician,7412,7,"7 · Oficiales, operarios y artesanos",Electrical mechanics and fitters,101,0.13,0.1188,20,0.1,0.0,121,0.13,0.0992
+8160.14,centrifuge operator,8160,8,8 · Operadores de instalaciones y máquinas,Food and related products machine operators,60,0.08,0.0667,12,0.06,0.1667,72,0.07,0.0833
+2431.8,customer experience manager,2431,2,2 · Profesionales científicos e intelectuales,Advertising and marketing professionals,42,0.05,0.0,16,0.08,0.0,58,0.06,0.0
+8341.1,forestry equipment operator,8341,8,8 · Operadores de instalaciones y máquinas,Mobile farm and forestry plant operators,44,0.06,0.0455,11,0.06,0.1818,55,0.06,0.0727
+2431.9,hospitality revenue manager,2431,2,2 · Profesionales científicos e intelectuales,Advertising and marketing professionals,40,0.05,0.35,9,0.05,0.2222,49,0.05,0.3265
+3112.1.12,sewerage maintenance technician,3112,3,3 · Técnicos y profesionales de nivel medio,Civil engineering technicians,20,0.03,0.0,4,0.02,0.0,24,0.02,0.0
+5163.4,funeral services director,5163,5,5 · Trabajadores de los servicios y vendedores,Undertakers and embalmers,13,0.02,0.0,8,0.04,0.25,21,0.02,0.0952
+3123.1.9,dismantling supervisor,3123,3,3 · Técnicos y profesionales de nivel medio,Construction supervisors,1,0.0,0.0,1,0.01,0.0,2,0.0,0.0

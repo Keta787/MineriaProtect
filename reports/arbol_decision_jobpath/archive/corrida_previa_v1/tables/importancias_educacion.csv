@@ -1,0 +1,3 @@
+variable,importancia,importancia_pct,descripcion_variable,lectura_metodologica
+nivel_educativo_ord,1.0,100.0,"Escala ordinal del nivel educativo (0=No reportado, 1=Secondary school, 2=Bachelor, 3=Master, 4=PhD)",Qué miró este árbol para reducir impureza en sus nodos (NO implica causalidad)
+educacion_no_reportada,0.0,0.0,Bandera binaria (0/1) de ausencia informativa (MNAR) cuando el nivel educativo no fue reportado,No utilizada por el árbol en profundidad <= 4

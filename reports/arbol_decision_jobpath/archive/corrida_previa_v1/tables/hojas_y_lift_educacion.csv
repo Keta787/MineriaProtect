@@ -1,0 +1,6 @@
+hoja_id,profundidad,predice_reincide,n_train,pct_train,tasa_clase1_train,tasa_base_train,lift_train,n_test,pct_test,tasa_clase1_test,tasa_base_test,lift_test,condiciones_hoja_es
+4,3,1,548687,39.44,0.3109,0.3001,1.036,136581,39.28,0.312,0.2997,1.041,nivel_educativo_ord <= 2.5 (hasta Bachelor (2)) Y nivel_educativo_ord <= 1.5 (hasta Secondary school (1)) Y nivel_educativo_ord > 0.5 (desde Secondary school (1) o superior)
+3,3,1,160664,11.55,0.308,0.3001,1.026,40270,11.58,0.3054,0.2997,1.019,nivel_educativo_ord <= 2.5 (hasta Bachelor (2)) Y nivel_educativo_ord <= 1.5 (hasta Secondary school (1)) Y nivel_educativo_ord <= 0.5 (hasta No reportado (0))
+5,2,1,473842,34.06,0.3075,0.3001,1.025,118038,33.95,0.3064,0.2997,1.022,nivel_educativo_ord <= 2.5 (hasta Bachelor (2)) Y nivel_educativo_ord > 1.5 (desde Bachelor (2) o superior)
+7,2,0,201851,14.51,0.2493,0.3001,0.831,51275,14.75,0.2499,0.2997,0.834,nivel_educativo_ord > 2.5 (desde Master (3) o superior) Y nivel_educativo_ord <= 3.5 (hasta Master (3))
+8,2,0,5974,0.43,0.2283,0.3001,0.761,1556,0.45,0.2166,0.2997,0.723,nivel_educativo_ord > 2.5 (desde Master (3) o superior) Y nivel_educativo_ord > 3.5 (desde PhD (4) o superior)
