@@ -1,0 +1,4 @@
+variable,importancia,importancia_pct,descripcion_variable,lectura_metodologica
+n_skills_competence,0.4745,47.45,Conteo (en unidades reales ESCO) de competencias prácticas/operativas ('saber hacer') del oficio,Qué miró este árbol para reducir impureza en sus nodos (NO implica causalidad)
+n_skills_essential,0.2877,28.77,Conteo total (en unidades reales ESCO) de competencias esenciales exigidas por el oficio,Qué miró este árbol para reducir impureza en sus nodos (NO implica causalidad)
+n_skills_knowledge,0.2378,23.78,Conteo (en unidades reales ESCO) de conocimientos teóricos/disciplinares ('saber') del oficio,Qué miró este árbol para reducir impureza en sus nodos (NO implica causalidad)

@@ -1,0 +1,43 @@
+|--- n_skills_competence <= 18.50
+|   |--- n_skills_essential <= 10.50
+|   |   |--- n_skills_essential <= 9.50
+|   |   |   |--- n_skills_knowledge <= 1.50
+|   |   |   |   |--- weights: [22300.22, 11245.54] class: 0
+|   |   |   |--- n_skills_knowledge >  1.50
+|   |   |   |   |--- weights: [17048.61, 13259.74] class: 0
+|   |   |--- n_skills_essential >  9.50
+|   |   |   |--- n_skills_knowledge <= 3.50
+|   |   |   |   |--- weights: [39657.46, 49673.62] class: 1
+|   |   |   |--- n_skills_knowledge >  3.50
+|   |   |   |   |--- weights: [1908.18, 811.34] class: 0
+|   |--- n_skills_essential >  10.50
+|   |   |--- n_skills_essential <= 16.50
+|   |   |   |--- n_skills_knowledge <= 0.50
+|   |   |   |   |--- weights: [26383.06, 20668.46] class: 0
+|   |   |   |--- n_skills_knowledge >  0.50
+|   |   |   |   |--- weights: [123188.81, 68039.67] class: 0
+|   |   |--- n_skills_essential >  16.50
+|   |   |   |--- n_skills_knowledge <= 6.50
+|   |   |   |   |--- weights: [114922.40, 98934.07] class: 0
+|   |   |   |--- n_skills_knowledge >  6.50
+|   |   |   |   |--- weights: [46252.15, 32058.94] class: 0
+|--- n_skills_competence >  18.50
+|   |--- n_skills_essential <= 20.50
+|   |   |--- n_skills_knowledge <= 0.50
+|   |   |   |--- n_skills_essential <= 19.50
+|   |   |   |   |--- weights: [1316.65, 1009.60] class: 0
+|   |   |   |--- n_skills_essential >  19.50
+|   |   |   |   |--- weights: [15992.72, 19437.29] class: 1
+|   |   |--- n_skills_knowledge >  0.50
+|   |   |   |--- weights: [25615.07, 68397.86] class: 1
+|   |--- n_skills_essential >  20.50
+|   |   |--- n_skills_knowledge <= 25.50
+|   |   |   |--- n_skills_knowledge <= 7.50
+|   |   |   |   |--- weights: [213152.68, 261562.87] class: 1
+|   |   |   |--- n_skills_knowledge >  7.50
+|   |   |   |   |--- weights: [44299.68, 36967.00] class: 0
+|   |   |--- n_skills_knowledge >  25.50
+|   |   |   |--- n_skills_competence <= 38.00
+|   |   |   |   |--- weights: [197.89, 58.31] class: 0
+|   |   |   |--- n_skills_competence >  38.00
+|   |   |   |   |--- weights: [3273.41, 13384.69] class: 1

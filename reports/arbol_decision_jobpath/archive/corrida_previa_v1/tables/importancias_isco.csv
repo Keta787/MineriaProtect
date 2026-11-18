@@ -1,0 +1,11 @@
+variable,importancia,importancia_pct,descripcion_variable,lectura_metodologica
+isco_major_7,0.2849,28.49,"Indicador binario (0/1) del Gran Grupo ISCO-08 7 · Oficiales, operarios y artesanos",Qué miró este árbol para reducir impureza en sus nodos (NO implica causalidad)
+isco_major_4,0.28,28.0,Indicador binario (0/1) del Gran Grupo ISCO-08 4 · Personal de apoyo administrativo,Qué miró este árbol para reducir impureza en sus nodos (NO implica causalidad)
+isco_major_1,0.2567,25.67,Indicador binario (0/1) del Gran Grupo ISCO-08 1 · Directores y gerentes,Qué miró este árbol para reducir impureza en sus nodos (NO implica causalidad)
+isco_major_8,0.1785,17.85,Indicador binario (0/1) del Gran Grupo ISCO-08 8 · Operadores de instalaciones y máquinas,Qué miró este árbol para reducir impureza en sus nodos (NO implica causalidad)
+isco_major_0,0.0,0.0,Indicador binario (0/1) del Gran Grupo ISCO-08 0 · Ocupaciones militares,No utilizada por el árbol en profundidad <= 4
+isco_major_2,0.0,0.0,Indicador binario (0/1) del Gran Grupo ISCO-08 2 · Profesionales científicos e intelectuales,No utilizada por el árbol en profundidad <= 4
+isco_major_5,0.0,0.0,Indicador binario (0/1) del Gran Grupo ISCO-08 5 · Trabajadores de los servicios y vendedores,No utilizada por el árbol en profundidad <= 4
+isco_major_3,0.0,0.0,Indicador binario (0/1) del Gran Grupo ISCO-08 3 · Técnicos y profesionales de nivel medio,No utilizada por el árbol en profundidad <= 4
+isco_major_6,0.0,0.0,Indicador binario (0/1) del Gran Grupo ISCO-08 6 · Agricultores y trabajadores agropecuarios,No utilizada por el árbol en profundidad <= 4
+isco_major_9,0.0,0.0,Indicador binario (0/1) del Gran Grupo ISCO-08 9 · Ocupaciones elementales,No utilizada por el árbol en profundidad <= 4

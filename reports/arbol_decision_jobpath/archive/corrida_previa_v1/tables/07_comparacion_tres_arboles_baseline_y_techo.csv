@@ -1,0 +1,7 @@
+modelo,sub_pregunta_o_alcance,n_variables_X,profundidad_max,n_hojas,train_accuracy,test_accuracy,test_precision_clase_1,test_recall_clase_1,test_f1_clase_1,max_lift_hoja_test,pct_del_techo_f1_proyecto,supera_baseline_f1
+0 · Baseline Dummy (most_frequent),Predice siempre clase mayoritaria (0),0,0.0,1.0,0.6999,0.7003,0.0,0.0,0.0,1.0,0.0,Referencia (F1=0.0)
+Árbol 1 · ISCO,¿Qué es el oficio?,10,4.0,5.0,0.4451,0.4443,0.3254,0.7961,0.462,1.086,86.8,Sí
+Árbol 2 · Nivel educativo,¿Quién ejerce el oficio?,2,3.0,5.0,0.3752,0.376,0.3088,0.8738,0.4564,1.041,85.8,Sí
+Árbol 3 · Competencias,¿Qué exige el oficio?,3,4.0,15.0,0.5783,0.5777,0.3715,0.5909,0.4562,2.107,85.7,Sí
+"Techo 6.0 · Logística Regularizada (OHE 2,981 cols)",Todos los bloques combinados (referencia de techo real),2981,,,,0.676,0.4691,0.6147,0.5321,,100.0,Techo multivariado del proyecto
+Techo 6.0 · HistGradientBoosting (14 cols densas),Todos los bloques combinados (referencia de techo real),14,,,,0.6553,0.4453,0.6109,0.5151,,96.8,Techo multivariado del proyecto

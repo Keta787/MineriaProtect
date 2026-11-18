@@ -1,0 +1,4 @@
+particion,nivel_arbol,nodo_id,variable,umbral_sklearn,pregunta_es,n_en_nodo,n_izquierda,pct_izquierda,tasa_clase1_izquierda,lift_izquierda,n_derecha,pct_derecha,tasa_clase1_derecha,lift_derecha
+Train,Nivel 1 · Raíz (Nodo 0),0,n_skills_competence,18.5,¿n_skills_competence <= 18.50? [Izq: n_skills_competence <= 18.5 (18 o menos) | Der: n_skills_competence > 18.5 (19 o más)],1391018,725117,52.13,0.2439,0.813,665901,47.87,0.3613,1.204
+Train,Nivel 2 · Rama Izquierda (Nodo 1),1,n_skills_essential,10.5,¿n_skills_essential <= 10.50? [Izq: n_skills_essential <= 10.5 (10 o menos) | Der: n_skills_essential > 10.5 (11 o más)],725117,158273,21.83,0.2844,0.948,566844,78.17,0.2326,0.775
+Train,Nivel 2 · Rama Derecha (Nodo 16),16,n_skills_essential,20.5,¿n_skills_essential <= 20.50? [Izq: n_skills_essential <= 20.5 (20 o menos) | Der: n_skills_essential > 20.5 (21 o más)],665901,113412,17.03,0.4702,1.567,552489,82.97,0.3389,1.129

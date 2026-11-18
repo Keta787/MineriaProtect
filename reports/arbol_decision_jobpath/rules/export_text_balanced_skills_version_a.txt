@@ -1,0 +1,37 @@
+|--- diff_competence_knowledge <= 16.50
+|   |--- n_skills_competence <= 40.50
+|   |   |--- n_skills_essential <= 10.50
+|   |   |   |--- n_skills_essential <= 9.50
+|   |   |   |   |--- weights: [39348.83, 24505.28] class: 0
+|   |   |   |--- n_skills_essential >  9.50
+|   |   |   |   |--- weights: [41565.64, 50484.97] class: 1
+|   |   |--- n_skills_essential >  10.50
+|   |   |   |--- n_skills_essential <= 16.50
+|   |   |   |   |--- weights: [149571.87, 88708.13] class: 0
+|   |   |   |--- n_skills_essential >  16.50
+|   |   |   |   |--- weights: [189097.87, 153080.92] class: 0
+|   |--- n_skills_competence >  40.50
+|   |   |--- weights: [639.39, 2740.58] class: 1
+|--- diff_competence_knowledge >  16.50
+|   |--- diff_competence_knowledge <= 18.50
+|   |   |--- n_skills_essential <= 19.50
+|   |   |   |--- n_skills_essential <= 17.50
+|   |   |   |   |--- weights: [1686.72, 604.76] class: 0
+|   |   |   |--- n_skills_essential >  17.50
+|   |   |   |   |--- weights: [8078.52, 6807.30] class: 0
+|   |   |--- n_skills_essential >  19.50
+|   |   |   |--- prop_knowledge_essential <= 0.07
+|   |   |   |   |--- weights: [25615.07, 68397.86] class: 1
+|   |   |   |--- prop_knowledge_essential >  0.07
+|   |   |   |   |--- weights: [50043.51, 79553.43] class: 1
+|   |--- diff_competence_knowledge >  18.50
+|   |   |--- n_skills_knowledge <= 4.50
+|   |   |   |--- prop_knowledge_essential <= 0.15
+|   |   |   |   |--- weights: [105465.79, 129240.38] class: 1
+|   |   |   |--- prop_knowledge_essential >  0.15
+|   |   |   |   |--- weights: [14873.24, 30566.20] class: 1
+|   |   |--- n_skills_knowledge >  4.50
+|   |   |   |--- ratio_competence_knowledge <= 8.20
+|   |   |   |   |--- weights: [57814.12, 44184.13] class: 0
+|   |   |   |--- ratio_competence_knowledge >  8.20
+|   |   |   |   |--- weights: [11708.42, 16635.07] class: 1

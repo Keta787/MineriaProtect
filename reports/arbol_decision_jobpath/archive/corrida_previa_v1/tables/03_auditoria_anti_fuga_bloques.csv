@@ -1,0 +1,4 @@
+bloque,n_variables_X,columnas_fuga_detectadas,nulos_X_train,nulos_X_test,esquema_train_test_identico,variable_mayor_corr_abs_y,max_corr_abs_con_reincide,veredicto_anti_fuga
+Árbol 1 · ISCO (1 dígito),10,0,0,0,Sí,isco_major_4,0.0487,APROBADO (sin fuga directa)
+Árbol 2 · Nivel educativo,2,0,0,0,Sí,nivel_educativo_ord,0.0344,APROBADO (sin fuga directa)
+Árbol 3 · Competencias,3,0,0,0,Sí,n_skills_competence,0.0815,APROBADO (sin fuga directa)

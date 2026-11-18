@@ -1,0 +1,7 @@
+arbol,version_datos,n_semillas,cv_train_acc_media,cv_train_prec1_media,cv_train_rec1_media,cv_train_f1_media,cv_train_f1_std,test_acc_media,test_prec1_media,test_rec1_media,test_f1_media,n_hojas_media,fit_time_ms_media,raiz_modal_5_semillas,nivel2_izq_modal,nivel2_der_modal
+Árbol 1 · ISCO,A · Con outliers,5,0.4583,0.3248,0.7622,0.4547,0.0067,0.4506,0.3277,0.7946,0.4636,5.0,18.8,isco_major_1 <= 0.50,isco_major_4 <= 0.50,Hoja terminal
+Árbol 1 · ISCO,B · Sin outliers (IQR),5,0.4583,0.3248,0.7622,0.4547,0.0067,0.4506,0.3277,0.7946,0.4636,5.0,19.46,isco_major_1 <= 0.50,isco_major_4 <= 0.50,Hoja terminal
+Árbol 2 · Nivel educativo,A · Con outliers,5,0.478,0.3178,0.6515,0.4203,0.0256,0.4751,0.3105,0.6261,0.4088,4.0,11.66,nivel_educativo_ord <= 2.50,nivel_educativo_ord <= 0.50,Hoja terminal
+Árbol 2 · Nivel educativo,B · Sin outliers (IQR),5,0.478,0.3178,0.6515,0.4203,0.0256,0.4751,0.3105,0.6261,0.4088,4.0,10.72,nivel_educativo_ord <= 2.50,nivel_educativo_ord <= 0.50,Hoja terminal
+Árbol 3 · Competencias,A · Con outliers,5,0.5769,0.3673,0.579,0.4469,0.0135,0.5679,0.3664,0.6004,0.4537,14.0,18.89,n_skills_competence <= 18.50,n_skills_essential <= 10.50,n_skills_knowledge <= 1.50
+Árbol 3 · Competencias,B · Sin outliers (IQR),5,0.573,0.3666,0.5955,0.4521,0.0123,0.5686,0.3662,0.6038,0.4556,14.8,19.12,n_skills_competence <= 18.50,n_skills_essential <= 10.50,n_skills_knowledge <= 1.50

@@ -1,0 +1,46 @@
+|--- diff_competence_knowledge <= 16.50
+|   |--- n_skills_essential <= 10.50
+|   |   |--- n_skills_essential <= 9.50
+|   |   |   |--- prop_competence_essential <= 0.79
+|   |   |   |   |--- weights: [17048.61, 13259.74] class: 0
+|   |   |   |--- prop_competence_essential >  0.79
+|   |   |   |   |--- weights: [22300.22, 11245.54] class: 0
+|   |   |--- n_skills_essential >  9.50
+|   |   |   |--- prop_knowledge_essential <= 0.35
+|   |   |   |   |--- weights: [39657.46, 49673.62] class: 1
+|   |   |   |--- prop_knowledge_essential >  0.35
+|   |   |   |   |--- weights: [1908.18, 811.34] class: 0
+|   |--- n_skills_essential >  10.50
+|   |   |--- n_skills_essential <= 16.50
+|   |   |   |--- ratio_competence_knowledge <= 12.50
+|   |   |   |   |--- weights: [126894.44, 70095.52] class: 0
+|   |   |   |--- ratio_competence_knowledge >  12.50
+|   |   |   |   |--- weights: [22677.43, 18612.61] class: 0
+|   |   |--- n_skills_essential >  16.50
+|   |   |   |--- ratio_competence_knowledge <= 5.50
+|   |   |   |   |--- weights: [169465.25, 132154.22] class: 0
+|   |   |   |--- ratio_competence_knowledge >  5.50
+|   |   |   |   |--- weights: [19476.17, 20890.04] class: 1
+|--- diff_competence_knowledge >  16.50
+|   |--- prop_competence_essential <= 0.95
+|   |   |--- ratio_competence_knowledge <= 3.44
+|   |   |   |--- prop_competence_essential <= 0.79
+|   |   |   |   |--- weights: [24545.60, 28490.36] class: 1
+|   |   |   |--- prop_competence_essential >  0.79
+|   |   |   |   |--- weights: [15984.15, 38814.60] class: 1
+|   |   |--- ratio_competence_knowledge >  3.44
+|   |   |   |--- prop_knowledge_essential <= 0.15
+|   |   |   |   |--- weights: [113951.52, 132239.19] class: 1
+|   |   |   |--- prop_knowledge_essential >  0.15
+|   |   |   |   |--- weights: [28535.57, 16608.41] class: 0
+|   |--- prop_competence_essential >  0.95
+|   |   |--- prop_competence_essential <= 0.95
+|   |   |   |--- n_skills_knowledge <= 1.50
+|   |   |   |   |--- weights: [25615.07, 68397.86] class: 1
+|   |   |   |--- n_skills_knowledge >  1.50
+|   |   |   |   |--- weights: [11279.78, 21473.15] class: 1
+|   |   |--- prop_competence_essential >  0.95
+|   |   |   |--- n_skills_essential <= 31.50
+|   |   |   |   |--- weights: [49016.19, 56282.67] class: 1
+|   |   |   |--- n_skills_essential >  31.50
+|   |   |   |   |--- weights: [7153.36, 16460.13] class: 1

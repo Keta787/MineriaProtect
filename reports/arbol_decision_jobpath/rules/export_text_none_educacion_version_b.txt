@@ -1,0 +1,13 @@
+|--- nivel_academico_ord <= 2.50
+|   |--- nivel_academico_ord <= 1.50
+|   |   |--- weights: [378092.00, 170595.00] class: 0
+|   |--- nivel_academico_ord >  1.50
+|   |   |--- educacion_no_reportada <= 0.50
+|   |   |   |--- weights: [328148.00, 145694.00] class: 0
+|   |   |--- educacion_no_reportada >  0.50
+|   |   |   |--- weights: [111174.00, 49490.00] class: 0
+|--- nivel_academico_ord >  2.50
+|   |--- nivel_academico_ord <= 3.50
+|   |   |--- weights: [151523.00, 50328.00] class: 0
+|   |--- nivel_academico_ord >  3.50
+|   |   |--- weights: [4610.00, 1364.00] class: 0

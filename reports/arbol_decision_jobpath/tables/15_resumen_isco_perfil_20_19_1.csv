@@ -1,0 +1,8 @@
+isco_major,gran_grupo_isco_es,n_ocupaciones_en_hoja,filas_train,pct_hoja_train,tasa_clase1_train,filas_test,pct_hoja_test,tasa_clase1_test,filas_total,pct_hoja_total,tasa_clase1_total
+3,3 · Técnicos y profesionales de nivel medio,3,66840,86.91,0.5701,16696,86.9,0.5655,83536,86.91,0.5691
+9,9 · Ocupaciones elementales,1,7264,9.44,0.2978,1835,9.55,0.3134,9099,9.47,0.3009
+5,5 · Trabajadores de los servicios y vendedores,2,2135,2.78,0.3208,516,2.69,0.2519,2651,2.76,0.3074
+1,1 · Directores y gerentes,1,384,0.5,0.1875,98,0.51,0.2041,482,0.5,0.1909
+8,8 · Operadores de instalaciones y máquinas,2,104,0.14,0.0577,23,0.12,0.1739,127,0.13,0.0787
+7,"7 · Oficiales, operarios y artesanos",1,101,0.13,0.1188,20,0.1,0.0,121,0.13,0.0992
+2,2 · Profesionales científicos e intelectuales,2,82,0.11,0.1707,25,0.13,0.08,107,0.11,0.1495

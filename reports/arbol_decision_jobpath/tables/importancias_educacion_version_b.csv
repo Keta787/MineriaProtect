@@ -1,0 +1,3 @@
+version_datos,variable,importancia,importancia_pct,descripcion_variable,lectura_metodologica
+Versión B · SIN outliers,nivel_academico_ord,0.9999,99.99,"Nivel educativo ordinal solo para reportados (1=Secondary school, 2=Bachelor, 3=Master, 4=PhD; 'No reportado' queda como NaN sin rellenar con 0)",Qué miró este árbol para reducir impureza en sus nodos (NO implica causalidad)
+Versión B · SIN outliers,educacion_no_reportada,0.0001,0.01,Bandera binaria separada (0/1) de ausencia informativa (MNAR: 1 si 'No reportado'),Qué miró este árbol para reducir impureza en sus nodos (NO implica causalidad)

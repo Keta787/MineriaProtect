@@ -1,0 +1,5 @@
+version,particion,filas,personas_unicas,positivos_reincide_1,negativos_reincide_0,tasa_clase_1_pct,personas_compartidas_train_test,coincide_split_map,coincide_y_04_transformed
+Versión A · CON outliers,Train (80%),1391018,281674,417471,973547,30.01,0,Sí,Sí
+Versión A · CON outliers,Test (20%),347720,70419,104225,243495,29.97,0,Sí,Sí
+Versión B · SIN outliers,Train (80%),1391018,281674,417471,973547,30.01,0,Sí,Sí
+Versión B · SIN outliers,Test (20%),347720,70419,104225,243495,29.97,0,Sí,Sí

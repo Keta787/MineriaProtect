@@ -1,0 +1,13 @@
+|--- isco_major_4 <= 0.50
+|   |--- isco_major_1 <= 0.50
+|   |   |--- isco_major_7 <= 0.50
+|   |   |   |--- isco_major_8 <= 0.50
+|   |   |   |   |--- weights: [489976.19, 552159.22] class: 1
+|   |   |   |--- isco_major_8 >  0.50
+|   |   |   |   |--- weights: [43415.96, 33141.85] class: 0
+|   |   |--- isco_major_7 >  0.50
+|   |   |   |--- weights: [55137.95, 38636.33] class: 0
+|   |--- isco_major_1 >  0.50
+|   |   |--- weights: [45097.67, 29778.18] class: 0
+|--- isco_major_4 >  0.50
+|   |--- weights: [61881.24, 41793.42] class: 0
