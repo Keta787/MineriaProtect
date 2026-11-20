@@ -1,0 +1,20 @@
+file_name,file_path,sha256_before,sha256_after,intact
+JobHop_v2_train.csv,C:\Users\ASUS\Documents\MINERIA2\MineriaProtect\data\01_raw\JobHop_v2_train.csv,68b7d3686c7580a0…,68b7d3686c7580a0…,True
+JobHop_v2_test.csv,C:\Users\ASUS\Documents\MINERIA2\MineriaProtect\data\01_raw\JobHop_v2_test.csv,ed28c2671e00c212…,ed28c2671e00c212…,True
+JobHop_v2_val.csv,C:\Users\ASUS\Documents\MINERIA2\MineriaProtect\data\01_raw\JobHop_v2_val.csv,c31236fb3639b411…,c31236fb3639b411…,True
+greenShareOcc_en_limpio.csv,C:\Users\ASUS\Documents\MINERIA2\MineriaProtect\data\02_interim\ESCO\greenShareOcc_en_limpio.csv,3cc4c43291437fc8…,3cc4c43291437fc8…,True
+ISCOGroups_en_limpio.csv,C:\Users\ASUS\Documents\MINERIA2\MineriaProtect\data\02_interim\ESCO\ISCOGroups_en_limpio.csv,a81ef1362babc924…,a81ef1362babc924…,True
+occupations_en_limpio.csv,C:\Users\ASUS\Documents\MINERIA2\MineriaProtect\data\02_interim\ESCO\occupations_en_limpio.csv,1a6d59c8ae1aed23…,1a6d59c8ae1aed23…,True
+occupationSkillRelations_en_limpio.csv,C:\Users\ASUS\Documents\MINERIA2\MineriaProtect\data\02_interim\SKILLS\occupationSkillRelations_en_limpio.csv,e1a46511f0ef4d50…,e1a46511f0ef4d50…,True
+skills_en_limpio.csv,C:\Users\ASUS\Documents\MINERIA2\MineriaProtect\data\02_interim\SKILLS\skills_en_limpio.csv,99f0ed64f643a82d…,99f0ed64f643a82d…,True
+empleos_limpio.csv,C:\Users\ASUS\Documents\MINERIA2\MineriaProtect\data\02_interim\Jobhop\empleos_limpio.csv,4ee5b956e25e8e7a…,4ee5b956e25e8e7a…,True
+empleos_limpio_sin_outliers .csv,C:\Users\ASUS\Documents\MINERIA2\MineriaProtect\data\02_interim\Jobhop\empleos_limpio_sin_outliers .csv,87d9350e82f27646…,87d9350e82f27646…,True
+empleos_unificado_limpio.csv,C:\Users\ASUS\Documents\MINERIA2\MineriaProtect\data\03_processed\empleos_unificado_limpio.csv,f51aaadffdff47ab…,f51aaadffdff47ab…,True
+empleos_limpio_con_competencias_sin_outliers.csv,C:\Users\ASUS\Documents\MINERIA2\MineriaProtect\data\03_processed\empleos_limpio_con_competencias_sin_outliers.csv,541d9576f3510249…,541d9576f3510249…,True
+X_train.csv,C:\Users\ASUS\Documents\MINERIA2\MineriaProtect\data\04_transformed\con_outliers\train\X_train.csv,ac2db9a34ed6fa94…,ac2db9a34ed6fa94…,True
+X_test.csv,C:\Users\ASUS\Documents\MINERIA2\MineriaProtect\data\04_transformed\con_outliers\test\X_test.csv,375baf909c382714…,375baf909c382714…,True
+X_train.csv,C:\Users\ASUS\Documents\MINERIA2\MineriaProtect\data\04_transformed\sin_outliers\train\X_train.csv,07386ebe978ebd49…,07386ebe978ebd49…,True
+X_test.csv,C:\Users\ASUS\Documents\MINERIA2\MineriaProtect\data\04_transformed\sin_outliers\test\X_test.csv,2554eb5a56b7fbe2…,2554eb5a56b7fbe2…,True
+transformers.joblib,C:\Users\ASUS\Documents\MINERIA2\MineriaProtect\data\04_transformed\transformers\con_outliers\transformers.joblib,b64f676458f3ef33…,b64f676458f3ef33…,True
+transformers.joblib,C:\Users\ASUS\Documents\MINERIA2\MineriaProtect\data\04_transformed\transformers\sin_outliers\transformers.joblib,d9c37b4c4b7364a8…,d9c37b4c4b7364a8…,True
+split_map_resume_id.csv,C:\Users\ASUS\Documents\MINERIA2\MineriaProtect\reports\eda_jobpath\tables\split_map_resume_id.csv,67dd3e3d68e1ff5e…,67dd3e3d68e1ff5e…,True

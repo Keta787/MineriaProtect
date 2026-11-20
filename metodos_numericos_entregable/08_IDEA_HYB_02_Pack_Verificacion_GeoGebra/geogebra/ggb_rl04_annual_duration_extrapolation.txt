@@ -1,0 +1,11 @@
+# JobPath GeoGebra Verification — IDEA-RL-04 (Annual mean_dur_q ~ year-2000, 2000..2019; extrap t=27 -> year 2027)
+# Paste each command sequentially into GeoGebra Classic Algebra Input (https://www.geogebra.org/classic)
+# Spanish equivalents: AjusteLineal(P), CoeficienteCorrelación(P), RCuadrado(P, f)
+# Expected Python OLS: a0 = 18.596288, a1 = -0.709603, r = -0.963723, R2 = 0.928761
+P = {(0, 20.902823), (1, 19.178141), (2, 17.721139), (3, 16.535690), (4, 15.686117), (5, 14.534851), (6, 13.721566), (7, 12.873866), (8, 12.087532), (9, 11.117679), (10, 10.431607), (11, 9.404647), (12, 9.261795), (13, 8.636089), (14, 8.331621), (15, 7.786000), (16, 7.247650), (17, 6.724662), (18, 6.605242), (19, 8.312423)}
+f = FitLine(P)
+r = CorrelationCoefficient(P)
+R2 = RSquare(P, f)
+Centroid = (9.500000, 11.855057)
+Q_pred = (27, f(27))
+# Expected Q_pred y-coordinate: -0.563000
