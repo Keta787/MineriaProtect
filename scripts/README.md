@@ -63,3 +63,9 @@ python scripts/pipeline/limpieza/limpiar_unificado.py
   fuga ni colinealidad redundante, validación cruzada agrupada por persona
   (`StratifiedGroupKFold`) y evaluación comparativa A vs. B usados por
   `notebooks/refactor/6.0_modelado_fase4_jobpath.ipynb`.
+- [`ScriptsCsv/MetodosNumericos/`](./ScriptsCsv/MetodosNumericos/): paquete
+  modular SOLID de **Regresión Lineal por Mínimos Cuadrados** e **Interpolación
+  Polinomial de Lagrange** (núcleo de 8 ideas: `IDEA-RL-01/02/04/05`,
+  `IDEA-LG-01/02`, `IDEA-HYB-01/02`, fenómeno de Runge + Chebyshev, laboratorio
+  comparativo LOOCV y paquete de verificación en GeoGebra) usado por los
+  cuadernos `8.0`, `8.1` y `8.2` de `notebooks/refactor/`.
