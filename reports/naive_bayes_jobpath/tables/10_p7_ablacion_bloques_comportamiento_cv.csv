@@ -1,0 +1,7 @@
+experimento_ablacion,variables_retiradas,n_columnas_activas,pr_auc_cv_media,cambio_pr_auc_vs_completo,roc_auc_cv_media,cambio_roc_auc_vs_completo,brier_cv_media,cambio_brier_vs_completo
+0. Modelo completo NB-H (Referencia),"Ninguno (2,981 columnas)",2981,0.4981,0.0,0.7058,0.0,0.1872,0.0
+1. Sin bloque Temporal,"start_ord_rob, end_ord_rob (2 cols)",2979,0.4984,0.0003,0.706,0.0002,0.1871,-0.0001
+2. Sin bloque Duración y carrera,"dur_q_rob, dur_q_bin, job_order_rob, es_vigente (4 cols)",2977,0.4868,-0.0114,0.7006,-0.0052,0.1885,0.0013
+3. Sin bloque Educación,univ_ord_mm (1 col),2980,0.4981,-0.0001,0.7058,-0.0,0.1872,0.0
+4. Sin bloque Competencias ESCO,"n_skills_essential_rob/bin, n_skills_knowledge_rob, n_skills_sin_tipo_rob, tiene_* (7 cols)",2974,0.5022,0.004,0.7081,0.0023,0.1865,-0.0007
+5. Sin bloque Ocupación OHE,"occupation_code_* (2,967 dummies)",14,0.3735,-0.1246,0.5892,-0.1166,0.2064,0.0192

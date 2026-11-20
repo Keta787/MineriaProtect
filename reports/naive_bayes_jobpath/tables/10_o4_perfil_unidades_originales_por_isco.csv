@@ -1,0 +1,21 @@
+isco_major,gran_grupo_isco,clase_reincide,soporte_filas_train,duracion_mediana_trimestres,duracion_media_trimestres,empleos_previos_mediana,empleos_previos_media,nivel_educativo_modal,pct_nivel_educativo_modal,skills_esenciales_mediana,skills_esenciales_media,pct_empleo_vigente
+0,0 · Ocupaciones militares,0 · No reincide,3141,9.0,16.94,1.0,1.71,Secondary school,46.3,12.0,14.16,4.14
+0,0 · Ocupaciones militares,1 · Reincide,252,9.0,13.0,3.0,3.49,Bachelor,34.9,12.0,13.04,2.38
+1,1 · Directores y gerentes,0 · No reincide,63126,9.0,17.43,3.0,3.18,Bachelor,38.7,26.0,26.95,4.39
+1,1 · Directores y gerentes,1 · Reincide,17874,9.0,15.35,4.0,3.96,Bachelor,41.8,24.0,27.05,4.05
+2,2 · Profesionales científicos e intelectuales,0 · No reincide,170650,5.0,13.02,2.0,3.04,Bachelor,43.7,25.0,28.98,5.5
+2,2 · Profesionales científicos e intelectuales,1 · Reincide,73055,5.0,10.11,3.0,4.05,Bachelor,54.1,29.0,34.58,5.05
+3,3 · Técnicos y profesionales de nivel medio,0 · No reincide,180656,5.0,14.09,2.0,2.83,Bachelor,41.3,20.0,23.67,5.6
+3,3 · Técnicos y profesionales de nivel medio,1 · Reincide,91918,5.0,11.59,3.0,3.38,Bachelor,42.9,20.0,24.49,4.76
+4,4 · Personal de apoyo administrativo,0 · No reincide,86619,5.0,13.66,2.0,2.8,Bachelor,39.1,14.0,15.58,5.88
+4,4 · Personal de apoyo administrativo,1 · Reincide,25086,5.0,12.04,3.0,3.37,Bachelor,41.2,16.0,16.07,4.88
+5,5 · Trabajadores de los servicios y vendedores,0 · No reincide,200265,5.0,12.76,2.0,2.55,Secondary school,44.4,22.0,22.65,5.48
+5,5 · Trabajadores de los servicios y vendedores,1 · Reincide,102441,5.0,9.43,3.0,3.36,Secondary school,49.0,22.0,22.56,4.86
+6,6 · Agricultores y trabajadores agropecuarios,0 · No reincide,4007,5.0,13.18,2.0,2.75,Secondary school,50.4,33.0,30.63,7.36
+6,6 · Agricultores y trabajadores agropecuarios,1 · Reincide,1073,5.0,10.28,2.0,2.92,Secondary school,54.2,33.0,31.92,5.96
+7,"7 · Oficiales, operarios y artesanos",0 · No reincide,77180,5.0,15.48,2.0,2.41,Secondary school,59.6,18.0,19.52,5.79
+7,"7 · Oficiales, operarios y artesanos",1 · Reincide,23191,5.0,12.71,2.0,2.98,Secondary school,64.3,21.0,21.97,4.94
+8,8 · Operadores de instalaciones y máquinas,0 · No reincide,60772,5.0,14.66,2.0,2.76,Secondary school,61.0,18.0,18.94,6.23
+8,8 · Operadores de instalaciones y máquinas,1 · Reincide,19893,5.0,12.04,3.0,3.74,Secondary school,65.7,18.0,21.98,5.09
+9,9 · Ocupaciones elementales,0 · No reincide,127131,5.0,12.41,2.0,2.59,Secondary school,56.8,20.0,19.72,6.66
+9,9 · Ocupaciones elementales,1 · Reincide,62688,5.0,9.64,3.0,3.35,Secondary school,61.3,20.0,22.47,5.46

@@ -1,0 +1,5 @@
+modelo_referencia,n_variables_X,ponderacion_clases,pr_auc_csv,pr_auc_reproducido,diff_abs_pr_auc,roc_auc_csv,roc_auc_reproducido,diff_abs_roc_auc,coincide_tolerancia_5e4
+NB-B · BernoulliNB (7.1),2971,Sin ponderar (empírico),0.4829,0.4829,4.4e-05,0.7024,0.7024,4.3e-05,True
+NB-H · HybridNaiveBayes (7.1),2981,Sin ponderar (empírico),0.4962,0.4962,3.8e-05,0.7058,0.7058,2.3e-05,True
+Logística Regularizada (6.0),2981,Balanceada (class_weight='balanced'),0.5109,0.5109,4.7e-05,0.7133,0.7133,3e-05,True
+HistGradientBoosting (6.0),14,Balanceada (class_weight='balanced'),0.4951,0.4951,2.4e-05,0.6936,0.6936,2.3e-05,True

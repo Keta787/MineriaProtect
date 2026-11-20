@@ -1,0 +1,16 @@
+familia,modelo,n_variables_X,ponderacion_clases,test_pr_auc,test_roc_auc,test_f1_clase_1,test_recall_clase_1,test_precision_clase_1,test_accuracy,test_brier_sin_ponderar
+Referencia,Ref 1 · Baseline Mayoritario (0),0,Sin ponderar,0.2997,0.5,0.0,0.0,0.0,0.7003,
+Referencia,Ref 2 · Trivial Todo-Positivo (1),0,Sin ponderar,0.2997,0.5,0.4612,1.0,0.2997,0.2997,
+Referencia,Ref 3 · Techo 6.0 (Logística OHE),2981,Balanceada,0.5109,0.7133,0.5321,0.6147,0.4691,0.676,
+Árbol de Decisión (7.0),Árbol 1 · ISCO [Exactitud (None)],10,Sin ponderar,,0.5459,0.0,0.0,0.0,0.7003,
+Árbol de Decisión (7.0),Árbol 1 · ISCO [Recall (balanced)],10,Balanceada,,0.5459,0.462,0.7961,0.3254,0.4443,
+Árbol de Decisión (7.0),Árbol 2 · Education level [Exactitud (None)],2,Sin ponderar,,0.5208,0.0,0.0,0.0,0.7003,
+Árbol de Decisión (7.0),Árbol 2 · Education level [Recall (balanced)],2,Balanceada,,0.5208,0.4564,0.8738,0.3088,0.376,
+Árbol de Decisión (7.0),Árbol 3 · Skills [Exactitud (None)],7,Sin ponderar,,0.6145,0.1769,0.106,0.5363,0.7046,
+Árbol de Decisión (7.0),Árbol 3 · Skills [Recall (balanced)],7,Balanceada,,0.6157,0.455,0.5421,0.392,0.6107,
+Naive Bayes (7.1),NB-G (tau*=0.295),14,Sin ponderar,0.3778,0.5921,0.4687,0.8551,0.3228,0.419,0.2086
+Naive Bayes (7.1),NB-B (tau*=0.27),2971,Sin ponderar,0.4829,0.7024,0.5323,0.7285,0.4193,0.6162,0.1877
+Naive Bayes (7.1),NB-H (tau*=0.265),2981,Sin ponderar,0.4962,0.7058,0.5337,0.7279,0.4214,0.6188,0.1871
+KNN (7.2),KNN-D (tau*=0.27),11,Sin ponderar,0.4652,0.6677,0.501,0.7124,0.3863,0.5746,0.1936
+KNN (7.2),KNN-G (tau*=0.27),21,Sin ponderar,0.4928,0.6919,0.5186,0.7118,0.4079,0.6039,0.1887
+KNN (7.2),KNN-W (tau*=0.28),2978,Sin ponderar,0.5247,0.7245,0.5471,0.7077,0.4459,0.6487,0.1817

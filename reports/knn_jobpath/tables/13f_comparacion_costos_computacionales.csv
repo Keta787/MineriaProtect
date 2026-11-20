@@ -1,0 +1,8 @@
+familia,modelo,algoritmo_o_motor,tiempo_fit_s,tiempo_predict_por_1000_filas_s,tiempo_predict_total_eval_s,memoria_matriz_train_mb,rss_pico_mb,escalabilidad_inferencia
+KNN (7.2),KNN-D · Bloque denso auditado (11 cols),"KNeighborsClassifier (kd_tree, n_jobs=8)",5.216,0.2059,71.59,58.37,1807.8,Sublineal en d baja (árbol exacto)
+KNN (7.2),KNN-G · Denso + 10 grupos ISCO ponderados (21 cols),"KNeighborsClassifier (kd_tree, n_jobs=8)",8.815,3.177,1104.71,111.43,2051.3,Sublineal en d baja (árbol exacto)
+KNN (7.2),"KNN-W · Denso + 2,967 ocupaciones ESCO ponderadas (2,978 cols)","KNeighborsClassifier (brute, n_jobs=8)",0.076,83.8227,29146.83,121.54,1931.7,O(N_train * N_test) fuerza bruta
+Naive Bayes (7.1),NB-B · BernoulliNB,Producto matricial CSR,0.091,0.00016,0.054,36.74,,O(1) en N_train; lineal en N_test
+Naive Bayes (7.1),NB-H · HybridNaiveBayes,Gaussiano denso + Bernoulli CSR,0.56,0.00069,0.241,118.19,,O(1) en N_train; lineal en N_test
+Lineal (6.0),Logística Regularizada (6.0),SGDClassifier log-loss CSR,4.005,3e-05,0.01,118.19,,O(1) en N_train; lineal en N_test
+Boosting (6.0),HistGradientBoosting (6.0),Histogramas densos (14 cols),8.585,0.00117,0.407,74.29,,O(1) en N_train; rápido en N_test

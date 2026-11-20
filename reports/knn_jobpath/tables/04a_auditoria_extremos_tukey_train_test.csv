@@ -1,0 +1,15 @@
+columna,continua_activa_knn,valla_inf_tukey_train,valla_sup_tukey_train,min_train,max_train,filas_fuera_tukey_train,pct_fuera_tukey_train,pct_fuera_tukey_test,std_total_train,std_sin_extremos_train,factor_inflacion_std_por_extremos
+start_ord_rob,True,-2.1111,1.8889,-6.1667,1.5,77613,5.58,5.53,0.9002,0.6648,1.354
+end_ord_rob,True,-2.0938,1.9062,-5.8438,1.6562,65336,4.7,4.64,0.9667,0.7599,1.272
+dur_q_rob,True,-1.7727,2.2273,-0.2727,24.7273,160809,11.56,11.52,1.7218,0.5867,2.935
+n_skills_essential_rob,True,-1.8846,2.1154,-1.3077,6.0769,70249,5.05,4.97,1.0331,0.6434,1.606
+n_skills_knowledge_rob,True,-1.9,2.1,-0.6,8.4,28034,2.02,1.99,0.8658,0.5737,1.509
+n_skills_sin_tipo_rob,False,0.0,0.0,0.0,2.0,0,0.0,0.0,0.1041,0.1041,1.0
+job_order_rob,True,-1.8333,2.1667,-0.6667,5.6667,67023,4.82,4.68,0.9239,0.7295,1.266
+univ_ord_mm,False,-0.125,0.875,0.0,1.0,0,0.0,0.0,0.2231,0.2231,1.0
+es_vigente,False,0.0,0.0,0.0,1.0,0,0.0,0.0,0.2274,0.2274,1.0
+dur_q_bin,False,-3.0,5.0,0.0,2.0,0,0.0,0.0,0.7907,0.7907,1.0
+n_skills_essential_bin,False,-2.0,6.0,0.0,3.0,0,0.0,0.0,1.1044,1.1044,1.0
+tiene_skills,False,1.0,1.0,0.0,1.0,0,0.0,0.0,0.0025,0.0025,1.0
+tiene_knowledge,False,1.0,1.0,0.0,1.0,0,0.0,0.0,0.3026,0.3026,1.0
+tiene_sin_tipo,False,0.0,0.0,0.0,1.0,0,0.0,0.0,0.0945,0.0945,1.0

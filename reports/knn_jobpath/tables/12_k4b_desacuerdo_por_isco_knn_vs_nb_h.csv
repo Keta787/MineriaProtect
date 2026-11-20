@@ -1,0 +1,11 @@
+isco_major,gran_grupo_isco,soporte_train,soporte_test,tasa_obs_train_pct,tasa_obs_test_pct,brecha_test_menos_train_pp,alerta_brecha_mayor_5pp,spearman_rho_grupo,desacuerdo_total_pct,solo_knn_alerta_pct,solo_nb_h_alerta_pct
+4,4 · Personal de apoyo administrativo,111705,27784,22.46,22.55,0.09,False,0.7503,19.23,14.99,4.24
+6,6 · Agricultores y trabajadores agropecuarios,5080,1241,21.12,21.92,0.8,False,0.8078,16.52,2.58,13.94
+1,1 · Directores y gerentes,81000,19873,22.07,21.37,-0.7,False,0.8372,16.02,10.72,5.3
+9,9 · Ocupaciones elementales,189819,47849,33.03,33.05,0.02,False,0.7883,15.42,8.35,7.07
+5,5 · Trabajadores de los servicios y vendedores,302706,75803,33.84,33.87,0.02,False,0.8305,13.88,5.91,7.97
+7,"7 · Oficiales, operarios y artesanos",100371,25002,23.11,23.08,-0.02,False,0.8671,13.34,9.6,3.74
+8,8 · Operadores de instalaciones y máquinas,80665,20103,24.66,24.71,0.05,False,0.9036,13.06,9.87,3.19
+2,2 · Profesionales científicos e intelectuales,243705,61082,29.98,30.13,0.16,False,0.8914,12.69,6.18,6.51
+3,3 · Técnicos y profesionales de nivel medio,272574,68181,33.72,33.37,-0.36,False,0.8926,12.12,6.7,5.42
+0,0 · Ocupaciones militares,3393,802,7.43,7.61,0.18,False,0.7207,1.5,0.25,1.25

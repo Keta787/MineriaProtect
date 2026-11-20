@@ -1,0 +1,10 @@
+variable_original,descripcion_es,recortada_en_version_B,cota_inf_B,cota_sup_B,entra_en_X_7_2,efecto_real_en_X_B_vs_A
+n_skills_essential,Competencias esenciales ESCO (conteo),Sí (winsorizada con IQR de train),-4.5,47.5,Sí (entra como n_skills_essential_rob),Sí cambia en X (una de las 2 únicas continuas recortadas en B)
+n_skills_competence,Competencias prácticas ESCO (conteo),Sí (winsorizada con IQR de train),-4.5,39.5,No (excluida por colinealidad r = 0.952 con n_skills_essential),No afecta a X en 7.2
+n_skills_knowledge,Conocimientos teóricos ESCO (conteo),Sí (winsorizada con IQR de train),-6.5,13.5,Sí (entra como n_skills_knowledge_rob),Sí cambia en X (una de las 2 únicas continuas recortadas en B)
+veces_ese_oficio,veces_ese_oficio,Sí (winsorizada con IQR de train),-0.5,3.5,No (excluida por fuga directa 100 %),No afecta a X en 7.2
+start_ord,Trimestre de inicio (ordinal),No (idéntica en Versión A y Versión B),,,Sí (entra como start_ord_rob),Idéntica entre A y B (colas NO probadas por A vs. B; se prueban con winsorización propia)
+end_ord,Trimestre de fin (ordinal),No (idéntica en Versión A y Versión B),,,Sí (entra como end_ord_rob),Idéntica entre A y B (colas NO probadas por A vs. B; se prueban con winsorización propia)
+dur_q,Duración del empleo (trimestres),No (idéntica en Versión A y Versión B),,,Sí (entra como dur_q_rob),Idéntica entre A y B (colas NO probadas por A vs. B; se prueban con winsorización propia)
+n_skills_sin_tipo,Competencias sin tipo ESCO (conteo),No (idéntica en Versión A y Versión B),,,No (descartada < 1 %: n_skills_sin_tipo_rob),Descartada por casi constante
+job_order,Orden del empleo en la carrera,No (idéntica en Versión A y Versión B),,,Sí (entra como job_order_rob),Idéntica entre A y B (colas NO probadas por A vs. B; se prueban con winsorización propia)

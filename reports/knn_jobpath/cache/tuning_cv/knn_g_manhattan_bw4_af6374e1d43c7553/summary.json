@@ -1,0 +1,22 @@
+[
+  {
+    "modelo_id": "KNN-G",
+    "etapa_rejilla": "Curva aprendizaje 50%",
+    "algoritmo": "kd_tree",
+    "metrica": "manhattan",
+    "peso_bloque": 4.0,
+    "k_vecinos": 101,
+    "pesos": "uniform",
+    "resolucion_teorica_1_sobre_k": 0.0099,
+    "puntajes_unicos_oof": 94,
+    "pr_auc_cv_media": 0.48413,
+    "pr_auc_cv_std": 0.00276,
+    "roc_auc_cv_media": 0.68443,
+    "roc_auc_cv_std": 0.00153,
+    "f1_cv_050": 0.342,
+    "recall_cv_050": 0.2435,
+    "precision_cv_050": 0.5748,
+    "brier_cv": 0.19,
+    "tiempo_fold_kmax_s": 106.759
+  }
+]

@@ -1,0 +1,4 @@
+modelo_id,modelo,hiperparametros_base,n_columnas,n_train_piloto,n_val_piloto,puntajes_unicos_k5,pr_auc_piloto,roc_auc_piloto,f1_clase_1_050,recall_050,precision_050,brier_piloto,accuracy_050,tiempo_fit_s,tiempo_predict_s,ms_por_1000_filas,memoria_matriz_train_mb,rss_proceso_mb
+KNN-D,KNN-D · Bloque denso auditado (11 cols),"k=5, uniform, euclidean, algo=kd_tree",11,49537,12403,6,0.3745,0.5998,0.3557,0.3082,0.4205,0.2295,0.6661,0.0747,0.1959,15.79,2.08,1751.7
+KNN-G,KNN-G · Denso + 10 grupos ISCO ponderados (21 cols),"k=5, uniform, euclidean, algo=brute, peso_bloque=1",21,49537,12403,6,0.4019,0.6273,0.4013,0.3551,0.4613,0.2229,0.6831,0.0015,0.4362,35.17,3.97,1748.3
+KNN-W,"KNN-W · Denso + 2,967 ocupaciones ESCO ponderadas (2,978 cols)","k=5, uniform, euclidean, algo=brute, peso_bloque=1",2978,49537,12403,6,0.4002,0.6312,0.4046,0.3705,0.4457,0.2248,0.6739,0.0037,10.5515,850.72,4.33,1749.8

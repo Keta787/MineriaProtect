@@ -1,0 +1,5 @@
+celda_confusion,soporte_oof_train,pct_total_train,soporte_test,pct_total_test,prob_media_predicha_pct,empleos_previos_mediana,empleos_previos_media,duracion_mediana_trimestres,duracion_media_trimestres,anio_inicio_mediana,skills_esenciales_mediana,pct_empleo_vigente,gran_grupo_isco_modal,nivel_educativo_modal
+"TP · Verdadero Positivo (reincide=1, pred=1)",304368,21.88,75861,21.82,46.12,3.0,3.64,5.0,8.3,2011,22.0,3.04,5 · Trabajadores de los servicios y vendedores,Secondary school
+"FP · Falso Positivo (reincide=0, pred=1)",417318,30.0,104175,29.96,40.8,2.0,2.88,5.0,9.22,2011,22.0,2.83,5 · Trabajadores de los servicios y vendedores,Secondary school
+"FN · Falso Negativo (reincide=1, pred=0)",113103,8.13,28364,8.16,17.69,3.0,3.15,5.0,17.45,2009,18.0,10.06,2 · Profesionales científicos e intelectuales,Secondary school
+"TN · Verdadero Negativo (reincide=0, pred=0)",556229,39.99,139320,40.07,15.31,2.0,2.66,7.0,17.13,2010,18.0,7.85,2 · Profesionales científicos e intelectuales,Secondary school

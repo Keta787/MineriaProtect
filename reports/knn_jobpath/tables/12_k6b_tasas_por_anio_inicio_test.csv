@@ -1,0 +1,6 @@
+periodo_anio_inicio,soporte_train,tasa_obs_train_pct,soporte_test,tasa_obs_test_pct,ic95_wilson_test_pct,brecha_test_menos_train_pp,alerta_brecha_mayor_5pp,prob_media_knn_test_pct,brecha_knn_menos_obs_test_pp,prob_media_nb_h_test_pct,brecha_nb_h_menos_obs_test_pp
+<= 1999,183416,25.8,45258,25.62,"[25.22, 26.02]",-0.18,False,26.31,0.69,23.78,-1.84
+2000–2004,136571,28.97,34004,28.66,"[28.18, 29.14]",-0.32,False,28.63,-0.03,27.38,-1.28
+2005–2009,298002,30.14,74736,30.03,"[29.70, 30.36]",-0.11,False,29.67,-0.36,29.48,-0.55
+2010–2014,499602,31.23,125364,31.26,"[31.00, 31.51]",0.02,False,31.34,0.08,31.81,0.55
+2015–2019,273369,30.99,68349,31.1,"[30.75, 31.45]",0.11,False,32.22,1.12,33.25,2.15

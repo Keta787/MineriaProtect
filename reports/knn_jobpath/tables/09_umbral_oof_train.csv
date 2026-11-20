@@ -1,0 +1,4 @@
+modelo_id,modelo,n_filas_oof_submuestra,umbral_optimo_tau,tasa_alerta_en_tau_pct,f1_oof_umbral_050,f1_oof_en_tau_optimo,ganancia_f1_oof_vs_050,recall_oof_en_tau,precision_oof_en_tau,tasa_alerta_nb_h_pct,umbral_igual_alerta_nb_h_oof,tasa_alerta_efectiva_oof_pct,f1_oof_igual_alerta_nb_h,recall_oof_igual_alerta_nb_h,precision_oof_igual_alerta_nb_h
+KNN-D,KNN-D · Bloque denso auditado (11 cols),138783,0.27,58.03,0.2324,0.4908,0.2584,0.7171,0.3731,51.78,0.2871,54.51,0.4889,0.6858,0.3798
+KNN-G,KNN-G · Denso + 10 grupos ISCO ponderados (21 cols),138783,0.27,55.29,0.3212,0.5042,0.183,0.7138,0.3897,51.78,0.2871,52.27,0.5042,0.6885,0.3977
+KNN-W,"KNN-W · Denso + 2,967 ocupaciones ESCO ponderadas (2,978 cols)",138783,0.28,51.01,0.3895,0.5235,0.134,0.704,0.4167,51.78,0.2772,53.75,0.5226,0.7265,0.4081

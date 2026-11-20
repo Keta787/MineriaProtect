@@ -1,0 +1,36 @@
+[
+  {
+    "modelo_id": "KNN-W",
+    "esquema_validacion": "Validación fija disjunta por persona (27,756 filas)",
+    "fraccion_personas_pct": 25.0,
+    "personas_train": 64724,
+    "filas_train": 320485,
+    "rango_en_10pct": 1,
+    "config_etiqueta": "k=101, uniform, euclidean, w=8",
+    "k_vecinos": 101,
+    "pesos": "uniform",
+    "metrica": "euclidean",
+    "peso_bloque": 8.0,
+    "pr_auc_cv_media": 0.51634,
+    "pr_auc_cv_std": NaN,
+    "roc_auc_cv_media": 0.71109,
+    "brier_cv": 0.185
+  },
+  {
+    "modelo_id": "KNN-W",
+    "esquema_validacion": "Validación fija disjunta por persona (27,756 filas)",
+    "fraccion_personas_pct": 25.0,
+    "personas_train": 64724,
+    "filas_train": 320485,
+    "rango_en_10pct": 3,
+    "config_etiqueta": "k=201, uniform, euclidean, w=8",
+    "k_vecinos": 201,
+    "pesos": "uniform",
+    "metrica": "euclidean",
+    "peso_bloque": 8.0,
+    "pr_auc_cv_media": 0.51467,
+    "pr_auc_cv_std": NaN,
+    "roc_auc_cv_media": 0.70632,
+    "brier_cv": 0.1861
+  }
+]

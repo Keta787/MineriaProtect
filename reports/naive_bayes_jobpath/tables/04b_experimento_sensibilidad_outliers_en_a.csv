@@ -1,0 +1,13 @@
+modelo,regimen_entrenamiento,subconjunto_evaluacion_test,n_filas_test,prevalencia_test_pct,pr_auc,roc_auc,f1_clase_1,recall_clase_1,precision_clase_1,brier,accuracy
+NB-G,a) Entrenado en Train completo,Test completo (A),347720,29.97,0.3703,0.5885,0.4624,0.9757,0.303,0.6275,0.32
+NB-G,a) Entrenado en Train completo,Test sin extremos Tukey,259088,30.19,0.3595,0.5838,0.4638,1.0,0.3019,0.6639,0.3019
+NB-G,a) Entrenado en Train completo,Test con extremos Tukey,88632,29.33,0.3969,0.6071,0.4578,0.9026,0.3067,0.521,0.3729
+NB-G,b) Entrenado en Train sin extremos Tukey,Test completo (A),347720,29.97,0.3682,0.5891,0.4595,0.9134,0.3069,0.594,0.3558
+NB-G,b) Entrenado en Train sin extremos Tukey,Test sin extremos Tukey,259088,30.19,0.3839,0.5995,0.4639,0.9989,0.3021,0.6482,0.303
+NB-G,b) Entrenado en Train sin extremos Tukey,Test con extremos Tukey,88632,29.33,0.3441,0.5719,0.4402,0.6563,0.3311,0.4354,0.5104
+NB-H,a) Entrenado en Train completo,Test completo (A),347720,29.97,0.4524,0.6749,0.4678,0.464,0.4717,0.2122,0.6836
+NB-H,a) Entrenado en Train completo,Test sin extremos Tukey,259088,30.19,0.4819,0.693,0.4745,0.4607,0.4891,0.1987,0.6918
+NB-H,a) Entrenado en Train completo,Test con extremos Tukey,88632,29.33,0.4447,0.6623,0.4492,0.4736,0.4272,0.2516,0.6594
+NB-H,b) Entrenado en Train sin extremos Tukey,Test completo (A),347720,29.97,0.4525,0.6562,0.4279,0.3798,0.4899,0.2092,0.6955
+NB-H,b) Entrenado en Train sin extremos Tukey,Test sin extremos Tukey,259088,30.19,0.4883,0.6914,0.4449,0.3888,0.5199,0.1945,0.707
+NB-H,b) Entrenado en Train sin extremos Tukey,Test con extremos Tukey,88632,29.33,0.4102,0.6057,0.3796,0.3527,0.411,0.2521,0.6619

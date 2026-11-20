@@ -1,0 +1,7 @@
+tramo_job_order,soporte_train,tasa_obs_train_pct,soporte_test,tasa_obs_test_pct,ic95_wilson_test_pct,brecha_test_menos_train_pp,alerta_brecha_mayor_5pp,prob_media_knn_test_pct,brecha_knn_menos_obs_test_pp,prob_media_nb_h_test_pct,brecha_nb_h_menos_obs_test_pp
+1 (1er empleo),263187,21.58,65882,21.52,"[21.21, 21.84]",-0.06,False,25.04,3.52,27.82,6.3
+2 (2do empleo),248254,26.32,62082,26.39,"[26.05, 26.74]",0.08,False,27.01,0.61,28.64,2.25
+3 (3er empleo),219727,29.15,55007,29.23,"[28.85, 29.61]",0.08,False,28.8,-0.43,29.23,0.0
+4–5 empleos,323258,32.22,81038,31.98,"[31.66, 32.30]",-0.24,False,31.37,-0.61,30.31,-1.67
+6–8 empleos,233882,36.0,58496,35.99,"[35.61, 36.38]",-0.01,False,35.01,-0.98,32.23,-3.77
+9+ empleos,102710,41.8,25215,42.08,"[41.47, 42.69]",0.28,False,40.13,-1.95,36.12,-5.96

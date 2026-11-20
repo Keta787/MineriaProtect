@@ -1,0 +1,16 @@
+regimen_id,regimen_datos,subconjunto_oof,n_filas_oof,prevalencia_pct,pr_auc_oof,roc_auc_oof,f1_oof,brier_oof
+R1_A_crudo,"1. Versión A cruda (sin reescalar, con outliers)",Validación OOF completa,138783,30.19,0.4492,0.6514,0.4941,0.1973
+R1_A_crudo,"1. Versión A cruda (sin reescalar, con outliers)",Solo inliers (dentro vallas Tukey),103965,30.32,0.439,0.6436,0.4907,0.1993
+R1_A_crudo,"1. Versión A cruda (sin reescalar, con outliers)",Solo extremos Tukey (fuera vallas),34818,29.79,0.4758,0.6733,0.5054,0.1913
+R2_A_escalado,2. Versión A escalada auditada (referencia 7.2),Validación OOF completa,138783,30.19,0.4471,0.6491,0.4906,0.1976
+R2_A_escalado,2. Versión A escalada auditada (referencia 7.2),Solo inliers (dentro vallas Tukey),103965,30.32,0.4353,0.6402,0.4867,0.1998
+R2_A_escalado,2. Versión A escalada auditada (referencia 7.2),Solo extremos Tukey (fuera vallas),34818,29.79,0.4774,0.6739,0.5034,0.1911
+R3_A_wins_tukey,3. Versión A winsorizada Tukey (6 continuas en train) + escalada,Validación OOF completa,138783,30.19,0.4434,0.65,0.4913,0.1977
+R3_A_wins_tukey,3. Versión A winsorizada Tukey (6 continuas en train) + escalada,Solo inliers (dentro vallas Tukey),103965,30.32,0.4398,0.6437,0.4883,0.1992
+R3_A_wins_tukey,3. Versión A winsorizada Tukey (6 continuas en train) + escalada,Solo extremos Tukey (fuera vallas),34818,29.79,0.4542,0.6679,0.5009,0.1934
+R4_A_solo_inliers,4. Versión A entrenada EXCLUSIVAMENTE sin filas con outliers Tukey,Validación OOF completa,138783,30.19,0.4344,0.6391,0.4857,0.1992
+R4_A_solo_inliers,4. Versión A entrenada EXCLUSIVAMENTE sin filas con outliers Tukey,Solo inliers (dentro vallas Tukey),103965,30.32,0.4391,0.6433,0.4892,0.1992
+R4_A_solo_inliers,4. Versión A entrenada EXCLUSIVAMENTE sin filas con outliers Tukey,Solo extremos Tukey (fuera vallas),34818,29.79,0.4229,0.6314,0.4731,0.1992
+R5_B_iqr,5. Versión B (sin_outliers IQR en 4 cols) + escalada auditada,Validación OOF completa,138783,30.19,0.4443,0.6501,0.4914,0.1977
+R5_B_iqr,5. Versión B (sin_outliers IQR en 4 cols) + escalada auditada,Solo inliers (dentro vallas Tukey),103965,30.32,0.4405,0.6443,0.4883,0.1991
+R5_B_iqr,5. Versión B (sin_outliers IQR en 4 cols) + escalada auditada,Solo extremos Tukey (fuera vallas),34818,29.79,0.4554,0.6664,0.5012,0.1935

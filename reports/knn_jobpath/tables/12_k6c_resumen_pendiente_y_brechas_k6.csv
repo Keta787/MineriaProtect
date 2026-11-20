@@ -1,0 +1,3 @@
+dimension_temporal_carrera,rango_observado_test_pp,rango_predicho_knn_test_pp,razon_pendiente_knn_sobre_obs,brecha_max_abs_tramo_knn_pp,brecha_media_abs_tramo_knn_pp,rango_predicho_nb_h_test_pp,razon_pendiente_nb_h_sobre_obs,brecha_max_abs_tramo_nb_h_pp
+Posición en la carrera (job_order: 1er empleo -> 9+),20.56,15.09,0.7339,3.52,1.35,8.3,0.4037,6.3
+Período calendario (start_year: <=1999 -> 2020+),5.48,5.91,1.0785,1.12,0.46,9.47,1.7281,2.15

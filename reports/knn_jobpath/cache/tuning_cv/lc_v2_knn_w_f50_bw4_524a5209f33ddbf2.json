@@ -1,0 +1,23 @@
+[
+  {
+    "modelo_id": "KNN-W",
+    "esquema_validacion": "Pliegue único fijo disjunto (27,756 filas · mismo protocolo 10/25/50 %)",
+    "fraccion_personas_pct": 50.0,
+    "personas_train": 135143,
+    "filas_train": 667859,
+    "rango_en_10pct": 2,
+    "config_etiqueta": "k=101, uniform, euclidean, w=4",
+    "k_vecinos": 101,
+    "pesos": "uniform",
+    "metrica": "euclidean",
+    "peso_bloque": 4.0,
+    "pr_auc_cv_media": 0.52145,
+    "pr_auc_cv_std": NaN,
+    "pr_auc_ic95_persona": "[0.50387, 0.53958]",
+    "pr_auc_ic95_inf": 0.50387,
+    "pr_auc_ic95_sup": 0.53958,
+    "roc_auc_cv_media": 0.71769,
+    "roc_auc_ic95_persona": "[0.70812, 0.72768]",
+    "brier_cv": 0.1836
+  }
+]

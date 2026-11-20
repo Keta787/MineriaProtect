@@ -1,0 +1,4 @@
+fraccion_personas,personas_muestreadas,filas_muestreadas,pct_filas_total,prevalencia_submuestra_pct,prevalencia_train_total_pct,brecha_prevalencia_pp
+0.1,28167,138783,9.98,30.19,30.01,0.178
+0.25,70418,348241,25.03,30.08,30.01,0.065
+0.5,140837,695615,50.01,29.9,30.01,-0.111

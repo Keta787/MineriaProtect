@@ -1,0 +1,11 @@
+isco_major,gran_grupo_isco,n_reincide_1,n_reincide_0,diff_empleos_previos_media,diff_duracion_trimestres_media,diff_anio_inicio_media,diff_skills_essential_media,diff_skills_knowledge_media,diff_es_vigente_pp,diff_educacion_universitaria_pp
+0,0 · Ocupaciones militares,252,3141,1.77,-3.94,7.7,-1.12,-0.43,-1.76,7.63
+1,1 · Directores y gerentes,17874,63126,0.78,-2.08,-0.33,0.1,0.41,-0.34,2.12
+2,2 · Profesionales científicos e intelectuales,73055,170650,1.01,-2.91,1.13,5.6,2.13,-0.45,7.01
+3,3 · Técnicos y profesionales de nivel medio,91918,180656,0.55,-2.51,-0.02,0.82,-0.75,-0.84,-4.41
+4,4 · Personal de apoyo administrativo,25086,86619,0.57,-1.62,-0.59,0.49,-0.29,-1.0,-0.51
+5,5 · Trabajadores de los servicios y vendedores,102441,200265,0.81,-3.33,1.21,-0.09,-0.33,-0.62,-5.12
+6,6 · Agricultores y trabajadores agropecuarios,1073,4007,0.17,-2.9,0.43,1.3,0.67,-1.4,-5.31
+7,"7 · Oficiales, operarios y artesanos",23191,77180,0.56,-2.77,0.57,2.45,0.62,-0.85,-6.73
+8,8 · Operadores de instalaciones y máquinas,19893,60772,0.98,-2.63,0.47,3.05,-0.04,-1.13,-7.9
+9,9 · Ocupaciones elementales,62688,127131,0.76,-2.77,0.39,2.75,-0.08,-1.2,-6.94
