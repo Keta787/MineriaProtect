@@ -1,0 +1,103 @@
+# Bitácora de Clustering K-Means · `8.0_kmeans_clustering.ipynb`
+
+> **Proyecto:** `MineriaProtect` (JobPath — Observatorio Laboral de Trayectorias y Perfiles ESCO)
+> **Guía técnica implementada:** `02_kmeans_clustering.md`
+
+Este archivo es **append-only**: conserva todas las corridas previas marcadas como **`[SUPERSEDED]`** y registra la corrida vigente como **`[CURRENT]`**.
+- **Corrida vigente confirmada en ambos archivos (`.md`)**: **`RUN-20261119-181140`** (`2026-11-19 18:11:40` · estado: **`CURRENT`**).
+
+---
+## Corrida Fechada · ID `RUN-20261119-181140` · `2026-11-19 18:11:40` · [CURRENT]
+
+### 0. Resumen de Indicadores Clave de la Corrida (`RUN-20261119-181140`)
+| run_id | timestamp | k_optimo | inercia_wcss_personas_k4 | caida_inercia_personas_k4_pct | silhouette_personas_k4 | davies_bouldin_personas_k4 | silhouette_experiencias_k4 | davies_bouldin_experiencias_k4 | max_diff_centroide_inv_vs_groupby | ari_kmeans_vs_ward_personas | nmi_kmeans_vs_ward_personas | silhouette_5semillas_b_media | silhouette_5semillas_a_media | ari_b_vs_a_train_completo |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| RUN-20261119-181140 | 2026-11-19 18:11:40 | 4 | 1692018 | 11.93 | 0.1948 | 1.6298 | 0.2465 | 1.4488 | 0 | 0.3117 | 0.456 | 0.1952 | 0.1993 | 0.8633 |
+
+### 1. Verificación de Integridad SHA-256 y Auditoría Cero-Fuga (`Zero Target Leakage`)
+| archivo_insumo | ruta_relativa | sha256_inicial | sha256_final | intacto_en_disco |
+| --- | --- | --- | --- | --- |
+| clean_version_b | data/03_processed/empleos_limpio_con_competencias_sin_outliers.csv | c8ea36b51dea8803... | c8ea36b51dea8803... | Sí |
+| clean_version_a | data/03_processed/empleos_unificado_limpio.csv | 68cd34c624e8d23e... | 68cd34c624e8d23e... | Sí |
+| split_map | reports/eda_jobpath/tables/split_map_resume_id.csv | 67dd3e3d68e1ff5e... | 67dd3e3d68e1ff5e... | Sí |
+
+| vista_analitica | n_variables_clustering | variables_incluidas | columnas_fuga_detectadas | colinealidad_E_igual_C_mas_K_evitada | tratamiento_educacion_mnar | estado_auditoria |
+| --- | --- | --- | --- | --- | --- | --- |
+| Vista Primaria · Personas / Trayectorias (V_PERSON) | 9 | n_jobs, span_q, dur_mean, overlap_ratio, mean_skills_competence, mean_skills_knowledge, mean_prop_competence, nivel_academico_ord_imputado, educacion_no_reportada | 0 | Sí (usa competence, knowledge y prop_competence) | Bandera educacion_no_reportada (0/1) + ordinal imputado con mediana de Train (2.0); sin relleno 0 | APROBADO (100% no supervisado) |
+| Vista Secundaria · Experiencias / Perfiles ESCO (V_EXPERIENCE) | 7 | dur_q, job_order, n_skills_competence, n_skills_knowledge, prop_competence_essential, nivel_academico_ord_imputado, educacion_no_reportada | 0 | Sí (usa competence, knowledge y prop_competence_essential) | Bandera educacion_no_reportada (0/1) + ordinal imputado con mediana de Train (2.0); sin relleno 0 | APROBADO (100% no supervisado) |
+
+### 2. Tabla de Uso de Datos (`Uso de datos`)
+| etapa_uso_de_datos | filas_experiencias | personas_unicas | pct_sobre_total_csv | pct_sobre_clasificados | detalle_y_justificacion |
+| --- | --- | --- | --- | --- | --- |
+| 1. Universo bruto en CSV de entrada (Versión B y Versión A) | 1871014 | 355308 | 100.00% | no aplica | Total de experiencias laborales antes de filtrar ocupaciones sin código ESCO estandarizado. |
+| 2. Filas excluidas en RAM (es_ocupacion_clasificada == 0) | 132276 | 3215 | 7.07% | no aplica | Excluidas en RAM antes de clusterizar (Decisión D07 de Fase 3) por carecer de perfil ESCO (128981 con emparejado='unknown' y 3295 con 'rescatado' sin padre ESCO; 3215 personas exclusivas). |
+| 3. Universo clasificado modelado (es_ocupacion_clasificada == 1) | 1738738 | 352093 | 92.93% | 100.00% | Universo válido alineado 1 a 1 entre Versión B (sin outliers IQR, primaria) y Versión A (con outliers, sensibilidad). |
+| 4. Ajuste de StandardScaler y KMeans (Train 80% agrupado por resume_id) | 1391018 | 281674 | 74.35% | 80.00% | Partición de entrenamiento (seed=42, 0 personas compartidas con Test) donde se ajustan StandardScaler y los centroides K-Means (k-means++, n_init=10). |
+| 5. Validación out-of-sample de clústeres y perfiles (Test 20% por resume_id) | 347720 | 70419 | 18.58% | 20.00% | Partición de prueba retenida (20%, seed=42) asignada mediante km.predict(scaler.transform(X_test)) para verificar estabilidad fuera de muestra. |
+| 6. Educación no reportada (MNAR · educacion_no_reportada == 1) en Train | 160664 | 34266 | 8.59% | 11.55% | Registros de Train sin grado académico reportado (codificados con bandera binaria 1 + mediana ordinal de Train=2.0, sin rellenar jamás con 0). |
+| 7. Educación no reportada (MNAR · educacion_no_reportada == 1) en Test | 40270 | 8618 | 2.15% | 11.58% | Registros de Test sin grado académico reportado (mantenidos con bandera binaria 1 + mediana ordinal de Train=2.0). |
+| 8. Educación no reportada (MNAR · educacion_no_reportada == 1) en Total Clasificado | 200934 | 42884 | 10.74% | 11.56% | Total de registros clasificados con educación no reportada (Train + Test = 200,934 filas; 42,884 personas según primera experiencia). |
+| 9. Muestra de evaluación de Silueta (sample_size para O(n^2) tractable) | 12000 | 12000 | 0.64% | 0.69% | Submuestra aleatoria reproducible (seed=42) usada por silhouette_score mientras Inercia, Davies-Bouldin y Calinski-Harabasz se calculan sobre el 100% de Train. |
+| 10. Sensibilidad Versión B vs. Versión A en 5 Semillas (42, 100, 2026, 7, 999) | 10000 | 10000 | 0.53% | 2.84% | 5 muestras estratificadas de 10,000 personas de Train + evaluación en datos completos (281,674 personas Train / 70,419 Test) comparando Versión B vs. Versión A. |
+
+### 3. Determinación del $k$ Óptimo (`k = 2..8` · Método del Codo + Coeficiente de Silueta + Davies-Bouldin)
+
+#### 3.1 Vista Primaria · Personas / Trayectorias (`281674` Personas en Train)
+| k | inercia_wcss | caida_relativa_inercia_pct | silhouette_score | davies_bouldin_index | calinski_harabasz_index | tamano_min_cluster_pct | tamano_max_cluster_pct | decision_y_justificacion_es |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2 | 2185781.34 | 0 | 0.166 | 2.281 | 45011.74 | 38.56 | 61.44 | Caída fuerte de inercia (0.00%), pero agrupa perfiles distintos en solo 2 macro-segmentos |
+| 3 | 1921139.73 | 12.11 | 0.1958 | 1.8498 | 45006.23 | 12.03 | 53.79 | Caída fuerte de inercia (12.11%), pero agrupa perfiles distintos en solo 3 macro-segmentos |
+| 4 | 1692018 | 11.93 | 0.1948 | 1.6298 | 46780.83 | 11.65 | 43.94 | K ÓPTIMO SELECCIONADO (k=4: codo de inercia con caída relativa=11.93%, Silueta=0.1948, Davies-Bouldin=1.6298, concordancia con corte Ward k=4 y 4 segmentos accionables) |
+| 5 | 1547830.99 | 8.52 | 0.1751 | 1.6292 | 44913.59 | 6.6 | 34.94 | Rendimiento marginal decreciente más allá del codo (caída=8.52%) y fragmentación operativa |
+| 6 | 1428115.55 | 7.73 | 0.1821 | 1.4943 | 43665.04 | 2.92 | 33.64 | Rendimiento marginal decreciente más allá del codo (caída=7.73%) y fragmentación operativa |
+| 7 | 1322114.13 | 7.42 | 0.1856 | 1.4638 | 43068.59 | 2.86 | 30.71 | Rendimiento marginal decreciente más allá del codo (caída=7.42%) y fragmentación operativa |
+| 8 | 1244354.29 | 5.88 | 0.1736 | 1.4372 | 41737.18 | 2.8 | 22.28 | Rendimiento marginal decreciente más allá del codo (caída=5.88%) y fragmentación operativa |
+
+#### 3.2 Vista Secundaria · Experiencias Laborales / Perfiles ESCO (`1391018` Experiencias en Train)
+| k | inercia_wcss | caida_relativa_inercia_pct | silhouette_score | davies_bouldin_index | calinski_harabasz_index | tamano_min_cluster_pct | tamano_max_cluster_pct | decision_y_justificacion_es |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2 | 7992818.36 | 0 | 0.1951 | 1.9733 | 21439.32 | 37.96 | 62.04 | Caída fuerte de inercia (0.00%), pero agrupa perfiles distintos en solo 2 macro-segmentos |
+| 3 | 6744435.41 | 15.62 | 0.2342 | 1.6059 | 21958.34 | 11.33 | 53.73 | Caída fuerte de inercia (15.62%), pero agrupa perfiles distintos en solo 3 macro-segmentos |
+| 4 | 5967134.18 | 11.53 | 0.2465 | 1.4488 | 20887.65 | 7.41 | 49.75 | K ÓPTIMO SELECCIONADO (k=4: codo de inercia con caída relativa=11.53%, Silueta=0.2465, Davies-Bouldin=1.4488, concordancia con corte Ward k=4 y 4 segmentos accionables) |
+| 5 | 5289575.65 | 11.35 | 0.2373 | 1.3699 | 20874.42 | 6.74 | 42.56 | Rendimiento marginal decreciente más allá del codo (caída=11.35%) y fragmentación operativa |
+| 6 | 4775771.02 | 9.71 | 0.2165 | 1.3929 | 20647.48 | 6.29 | 27.62 | Rendimiento marginal decreciente más allá del codo (caída=9.71%) y fragmentación operativa |
+| 7 | 4328642.57 | 9.36 | 0.2229 | 1.2686 | 20704.84 | 5.99 | 23.41 | Rendimiento marginal decreciente más allá del codo (caída=9.36%) y fragmentación operativa |
+| 8 | 4030337.32 | 6.89 | 0.2177 | 1.2384 | 20117.63 | 5.69 | 19.08 | Rendimiento marginal decreciente más allá del codo (caída=6.89%) y fragmentación operativa |
+
+- **Justificación cuantitativa y de negocio de `k = 4`**: En la vista primaria de personas, `k = 4` reduce la inercia WCSS a `1692018.00` (caída relativa de `11.93%`), alcanza un `silhouette_score` de `0.1948` y un `davies_bouldin_index` de `1.6298`, coincidiendo con el corte óptimo del dendrograma jerárquico de Ward (`ARI = 0.3117`, `NMI = 0.4560`). En la vista de experiencias, `k = 4` obtiene `silhouette_score = 0.2465` y `davies_bouldin_index = 1.4488`.
+
+### 4. Centroides Interpretables en Escala Original (`inverse_transform` vs. `groupby().mean()`) y Escala Estandarizada ($z$)
+
+#### 4.1 Centroides Vista Primaria · Personas (`max_diff = 0.000000`)
+| cluster | nombre_segmento_es | n_jobs_centroide_original | n_jobs_media_groupby_train | n_jobs_centroide_z_estandarizado | span_q_centroide_original | span_q_media_groupby_train | span_q_centroide_z_estandarizado | dur_mean_centroide_original | dur_mean_media_groupby_train | dur_mean_centroide_z_estandarizado | overlap_ratio_centroide_original | overlap_ratio_media_groupby_train | overlap_ratio_centroide_z_estandarizado | mean_skills_competence_centroide_original | mean_skills_competence_media_groupby_train | mean_skills_competence_centroide_z_estandarizado | mean_skills_knowledge_centroide_original | mean_skills_knowledge_media_groupby_train | mean_skills_knowledge_centroide_z_estandarizado | mean_prop_competence_centroide_original | mean_prop_competence_media_groupby_train | mean_prop_competence_centroide_z_estandarizado | nivel_academico_ord_imputado_centroide_original | nivel_academico_ord_imputado_media_groupby_train | nivel_academico_ord_imputado_centroide_z_estandarizado | educacion_no_reportada_centroide_original | educacion_no_reportada_media_groupby_train | educacion_no_reportada_centroide_z_estandarizado | max_diff_inv_vs_groupby |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 0 | Inserción Temprana y Trayectorias Cortas en Oficios Operativos | 4.8172 | 4.8172 | -0.0426 | 38.7148 | 38.7148 | -0.381 | 8.7454 | 8.7454 | -0.3592 | 1.0264 | 1.0264 | -0.1834 | 18.0812 | 18.0812 | -0.0487 | 2.5142 | 2.5142 | -0.5699 | 0.8727 | 0.8727 | 0.5294 | 1.4225 | 1.4225 | -0.4572 | 0 | 0 | -0.3722 | 0 |
+| 1 | Trabajadores con Educación No Reportada (MNAR) y Perfil Operativo Estable | 4.7246 | 4.7246 | -0.0752 | 58.3538 | 58.3538 | 0.1038 | 14.1171 | 14.1171 | -0.028 | 1.0302 | 1.0302 | -0.1776 | 18.1156 | 18.1156 | -0.0425 | 3.2216 | 3.2216 | -0.2471 | 0.8442 | 0.8442 | 0.1956 | 2 | 2 | 0.3527 | 1 | 1 | 2.687 | 0 |
+| 2 | Profesionales Intensivos en Conocimiento y Alta Exigencia ESCO | 4.9231 | 4.9231 | -0.0054 | 42.5429 | 42.5429 | -0.2865 | 10.4404 | 10.4404 | -0.2547 | 1.1198 | 1.1198 | -0.0431 | 19.3421 | 19.3421 | 0.175 | 5.9807 | 5.9807 | 1.012 | 0.7542 | 0.7542 | -0.8617 | 2.3325 | 2.3325 | 0.819 | 0.0048 | 0.0048 | -0.3574 | 0 |
+| 3 | Trayectorias Consolidadas de Alta Rotación o Larga Permanencia | 5.4396 | 5.4396 | 0.1763 | 112.1356 | 112.1356 | 1.4312 | 37.4723 | 37.4723 | 1.4122 | 1.607 | 1.607 | 0.6891 | 17.5814 | 17.5814 | -0.1373 | 3.7142 | 3.7142 | -0.0223 | 0.82 | 0.82 | -0.0885 | 1.4489 | 1.4489 | -0.4202 | 0.0229 | 0.0229 | -0.3021 | 0 |
+
+#### 4.2 Centroides Vista Secundaria · Experiencias (`max_diff = 0.000001`)
+| cluster | nombre_segmento_es | dur_q_centroide_original | dur_q_media_groupby_train | dur_q_centroide_z_estandarizado | job_order_centroide_original | job_order_media_groupby_train | job_order_centroide_z_estandarizado | n_skills_competence_centroide_original | n_skills_competence_media_groupby_train | n_skills_competence_centroide_z_estandarizado | n_skills_knowledge_centroide_original | n_skills_knowledge_media_groupby_train | n_skills_knowledge_centroide_z_estandarizado | prop_competence_essential_centroide_original | prop_competence_essential_media_groupby_train | prop_competence_essential_centroide_z_estandarizado | nivel_academico_ord_imputado_centroide_original | nivel_academico_ord_imputado_media_groupby_train | nivel_academico_ord_imputado_centroide_z_estandarizado | educacion_no_reportada_centroide_original | educacion_no_reportada_media_groupby_train | educacion_no_reportada_centroide_z_estandarizado | max_diff_inv_vs_groupby |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 0 | Experiencias Iniciales de Corta Duración y Exigencia Práctica | 7.8568 | 7.8568 | -0.2637 | 3.7249 | 3.7249 | -0.0237 | 17.5899 | 17.5899 | -0.1042 | 1.8145 | 1.8145 | -0.6207 | 0.8972 | 0.8972 | 0.5516 | 1.5284 | 1.5284 | -0.3268 | 0 | 0 | -0.3614 | 0 |
+| 1 | Puestos Operativos y de Servicios con Educación No Reportada (MNAR) | 11.5013 | 11.5013 | -0.0713 | 3.6832 | 3.6832 | -0.0396 | 18.2003 | 18.2003 | -0.0343 | 3.2911 | 3.2911 | -0.1539 | 0.8422 | 0.8422 | 0.1121 | 2 | 2 | 0.3409 | 1 | 1 | 2.7673 | 0 |
+| 2 | Ocupaciones Técnicas y Profesionales de Alta Complejidad ESCO | 8.7581 | 8.7581 | -0.2161 | 4.0846 | 4.0846 | 0.1131 | 20.2118 | 20.2118 | 0.1962 | 7.0548 | 7.0548 | 1.036 | 0.7167 | 0.7167 | -0.892 | 2.0689 | 2.0689 | 0.4385 | 0.002 | 0.002 | -0.355 | 0 |
+| 3 | Empleos de Etapa Avanzada de Carrera o Larga Permanencia | 66.3038 | 66.3038 | 2.8223 | 3.0761 | 3.0761 | -0.2707 | 17.6513 | 17.6513 | -0.0972 | 3.5325 | 3.5325 | -0.0776 | 0.8259 | 0.8259 | -0.0183 | 1.6071 | 1.6071 | -0.2155 | 0.0469 | 0.0469 | -0.2148 | 0 |
+
+### 5. Evaluación de Perfiles por Clúster (`Retrato Robot`), Validación Post-Hoc con `reincide` y Acciones del Observatorio
+
+#### 5.1 Perfiles Vista Primaria · Personas (`352093` Personas Clasificadas: `281674` Train / `70419` Test)
+| vista | cluster | nombre_segmento_es | n_train | pct_train | n_test | pct_test | n_total | pct_total | n_jobs_media_train | n_jobs_media_test | span_q_media_train | span_q_media_test | dur_mean_media_train | dur_mean_media_test | overlap_ratio_media_train | overlap_ratio_media_test | mean_skills_competence_media_train | mean_skills_competence_media_test | mean_skills_knowledge_media_train | mean_skills_knowledge_media_test | mean_prop_competence_media_train | mean_prop_competence_media_test | nivel_academico_ord_imputado_media_train | nivel_academico_ord_imputado_media_test | educacion_no_reportada_media_train | educacion_no_reportada_media_test | mean_skills_essential_media_train | mean_skills_essential_media_test | tasa_reincide_train_posthoc_pct | lift_reincide_train_posthoc | tasa_reincide_test_posthoc_pct | lift_reincide_test_posthoc | gran_grupo_isco_dominante_posthoc | accion_observatorio_recomendada_es |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Personas (352,093) | 0 | Inserción Temprana y Trayectorias Cortas en Oficios Operativos | 123780 | 43.94 | 30797 | 43.73 | 154577 | 43.9 | 4.82 | 4.84 | 38.71 | 38.67 | 8.75 | 8.73 | 1.03 | 1.03 | 18.08 | 18.11 | 2.51 | 2.51 | 0.87 | 0.87 | 1.42 | 1.43 | 0 | 0 | 20.63 | 20.66 | 47.64 | 1.042 | 47.78 | 1.046 | 5 · Trabajadores de los servicios y vendedores | Programa Puente al Primer Empleo: orientación vocacional temprana, certificación de competencias prácticas base y acompañamiento en el primer año post-egreso. |
+| Personas (352,093) | 1 | Trabajadores con Educación No Reportada (MNAR) y Perfil Operativo Estable | 32824 | 11.65 | 8238 | 11.7 | 41062 | 11.66 | 4.72 | 4.7 | 58.35 | 57.06 | 14.12 | 13.87 | 1.03 | 1.03 | 18.12 | 18.12 | 3.22 | 3.21 | 0.84 | 0.84 | 2 | 2 | 1 | 1 | 21.37 | 21.37 | 45.86 | 1.003 | 45 | 0.985 | 5 · Trabajadores de los servicios y vendedores | Certificación de Competencias por Saberes Previos: validación formal de habilidades empíricas para trabajadores sin título reportado. |
+| Personas (352,093) | 2 | Profesionales Intensivos en Conocimiento y Alta Exigencia ESCO | 78738 | 27.95 | 19815 | 28.14 | 98553 | 27.99 | 4.92 | 4.9 | 42.54 | 42.23 | 10.44 | 10.41 | 1.12 | 1.12 | 19.34 | 19.26 | 5.98 | 5.99 | 0.75 | 0.75 | 2.33 | 2.34 | 0 | 0.01 | 25.37 | 25.29 | 42.79 | 0.936 | 42.75 | 0.936 | 2 · Profesionales científicos e intelectuales | Vinculación I+D y Posgrados Aplicados: articulación con maestrías, liderazgo técnico y transferencia tecnológica universidad-empresa. |
+| Personas (352,093) | 3 | Trayectorias Consolidadas de Alta Rotación o Larga Permanencia | 46332 | 16.45 | 11569 | 16.43 | 57901 | 16.44 | 5.44 | 5.44 | 112.14 | 113.05 | 37.47 | 37.48 | 1.61 | 1.6 | 17.58 | 17.55 | 3.71 | 3.72 | 0.82 | 0.82 | 1.45 | 1.46 | 0.02 | 0.02 | 21.33 | 21.31 | 45.48 | 0.995 | 45.55 | 0.997 | 3 · Técnicos y profesionales de nivel medio | Programa de Estabilización y Consolidación de Portafolio Laboral: acompañamiento para capitalizar la experiencia acumulada y reducir la rotación fragmentada. |
+
+#### 5.2 Perfiles Vista Secundaria · Experiencias (`1738738` Experiencias Clasificadas: `1391018` Train / `347720` Test)
+| vista | cluster | nombre_segmento_es | n_train | pct_train | n_test | pct_test | n_total | pct_total | dur_q_media_train | dur_q_media_test | job_order_media_train | job_order_media_test | n_skills_competence_media_train | n_skills_competence_media_test | n_skills_knowledge_media_train | n_skills_knowledge_media_test | prop_competence_essential_media_train | prop_competence_essential_media_test | nivel_academico_ord_imputado_media_train | nivel_academico_ord_imputado_media_test | educacion_no_reportada_media_train | educacion_no_reportada_media_test | n_skills_essential_media_train | n_skills_essential_media_test | tasa_reincide_train_posthoc_pct | lift_reincide_train_posthoc | tasa_reincide_test_posthoc_pct | lift_reincide_test_posthoc | gran_grupo_isco_dominante_posthoc | accion_observatorio_recomendada_es |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Experiencias (1,738,738) | 0 | Experiencias Iniciales de Corta Duración y Exigencia Práctica | 689758 | 49.59 | 172161 | 49.51 | 861919 | 49.57 | 7.86 | 7.81 | 3.72 | 3.72 | 17.59 | 17.58 | 1.81 | 1.81 | 0.9 | 0.9 | 1.53 | 1.53 | 0 | 0 | 19.43 | 19.42 | 31.97 | 1.065 | 31.85 | 1.063 | 5 · Trabajadores de los servicios y vendedores | Módulo de Nivelación de Competencias Transversales para fortalecer la retención temprana. |
+| Experiencias (1,738,738) | 1 | Puestos Operativos y de Servicios con Educación No Reportada (MNAR) | 154966 | 11.14 | 38823 | 11.17 | 193789 | 11.15 | 11.5 | 11.33 | 3.68 | 3.66 | 18.2 | 18.18 | 3.29 | 3.28 | 0.84 | 0.84 | 2 | 2 | 1 | 1 | 21.5 | 21.47 | 31.16 | 1.038 | 30.86 | 1.03 | 5 · Trabajadores de los servicios y vendedores | Reconocimiento y Homologación de Experiencia Laboral en programas técnicos y tecnológicos. |
+| Experiencias (1,738,738) | 2 | Ocupaciones Técnicas y Profesionales de Alta Complejidad ESCO | 443934 | 31.91 | 111295 | 32.01 | 555229 | 31.93 | 8.76 | 8.77 | 4.08 | 4.06 | 20.21 | 20.17 | 7.05 | 7.04 | 0.72 | 0.72 | 2.07 | 2.07 | 0 | 0 | 27.33 | 27.29 | 28.25 | 0.941 | 28.32 | 0.945 | 2 · Profesionales científicos e intelectuales | Actualización Curricular Basada en Perfiles ESCO de Alta Complejidad. |
+| Experiencias (1,738,738) | 3 | Empleos de Etapa Avanzada de Carrera o Larga Permanencia | 102360 | 7.36 | 25441 | 7.32 | 127801 | 7.35 | 66.3 | 66.64 | 3.08 | 3.09 | 17.65 | 17.57 | 3.53 | 3.57 | 0.83 | 0.82 | 1.61 | 1.61 | 0.05 | 0.05 | 21.23 | 21.19 | 22.73 | 0.757 | 23.13 | 0.772 | 3 · Técnicos y profesionales de nivel medio | Red de Mentores Egresados y Programas de Reconversión Ejecutiva. |
