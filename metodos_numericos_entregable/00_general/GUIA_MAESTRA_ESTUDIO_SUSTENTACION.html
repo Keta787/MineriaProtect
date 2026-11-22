@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guía Maestra de Estudio y Sustentación · JobPath Métodos Numéricos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+:root{
+  --bg:#f5f6fb; --card:#ffffff; --ink:#1b2340; --muted:#5b6482; --line:#e3e6f0;
+  --indigo:#4f46e5; --indigo-soft:#eef0ff; --teal:#0d9488; --teal-soft:#e6f6f4;
+  --amber:#d97706; --amber-soft:#fff5e6; --rose:#e11d48; --rose-soft:#ffeef2;
+  --dark:#141b33; --shadow:0 10px 28px rgba(27,35,64,.07);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.58;font-size:15px}
+.progress{position:fixed;left:0;top:0;height:4px;width:0;background:linear-gradient(90deg,var(--indigo),var(--teal),var(--amber));z-index:100;transition:width .1s}
+.layout{display:grid;grid-template-columns:268px 1fr;min-height:100vh}
+.sidebar{position:sticky;top:0;height:100vh;overflow-y:auto;background:#fff;border-right:1px solid var(--line);padding:18px 16px 26px;display:flex;flex-direction:column;gap:14px}
+.brand{padding:12px 14px;border-radius:14px;background:linear-gradient(135deg,#eef0ff,#e6f6f4);border:1px solid #d7ddf7}
+.brand .kicker{font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--indigo)}
+.brand h2{font-size:15.5px;font-weight:800;margin-top:4px;line-height:1.25}
+.nav-sec{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:4px 8px 0}
+.nav-link{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:10px;text-decoration:none;color:var(--ink);font-size:13px;font-weight:600;transition:background .15s,color .15s}
+.nav-link:hover,.nav-link.active{background:var(--indigo-soft);color:var(--indigo)}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot.indigo{background:var(--indigo)} .dot.teal{background:var(--teal)} .dot.amber{background:var(--amber)} .dot.dark{background:var(--dark)}
+.timer-box{background:var(--dark);color:#eef2ff;border-radius:14px;padding:12px;margin-top:auto}
+.timer-lbl{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#a5b4fc;font-weight:700}
+.timer-val{font-family:"JetBrains Mono",monospace;font-size:26px;font-weight:800;margin:4px 0 8px;font-variant-numeric:tabular-nums}
+.timer-btns{display:flex;gap:6px;flex-wrap:wrap}
+.timer-btns button{font-size:11.5px;padding:5px 8px;border-radius:8px;border:none;cursor:pointer;font-weight:700;background:#312e81;color:#fff}
+.timer-btns button.go{background:var(--teal)} .timer-btns button.rst{background:#334155}
+.main{padding:28px clamp(18px,3.2vw,44px) 72px;max-width:1180px;width:100%;margin:0 auto}
+.hero{background:radial-gradient(920px 380px at 95% 0%,#e0e7ff 0%,transparent 60%),radial-gradient(760px 320px at 0% 100%,#ccfbf1 0%,transparent 55%),#fff;border:1px solid var(--line);border-radius:22px;padding:28px clamp(20px,3vw,34px);box-shadow:var(--shadow);margin-bottom:24px}
+.hero .kicker{font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--indigo)}
+.hero h1{font-size:clamp(26px,3.2vw,40px);line-height:1.12;font-weight:800;margin:8px 0 10px;letter-spacing:-.02em}
+.hero p{color:var(--muted);max-width:860px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:999px;font-size:12px;font-weight:700}
+.pill.indigo{background:var(--indigo-soft);color:var(--indigo)}
+.pill.teal{background:var(--teal-soft);color:var(--teal)}
+.pill.amber{background:var(--amber-soft);color:var(--amber)}
+.pill.rose{background:var(--rose-soft);color:var(--rose)}
+.pill.dark{background:var(--dark);color:#fff}
+.pill.white{background:rgba(255,255,255,.92);color:var(--ink);border:1px solid var(--line)}
+.btn,button.ctrl{display:inline-flex;align-items:center;gap:6px;padding:8px 13px;border-radius:11px;font:inherit;font-size:13px;font-weight:700;text-decoration:none;border:none;cursor:pointer;background:var(--indigo);color:#fff;transition:transform .12s,box-shadow .12s}
+.btn:hover,button.ctrl:hover{transform:translateY(-1px);box-shadow:0 6px 14px rgba(27,35,64,.14)}
+.btn.teal{background:var(--teal)} .btn.amber{background:var(--amber)} .btn.ghost,button.ctrl.ghost{background:#fff;color:var(--ink);border:1.5px solid var(--line)}
+button.ctrl.on{background:var(--indigo);color:#fff;border-color:var(--indigo)}
+.sec-box{background:#fff;border:1px solid var(--line);border-radius:20px;padding:24px;box-shadow:var(--shadow);margin-bottom:24px}
+.sec-title{font-size:22px;font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.speech-box{background:linear-gradient(135deg,#eef0ff 0%,#f8fafc 100%);border-left:5px solid var(--indigo);border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:10px;font-size:15.5px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+.stack{display:flex;flex-direction:column;gap:10px}
+.subcard{background:#fafbff;border:1px solid var(--line);border-radius:14px;padding:15px 17px}
+.subcard.indigo{background:var(--indigo-soft);border-color:#d6dbff}
+.subcard.teal{background:var(--teal-soft);border-color:#bcece5}
+.subcard.amber{background:var(--amber-soft);border-color:#fde0b5}
+.subcard.rose{background:var(--rose-soft);border-color:#ffccd8}
+.subcard h4{font-size:14.5px;font-weight:800;margin-bottom:8px;color:var(--ink)}
+.formula{background:#fff;border:1.5px dashed #c7cbe6;border-radius:12px;padding:11px 14px;overflow-x:auto;font-size:16px}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.88em;background:rgba(27,35,64,.06);padding:1px 5px;border-radius:5px}
+ul.clean{list-style:none}
+ul.clean li{position:relative;padding-left:20px;margin-bottom:6px;font-size:14.2px}
+ul.clean li::before{content:"";position:absolute;left:3px;top:.58em;width:8px;height:8px;border-radius:2.5px;background:var(--indigo)}
+.subcard.teal ul.clean li::before{background:var(--teal)}
+.subcard.amber ul.clean li::before{background:var(--amber)}
+ol.steps{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14.2px}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:#fff;margin-top:6px}
+table{width:100%;border-collapse:collapse;font-size:13.3px;font-variant-numeric:tabular-nums}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{background:var(--dark);color:#fff;font-weight:700;white-space:nowrap}
+tr:nth-child(even) td{background:#fafbff}
+td.say-ok{background:#ecfdf5 !important;border-right:1px solid #d1fae5}
+td.say-bad{background:#fff1f2 !important}
+.filter-bar{position:sticky;top:8px;z-index:30;background:rgba(255,255,255,.95);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:16px;padding:12px 16px;box-shadow:var(--shadow);margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.case-section{background:#fff;border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:var(--shadow);margin-bottom:24px}
+.case-section.hidden{display:none}
+.case-head{padding:18px 22px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.case-head.indigo{background:linear-gradient(90deg,#eef0ff,#f8faff)}
+.case-head.teal{background:linear-gradient(90deg,#e6f6f4,#f6fdfc)}
+.case-head.amber{background:linear-gradient(90deg,#fff5e6,#fffbf5)}
+.case-head h3{font-size:20px;font-weight:800;line-height:1.2}
+.case-files{font-size:12.5px;color:var(--muted);margin-top:4px}
+.case-body{padding:16px 22px 22px}
+details.qa-card{background:#fff;border:1px solid #fecdd3;border-radius:12px;padding:10px 14px}
+details.qa-card summary{cursor:pointer;font-weight:700;font-size:14.2px;list-style:none;display:flex;align-items:flex-start;gap:8px}
+details.qa-card summary::-webkit-details-marker{display:none}
+.qa-tag{background:var(--rose);color:#fff;font-size:11px;padding:2px 8px;border-radius:999px;flex-shrink:0;margin-top:2px}
+.qa-ans{margin-top:9px;padding-top:9px;border-top:1px dashed #fda4af;font-size:14px;color:var(--ink)}
+.search-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+.search-input{flex:1;min-width:240px;padding:10px 14px;border-radius:12px;border:1.5px solid var(--line);font:inherit;font-size:14px;outline:none}
+.search-input:focus{border-color:var(--indigo)}
+.chk-list{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.chk-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:12px;background:#fafbff;border:1px solid var(--line);cursor:pointer;font-size:14px}
+.chk-item input{margin-top:3px;width:17px;height:17px;accent-color:var(--teal);flex-shrink:0}
+.chk-item.done{background:#ecfdf5;border-color:#a7f3d0;text-decoration:line-through;color:var(--muted)}
+.mob-bar{display:none}
+@media (max-width:1020px){
+  .layout{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .grid2{grid-template-columns:1fr}
+  .mob-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+}
+@media print{
+  .sidebar,.filter-bar,.progress,.timer-box,.btn,button.ctrl,.mob-bar{display:none !important}
+  .layout{display:block}
+  .main{max-width:100%;padding:0}
+  .case-section,.sec-box{box-shadow:none;break-inside:avoid}
+  details.qa-card{display:block}
+}
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="kicker">JobPath · UNIMINUTO</div>
+      <h2>Guía Maestra de Estudio y Sustentación</h2>
+    </div>
+    <div class="nav-sec">Inicio y Bases</div>
+    <a class="nav-link" href="#apertura"><span class="dot dark"></span>1. Apertura (60 s) y Reglas</a>
+    <div class="nav-sec">Los 8 Casos (5.0 / 5.0)</div>
+    <a class="nav-link" href="#caso-01"><span class="dot indigo"></span>Caso 01 · RL-01</a><a class="nav-link" href="#caso-02"><span class="dot indigo"></span>Caso 02 · RL-02</a><a class="nav-link" href="#caso-03"><span class="dot indigo"></span>Caso 03 · RL-04</a><a class="nav-link" href="#caso-04"><span class="dot indigo"></span>Caso 04 · RL-05</a><a class="nav-link" href="#caso-05"><span class="dot teal"></span>Caso 05 · LG-01</a><a class="nav-link" href="#caso-06"><span class="dot teal"></span>Caso 06 · LG-02</a><a class="nav-link" href="#caso-07"><span class="dot amber"></span>Caso 07 · HYB-01</a><a class="nav-link" href="#caso-08"><span class="dot amber"></span>Caso 08 · HYB-02</a>
+    <div class="nav-sec">Estudio y Cierre</div>
+    <a class="nav-link" href="#glosario"><span class="dot teal"></span>3. Glosario Maestro (A–Z)</a>
+    <a class="nav-link" href="#acordeon"><span class="dot amber"></span>4. Acordeón y Checklist</a>
+    <div class="nav-sec">Accesos Directos</div>
+    <a class="nav-link" href="../presentaciones_separadas.html">← Portal 8 Presentaciones</a>
+    <a class="nav-link" href="../index.html">📊 Reporte index.html</a>
+    <a class="nav-link" href="./GUIA_MAESTRA_ESTUDIO_SUSTENTACION.md" target="_blank">📄 Versión Markdown (.md)</a>
+
+    <div class="timer-box">
+      <div class="timer-lbl">⏱ Cronómetro de Ensayo</div>
+      <div class="timer-val" id="timerDisp">10:00</div>
+      <div class="timer-btns">
+        <button onclick="setTimer(600)">10m</button>
+        <button onclick="setTimer(1200)">20m</button>
+        <button class="go" id="btnRun" onclick="toggleTimer()">▶ Iniciar</button>
+        <button class="rst" onclick="resetTimer()">↺</button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="mob-bar">
+      <a class="btn ghost" href="../presentaciones_separadas.html">← 8 Presentaciones</a>
+      <a class="btn ghost" href="#glosario">Glosario A–Z</a>
+      <a class="btn ghost" href="#acordeon">Acordeón Final</a>
+    </div>
+
+    <header class="hero">
+      <div class="kicker">Métodos Numéricos · JobPath (MineriaProtect) · Versión V2 Certificada</div>
+      <h1>Guía Maestra de Estudio y Sustentación Oral</h1>
+      <p>Todo lo necesario para dominar y defender los <b>8 casos reales</b> (MCO, Lagrange, Híbrido y Verificación): discurso de apertura, fórmulas explicadas símbolo por símbolo, cadena exacta de conclusiones, qué mostrar en vivo, <b>16 preguntas "corchadoras" interactivas</b>, glosario buscable A–Z y acordeón de 1 página.</p>
+      <div class="row" style="margin-top:14px">
+        <span class="pill indigo">5.0 / 5.0 en 8 Casos y 8 HTML</span>
+        <span class="pill teal">19/19 Pruebas OK · 19/19 SHA-256 64-hex</span>
+        <span class="pill amber">0 violaciones MR-07/MR-08 · 100 % Offline</span>
+      </div>
+      <div class="row" style="margin-top:16px">
+        <a class="btn" href="../presentaciones_separadas.html">▶ Ir a las 8 Presentaciones HTML</a>
+        <a class="btn ghost" href="./EVALUACION_UNIFICADA_8_CASOS.md" target="_blank">📋 Evaluación 8 Casos (.md)</a>
+        <a class="btn ghost" href="./EVALUACION_DIAPOSITIVAS_HTML.md" target="_blank">🧪 Auditoría HTML (.md)</a>
+        <button class="ctrl ghost" onclick="window.print()">🖨 Imprimir / Guardar PDF</button>
+      </div>
+    </header>
+
+    <section class="sec-box" id="apertura">
+      <h2 class="sec-title">🎤 1. Panorama General y Discurso de Apertura (60 segundos)</h2>
+      <div class="speech-box"><p><i>"Nuestro proyecto <b>JobPath</b> analiza casi <b>2 millones de registros laborales reales</b> del dataset <b>JobHop v2</b> (<code>1,993,291</code> filas crudas; <code>1,738,738</code> experiencias clasificadas con habilidades completas) integrados con el catálogo europeo oficial <b>ESCO v1.2.1</b> (<code>3,039</code> ocupaciones y <code>126,051</code> relaciones ocupación–competencia).</i></p><p><i>En lugar de aplicar métodos numéricos sobre ejemplos de juguete, llevamos las dos grandes técnicas del curso —<b>Regresión Lineal por Mínimos Cuadrados (MCO)</b> e <b>Interpolación Polinomial de Lagrange</b>— directamente sobre las <b>4 capas reales de nuestro pipeline KDD/CRISP-DM</b>, respetando al 100 % el modo solo lectura sobre <code>data/</code>.</i></p><p><i>Organizamos el estudio en <b>8 casos progresivos</b>: los <b>Casos 01 al 04</b> aplican y auditan MCO (tendencias, rechazo honesto por bajo <code>R²</code>, fallo físico por extrapolación y sensibilidad a outliers/escalado); los <b>Casos 05 y 06</b> aplican Lagrange (curva de supervivencia, Fenómeno de Runge mitigado con Chebyshev-Lobatto e interpolación inversa en PCA); el <b>Caso 07</b> enfrenta ambos métodos cara a cara para responder '¿Interpolar o ajustar?'; y el <b>Caso 08</b> certifica todo con verificación triple (fórmulas propias desde cero ↔ NumPy/SciPy ↔ 5 scripts de GeoGebra Classic), huellas <b>SHA-256 completas de 64 caracteres</b> y <b>19 pruebas automatizadas en verde</b>."</i></p></div>
+      <div class="grid2" style="margin-top:16px">
+        <div class="subcard">
+          <h4>🗂 Mapa rápido de las 4 capas de <code>data/</code> (solo lectura)</h4>
+          <div class="tbl-wrap"><table class=""><thead><tr><th>Capa</th><th>Qué guarda</th><th>Volumen / Ejemplos</th><th>En qué casos se usa</th></tr></thead><tbody><tr><td><code>01_raw/</code></td><td>Archivos crudos originales de JobHop v2 sin limpiar (<code>train</code>, <code>test</code>, <code>val</code>).</td><td><code>1,993,291</code> filas (<code>63.7 + 8.0 + 8.0 MiB</code>).</td><td>Caso 03 (<code>RL-04</code>), Caso 08 (<code>HYB-02</code>).</td></tr><tr><td><code>02_interim/</code></td><td>Catálogos limpios ESCO/ISCO/SKILLS y tablas legadas (<code>test+val</code>).</td><td><code>3,039</code> oficios, <code>126,051</code> relaciones, <code>348k</code> filas legadas.</td><td>Casos 01, 02, 04, 08.</td></tr><tr><td><code>03_processed/</code></td><td>Datasets analíticos completos en <b>Versión A</b> (con outliers) y <b>Versión B</b> (winsorizada IQR).</td><td><code>1,871,014</code> filas (<code>1,738,738</code> clasificadas; <code>~1.4 GB</code> c/u).</td><td>Casos 01, 03, 04, 05, 06, 07, 08.</td></tr><tr><td><code>04_transformed/</code></td><td>Matrices escaladas con <code>RobustScaler</code> listas para Machine Learning (<code>2,985</code> columnas).</td><td>Archivos CSV de <code>2 GB</code> a <code>8 GB</code> + <code>transformers.joblib</code>.</td><td>Caso 04 (<code>RL-05</code>), Caso 08 (<code>HYB-02</code>).</td></tr></tbody></table></div>
+        </div>
+        <div class="subcard rose">
+          <h4>🛡 Las 5 Reglas Metodológicas (<code>MR</code>) de memoria</h4>
+          <div class="tbl-wrap"><table class=""><thead><tr><th>Regla</th><th>Nombre corto</th><th>Qué garantiza en la sustentación</th></tr></thead><tbody><tr><td><b><code>MR-04</code></b></td><td><b>Nodos distintos</b></td><td>En Lagrange nunca puede haber dos nodos <code>xᵢ = xⱼ</code>, porque el denominador <code>(xᵢ − xⱼ)</code> se hace cero (división por cero). Se dispara en vivo en PCA <code>V(9) = V(10) = 1.0</code>.</td></tr><tr><td><b><code>MR-06</code></b></td><td><b>Rechazo honesto (<code>R² &lt; 0.30</code>)</b></td><td>Aunque MCO siempre dibuje una recta, si <code>R² &lt; 0.30</code> el modelo lineal se <b>rechaza explícitamente</b> (no se usa para predecir).</td></tr><tr><td><b><code>MR-07</code></b></td><td><b>No causalidad</b></td><td>Las pendientes <code>a₁</code> y correlaciones <code>r</code> describen <b>asociaciones históricas</b> en los datos; nunca prueban que <code>X</code> "cause" <code>Y</code>.</td></tr><tr><td><b><code>MR-08</code></b></td><td><b>Atribución ESCO</b></td><td>Las columnas de competencias miden <b>cuántas habilidades exige el oficio ESCO asignado al cargo</b>, nunca cuántas habilidades sabe o posee individualmente una persona.</td></tr><tr><td><b><code>MR-09</code></b></td><td><b>Censura (<code>~es_vigente</code>)</b></td><td>Todas las métricas de duración (<code>RL-01</code>, <code>RL-04</code>, <code>LG-01</code>) se calculan <b>solo sobre empleos ya terminados (<code>~es_vigente</code>)</b>, excluyendo empleos aún activos sin fecha real de fin.</td></tr></tbody></table></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="filter-bar">
+      <div class="row">
+        <b style="font-size:13px;color:var(--muted)">Filtrar casos:</b>
+        <button class="ctrl ghost on" data-f="all" onclick="filterCases('all',this)">Todos (8)</button>
+        <button class="ctrl ghost" data-f="mco" onclick="filterCases('mco',this)">Bloque 1 · MCO (01–04)</button>
+        <button class="ctrl ghost" data-f="lag" onclick="filterCases('lag',this)">Bloque 2 · Lagrange (05–06)</button>
+        <button class="ctrl ghost" data-f="hyb" onclick="filterCases('hyb',this)">Bloque 3 · Síntesis y Verif. (07–08)</button>
+      </div>
+      <div class="row">
+        <button class="ctrl ghost" onclick="toggleAllQA(true)">👁 Mostrar todas las respuestas Q&A</button>
+        <button class="ctrl ghost" onclick="toggleAllQA(false)">🙈 Ocultar Q&A (modo examen)</button>
+      </div>
+    </div>
+
+    <section id="casos">
+      
+    <article class="case-section" id="caso-01" data-block="mco">
+      <div class="case-head indigo">
+        <div>
+          <div class="row" style="gap:8px;margin-bottom:6px">
+            <span class="pill indigo">Caso 01 · Bloque 1 · MCO</span>
+            <span class="pill dark">IDEA-RL-01</span>
+            <span class="pill white">R² = 99.55 % · WLS 1.67 %</span>
+          </div>
+          <h3>Caso 01 — IDEA-RL-01: Pasos de Carrera (k=1..10)</h3>
+          <p class="case-files">Fuentes verificadas: <code>rl01_career_step_profile.csv</code>, <code>rl01_summation_and_residuals_skills.csv</code>, <code>rl01_ols_summary.csv</code>, <code>rl01_extrapolation_audit.csv</code></p>
+        </div>
+        <div class="row" style="flex-shrink:0">
+          <a class="btn indigo" href="../01_IDEA_RL_01_Pasos_Carrera_MCO/presentacion_IDEA_RL_01.html">▶ Abrir Diapositivas HTML</a>
+          <a class="btn ghost" href="../01_IDEA_RL_01_Pasos_Carrera_MCO/GUIA_FACIL_IDEA_RL_01.md" target="_blank">📖 Guía Fácil (.md)</a>
+        </div>
+      </div>
+      <div class="case-body">
+        
+      <div class="grid2" style="margin-top:12px">
+        <div class="subcard">
+          <h4>⏱ En 30 segundos ("Si solo tienes 1 minuto, di esto")</h4>
+          <p>Ordenamos los <code>1,738,738</code> empleos clasificados por el número secuencial de empleo de cada hoja de vida (<code>k = 1, 2, ..., 10</code>) y ajustamos rectas por Mínimos Cuadrados (MCO) para ver cómo evolucionan las competencias exigidas por el cargo, la reincidencia en el oficio, la duración de empleos cerrados y la intensidad verde.</p>
+        </div>
+        <div class="subcard teal">
+          <h4>💡 Analogía lista para contar en voz alta</h4>
+          <p><i>Colocar una regla transparente sobre los puntos de estatura promedio de niños de 1 a 10 años, buscando que los "saltitos" verticales al cuadrado sean lo más pequeños posible en vez de unir punto a punto el ruido.</i></p>
+        </div>
+      </div>
+        
+      <div class="subcard" style="margin-top:12px">
+        <h4>📂 Problema, capa de datos, variables y reglas aplicadas</h4>
+        <ul class="clean"><li><b>Capa:</b> <code>03_processed</code> (Versión A, <code>1,738,738</code> filas clasificadas) + <code>02_interim/ESCO/greenShareOcc_en_limpio.csv</code>.</li><li><b>Variable <code>X</code>:</b> <code>job_order</code> (<code>k = 1..10</code> para entrenamiento; <code>k = 11, 12, 15</code> retenidos para probar extrapolación).</li><li><b>Variables <code>Y</code>:</b> <code>mean_skills</code> (promedio de habilidades esenciales ESCO del oficio), <code>reincide_rate</code> (proporción de empleos cuyo oficio se repite en la trayectoria), <code>mean_dur_q</code> (duración media en trimestres solo sobre empleos cerrados <code>~es_vigente</code>), <code>mean_green</code> (intensidad verde promedio ESCO).</li><li><b>Reglas activas:</b> <code>MR-07</code>, <code>MR-08</code>, <code>MR-09</code> (<code>~es_vigente</code>) + control de cohorte fija (<code>≥10</code> empleos) + verificación ponderada <b>WLS</b>.</li></ul>
+      </div>
+        
+      <div class="subcard indigo" style="margin-top:12px">
+        <h4>∑ Fórmulas explicadas símbolo por símbolo</h4>
+        <div class="stack" style="gap:8px;margin-bottom:10px"><div class="formula" data-plain="ŷ(k) = a₀ + a₁·k,   a₁ = [n·Σ(kᵢyᵢ) − (Σkᵢ)(Σyᵢ)] / [n·Σkᵢ² − (Σkᵢ)²],   a₀ = ȳ − a₁·k̄">$$\hat{y}(k) = a_0 + a_1 k, \qquad a_1 = \frac{n\sum k_i y_i - \sum k_i \sum y_i}{n\sum k_i^2 - (\sum k_i)^2}, \qquad a_0 = \bar{y} - a_1 \bar{k}$$</div><div class="formula" data-plain="R² = (Sₜ − Sᵣ) / Sₜ,   S_{y/x} = √(Sᵣ / (n − 2))">$$R^2 = \frac{S_t - S_r}{S_t}, \qquad S_{y/x} = \sqrt{\frac{S_r}{n - 2}}$$</div></div>
+        <ul class="clean"><li><code>k</code>: número de paso de carrera (<code>1</code> a <code>10</code>).</li><li><code>a₀</code>: intercepto (nivel base teórico en <code>k = 0</code>; para <code>mean_skills</code>, <code>22.5160</code>).</li><li><code>a₁</code>: pendiente (cuánto cambia el promedio por cada escalón adicional; <code>+0.2250</code> competencias ESCO por paso).</li><li><code>Sₜ</code>: suma total de desviaciones al cuadrado respecto a la media (<code>4.1944</code>).</li><li><code>Sᵣ</code>: suma de residuos al cuadrado <code>Σ(yᵢ − ŷᵢ)²</code> que MCO minimiza (<code>0.0189</code>).</li><li><code>R²</code>: fracción de varianza explicada por la recta (<code>99.55 %</code>, casi línea recta perfecta).</li><li><code>S_{y/x}</code>: error típico vertical en las mismas unidades de <code>Y</code> (<code>0.0486</code> habilidades); <code>n − 2 = 8</code> son los grados de libertad porque se estimaron 2 parámetros (<code>a₀</code> y <code>a₁</code>).</li><li><b>Cuidado clásico del curso:</b> nunca confundir <code>∑kᵢ² = 385</code> con <code>(∑kᵢ)² = 55² = 3,025</code>.</li></ul>
+      </div>
+        
+      <div class="subcard" style="margin-top:12px">
+        <h4>🔎 Cadena exacta de evidencia: Dato CSV → Cálculo → Control → Conclusión</h4>
+        <div class="tbl-wrap"><table class=""><thead><tr><th>Pregunta / Hallazgo</th><th>Dato de entrada (<code>CSV</code>)</th><th>Cálculo exacto</th><th>Control / Verificación</th><th>Conclusión defendible</th></tr></thead><tbody><tr><td><b>1. Crecimiento de competencias exigidas</b></td><td><code>rl01_summation_and_residuals_skills.csv</code> (<code>n=10</code>, <code>∑k=55</code>, <code>∑y=237.5338</code>)</td><td><code>a₀ = 22.5160</code>, <code>a₁ = +0.2250</code>, <code>R² = 0.9955</code>, <code>Sy/x = 0.0486</code></td><td>Centroide <code>(5.5, 23.7534)</code> exacto (<code>err = 0.0</code>); <code>polyfit</code> diff <code>3.55e-15</code>; <b>WLS</b> <code>a₁ = +0.2287</code> (<b>diff solo <code>1.67 %</code></b>); Cohorte <code>≥10</code> mantiene <code>R² = 0.9529</code> (<code>a₁ = +0.2026</code>).</td><td>La complejidad ocupacional ESCO sube casi linealmente con el paso de carrera y es robusta frente al tamaño desigual de cada paso (<code>352k</code> vs <code>25k</code>).</td></tr><tr><td><b>2. Duración laboral cerrada y fallo al extrapolar</b></td><td><code>rl01_career_step_profile.csv</code> (<code>~es_vigente</code>, <code>n_closed_rows</code> de <code>336,800</code> a <code>23,465</code>)</td><td><code>a₀ = 13.2330</code>, <code>a₁ = -0.8565</code>, <code>R² = 0.9233</code>, <code>Sy/x = 0.7928</code></td><td>Extrapolación en <code>rl01_extrapolation_audit.csv</code>: en <code>k = 15</code> la recta predice <code>0.3852</code> trim., pero el dato real cerrado se estabiliza en <code>4.2601</code> (error <code>3.8749</code> trim.).</td><td>Aplicar <code>MR-09</code> mejora <code>R²</code> (<code>0.9050 → 0.9233</code>), pero la caída es <b>convexa</b>: nunca extrapoles una recta fuera del rango <code>k = 1..10</code>.</td></tr><tr><td><b>3. Paradoja de Simpson en <code>mean_green</code></b></td><td><code>rl01_ols_summary.csv</code> (Universo vs. Cohorte <code>≥10</code>)</td><td>Universo: <code>a₁ = -0.000219</code> (<code>R² = 0.7877</code>). Cohorte <code>≥10</code>: <b><code>a₁ = +0.000183</code></b> (<code>R² = 0.7310</code>).</td><td>Al fijar exactamente las mismas personas (<code>≥10</code> empleos), el signo de la pendiente <b>se invierte</b>.</td><td>La caída aparente global en intensidad verde es un <b>efecto composición</b> (salen perfiles de carreras cortas); dentro de la misma cohorte la tendencia es levemente positiva.</td></tr><tr><td><b>4. Sesgo en <code>reincide_rate</code></b></td><td><code>rl01_ols_summary.csv</code></td><td>Universo: <code>R² = 0.9625</code> (<code>a₁ = +0.0213</code>). Cohorte <code>≥10</code>: <code>R² = 0.4475</code> (<code>a₁ = +0.0072</code>).</td><td>Caída fuerte de pendiente y <code>R²</code> al controlar la longitud de carrera.</td><td>Parte del aumento en reincidencia es mecánico (personas con más empleos tienen más oportunidades de repetir oficio).</td></tr></tbody></table></div>
+      </div>
+        
+      <div class="grid2" style="margin-top:12px">
+        <div class="subcard amber">
+          <h4>🎬 Qué mostrar en vivo (Simulador · Gráfica · GeoGebra)</h4>
+          <ul class="clean"><li><b>Simulador (Diap. 4):</b> Mueve el slider a <code>k = 5</code> (verde, dentro del rango), luego pulsa <b><code>Extrap. k=12</code></b> (muestra que <code>mean_skills</code> apenas falla <code>0.023</code>) y <b><code>Extrap. k=15</code></b> (muestra que duración cerrada falla <code>3.87</code> trimestres!).</li><li><b>Gráficas (Diap. 5):</b> Haz clic para zoom en la Figura 1 (señala el centroide y la zona sombreada <code>k &gt; 10</code>) y Figura 2 (muestra los cuadraditos de residuos <code>eᵢ²</code> que suman <code>Sᵣ = 0.0189</code>).</li><li><b>GeoGebra (Diap. 7):</b> Señala <code>FitLine(P)</code>, <code>RSquare(P, f) = 0.9955</code> y <code>Centroid = (5.5, 23.7534)</code>.</li></ul>
+        </div>
+        <div class="subcard">
+          <h4>🛡 Salvaguardas al hablar (Qué SÍ decir vs. Qué NUNCA decir)</h4>
+          <div class="tbl-wrap"><table class="say-table"><thead><tr><th>✅ Frase correcta (aprobada)</th><th>❌ Frase prohibida (error grave)</th></tr></thead><tbody><tr><td class="say-ok"><i>"En promedio, los cargos ocupados en pasos posteriores exigen +0.225 competencias ESCO más por escalón."</i></td><td class="say-bad"><i>"Cambiar de trabajo hace que la persona aprenda 0.225 habilidades nuevas cada vez."</i> (Viola <code>MR-07</code> y <code>MR-08</code>).</td></tr><tr><td class="say-ok"><i>"Confirmamos con WLS que el menor volumen en <code>k=10</code> (<code>25k</code> vs <code>352k</code>) solo cambia la pendiente de <code>mean_skills</code> en 1.67 %."</i></td><td class="say-bad"><i>"Usamos MCO simple porque todos los pasos tienen el mismo peso estadístico."</i></td></tr></tbody></table></div>
+        </div>
+      </div>
+        
+      <div class="subcard rose" style="margin-top:12px">
+        <h4>🎯 Preguntas "corchadoras" del docente (clic para practicar tu respuesta)</h4>
+        <div class="stack" style="gap:8px">
+          <details class="qa-card">
+            <summary><span class="qa-tag">Pregunta difícil</span> <b>¿Por qué no hicieron la regresión sobre las 1.74 millones de filas directamente en vez de 10 promedios?</b></summary>
+            <div class="qa-ans"><b>Respuesta ganadora:</b> Porque aquí buscamos replicar la tabla paso a paso de sumatorias (<code>n = 10</code>, verificable a mano y en GeoGebra) para modelar la tendencia media por escalón <code>k</code>; para cubrir el riesgo de agregación ecológica y distinto tamaño <code>n_k</code> (<code>352k</code> vs <code>25k</code>), añadimos la auditoría <b>WLS</b> (<code>1.67 %</code> de diferencia en <code>mean_skills</code>) y el control de cohorte <code>≥10</code> (que destapó la Paradoja de Simpson en <code>mean_green</code>).</div>
+          </details>
+          <details class="qa-card">
+            <summary><span class="qa-tag">Pregunta difícil</span> <b>¿Por qué la suma de residuos <code>∑eᵢ = 0</code> no sirve como criterio para hallar la mejor recta?</b></summary>
+            <div class="qa-ans"><b>Respuesta ganadora:</b> Porque los errores positivos y negativos se cancelan entre sí: <b>cualquier recta</b> que pase por el centroide <code>(5.5, 23.7534)</code> tiene <code>∑eᵢ = 0</code>, incluso una recta pésima. Por eso MCO minimiza la suma de los <b>cuadrados</b> <code>Sᵣ = ∑eᵢ²</code>. ---</div>
+          </details></div>
+      </div>
+      </div>
+    </article>
+
+    <article class="case-section" id="caso-02" data-block="mco">
+      <div class="case-head indigo">
+        <div>
+          <div class="row" style="gap:8px;margin-bottom:6px">
+            <span class="pill indigo">Caso 02 · Bloque 1 · MCO</span>
+            <span class="pill dark">IDEA-RL-02</span>
+            <span class="pill white">57.9 % transf. · Verde R² ≈ 0</span>
+          </div>
+          <h3>Caso 02 — IDEA-RL-02: Catálogo ESCO y Rechazo R²</h3>
+          <p class="case-files">Fuentes verificadas: <code>rl02_esco_catalog_ols.csv</code>, <code>rl02_isco_major_group_slopes.csv</code></p>
+        </div>
+        <div class="row" style="flex-shrink:0">
+          <a class="btn indigo" href="../02_IDEA_RL_02_Catalogo_ESCO_MCO/presentacion_IDEA_RL_02.html">▶ Abrir Diapositivas HTML</a>
+          <a class="btn ghost" href="../02_IDEA_RL_02_Catalogo_ESCO_MCO/GUIA_FACIL_IDEA_RL_02.md" target="_blank">📖 Guía Fácil (.md)</a>
+        </div>
+      </div>
+      <div class="case-body">
+        
+      <div class="grid2" style="margin-top:12px">
+        <div class="subcard">
+          <h4>⏱ En 30 segundos ("Si solo tienes 1 minuto, di esto")</h4>
+          <p>Analizamos los <code>3,039</code> oficios del catálogo europeo ESCO v1.2.1 (<code>126,051</code> relaciones) para medir qué fracción de las habilidades de un oficio es transferible a otros sectores (<code>57.9 %</code> en promedio, llegando a <code>74.0 %</code> en Gerentes) y demostrar <b>cuándo la honestidad numérica obliga a rechazar una recta</b> (<code>greenShare</code> tiene <code>R² = 0.00004</code>).</p>
+        </div>
+        <div class="subcard teal">
+          <h4>💡 Analogía lista para contar en voz alta</h4>
+          <p><i>Una caja de herramientas: de cada 10 herramientas extra que exige un oficio, casi 6 son universales (<code>cross-sector</code>) y 4 son de nicho. En cambio, intentar adivinar si un oficio es ecológico contando cuántas habilidades tiene es como adivinar el color de un carro midiendo su peso (<code>R² ≈ 0</code>).</i></p>
+        </div>
+      </div>
+        
+      <div class="subcard" style="margin-top:12px">
+        <h4>📂 Problema, capa de datos, variables y reglas aplicadas</h4>
+        <ul class="clean"><li><b>Capa:</b> <code>02_interim/ESCO/</code> y <code>02_interim/SKILLS/</code> (<code>3,039</code> ocupaciones con <code>100 %</code> cobertura <code>greenShare</code>, agrupadas en los <code>10</code> grandes grupos ISCO-08).</li><li><b>Reglas activas:</b> <b><code>MR-06</code> (semáforo <code>R²</code>)</b>, <code>MR-07</code>, <code>MR-08</code>.</li><li>🟢 <b>Fuerte:</b> <code>R² ≥ 0.70</code> | 🟡 <b>Moderado:</b> <code>0.30 ≤ R² &lt; 0.70</code> | 🔴 <b>Rechazado:</b> <code>R² &lt; 0.30</code>.</li></ul>
+      </div>
+        
+      <div class="subcard indigo" style="margin-top:12px">
+        <h4>∑ Fórmulas explicadas símbolo por símbolo</h4>
+        <div class="stack" style="gap:8px;margin-bottom:10px"><div class="formula" data-plain="cross_sector_estimado = a₀ + a₁ · total_rel">$$\widehat{\text{cross\_sector}} = a_0 + a_1 \cdot \text{total\_rel}$$</div></div>
+        <ul class="clean"><li><code>total_rel</code>: total de relaciones de habilidades de un oficio en ESCO (<code>competencias + conocimientos</code>).</li><li><code>cross_sector</code>: habilidades reutilizables entre distintos sectores industriales.</li><li><code>a₁ = 0.5786</code>: tasa marginal de transferibilidad (<code>+57.9 %</code> de cada habilidad extra vinculada a un oficio es intersectorial).</li><li><code>greenShare</code>: proporción de habilidades ligadas a la transición ecológica en el oficio ESCO.</li></ul>
+      </div>
+        
+      <div class="subcard" style="margin-top:12px">
+        <h4>🔎 Cadena exacta de evidencia: Dato CSV → Cálculo → Control → Conclusión</h4>
+        <div class="tbl-wrap"><table class=""><thead><tr><th>Hallazgo</th><th>Dato (<code>CSV</code>)</th><th>Resultado exacto</th><th>Control crítico</th><th>Conclusión defendible</th></tr></thead><tbody><tr><td><b>1. Transferibilidad global</b></td><td><code>rl02_esco_catalog_ols.csv</code> (<code>n = 3,039</code>)</td><td><code>a₀ = -0.7983</code>, <code>a₁ = +0.5786</code>, <code>R² = 0.5670</code> (🟡 Moderado)</td><td><code>n_cross_sector</code> es subconjunto de <code>n_total_rel</code> (<b>acople parte-todo</b>): <code>a₁</code> se interpreta como proporción marginal estructural.</td><td>Por cada 10 habilidades adicionales en un oficio ESCO, en promedio ~5.8 son transferibles a otros sectores.</td></tr><tr><td><b>2. Contrastes fuertes por composición interna</b></td><td><code>rl02_esco_catalog_ols.csv</code> (<code>n = 3,039</code>)</td><td><code>n_ess_comp → n_essential</code>: <code>R² = 0.8643</code>; <code>n_competence → n_total_rel</code>: <code>R² = 0.7319</code></td><td><b>Advertencia parte-todo:</b> como <code>X</code> es un sumando de <code>Y</code>, la covarianza matemática infla <code>R²</code>; describe estructura taxonómica, no predicción externa.</td><td>Las competencias (vs. conocimientos) explican la mayor parte del volumen esencial de ESCO.</td></tr><tr><td><b>3. Mitos desmontados (Rechazos <code>MR-06</code>)</b></td><td><code>rl02_esco_catalog_ols.csv</code> (<code>n = 3,039</code>)</td><td><code>essential → optional</code>: <code>R² = 0.0140</code>; <code>essential → greenShare</code>: <b><code>R² = 0.000045</code></b>; <code>knowledge → greenShare</code>: <code>R² = 0.0043</code></td><td>Todos <code>&lt; 0.30</code> → <b>🔴 Rechazados</b>.</td><td>Tener más habilidades esenciales <b>no</b> hace a un oficio más "verde" ni le da más habilidades opcionales (ortogonalidad).</td></tr><tr><td><b>4. Brecha por grupo ISCO-08 y rechazo en centroides</b></td><td><code>rl02_isco_major_group_slopes.csv</code> (<code>10</code> grupos)</td><td>Campeón: <b>ISCO-1 Gerentes</b> (<code>a₁ = 74.0 %</code>, <code>R² = 0.7541</code>). Mínimos: <b>ISCO-9 Elementales</b> (<code>31.3 %</code>) y <b>ISCO-6 Agricultura</b> (<code>33.3 %</code>, aunque tiene el mayor <code>greenShare = 13.7 %</code>!). <b>ISCO-5 Servicios</b> queda <b>🔴 Rechazado (<code>R² = 0.2687</code>)</b>.</td><td>Al resumir los <code>3,039</code> oficios en los <code>10</code> centroides ISCO (<code>ggb_rl02</code>), <b>Agricultura (<code>46.6</code> totales vs <code>12.3</code> transferibles)</b> desploma <code>R²</code> a <b><code>0.2800</code> (🔴 Rechazado <code>MR-06</code>)</b>.</td><td>La transferibilidad depende fuertemente del sector; promediar en 10 centroides oculta la dispersión interna y obliga a rechazar la recta agregada (<code>Q_pred(45) = 22.93</code> es solo chequeo aritmético).</td></tr></tbody></table></div>
+      </div>
+        
+      <div class="grid2" style="margin-top:12px">
+        <div class="subcard amber">
+          <h4>🎬 Qué mostrar en vivo (Simulador · Gráfica · GeoGebra)</h4>
+          <ul class="clean"><li><b>Simulador ISCO-08 (Diap. 4):</b> Haz clic en <b>Grupo 1</b> (<code>🟢 Fuerte 75.4 %, 74.0 % transferible</code>), luego en <b>Grupo 6</b> (<code>Agricultura: 33.3 % transferible</code>) y finalmente en <b>Grupo 5</b> para mostrar en vivo la alerta roja <b><code>🔴 Semáforo MR-06: RECHAZADO (26.9 %)</code></b>!</li><li><b>GeoGebra (Diap. 7):</b> Resalta la línea <code># WARNING (MR-06): R2 = 0.2800 &lt; 0.30 -&gt; REJECTED</code> dentro del bloque de comandos.</li></ul>
+        </div>
+        <div class="subcard">
+          <h4>🛡 Salvaguardas al hablar (Qué SÍ decir vs. Qué NUNCA decir)</h4>
+          <div class="tbl-wrap"><table class="say-table"><thead><tr><th>✅ Frase correcta</th><th>❌ Frase prohibida</th></tr></thead><tbody><tr><td class="say-ok"><i>"En los 2 modelos fuertes (<code>0.86</code> y <code>0.73</code>), <code>X</code> es parte de <code>Y</code>; por eso los reportamos como tasas estructurales del catálogo ESCO."</i></td><td class="say-bad"><i>"Descubrimos un modelo predictivo independiente con <code>R² = 0.86</code>."</i></td></tr><tr><td class="say-ok"><i>"El punto <code>Q_pred(45) = 22.93</code> en GeoGebra valida la aritmética de la recta, pero el modelo está rechazado por <code>MR-06</code> (<code>R² = 0.28</code>)."</i></td><td class="say-bad"><i>"Según GeoGebra, un oficio con 45 habilidades tendrá exactamente 22.93 habilidades transferibles."</i></td></tr></tbody></table></div>
+        </div>
+      </div>
+        
+      <div class="subcard rose" style="margin-top:12px">
+        <h4>🎯 Preguntas "corchadoras" del docente (clic para practicar tu respuesta)</h4>
+        <div class="stack" style="gap:8px">
+          <details class="qa-card">
+            <summary><span class="qa-tag">Pregunta difícil</span> <b>Si <code>R² = 0.28</code> en los 10 centroides ISCO está rechazado, ¿por qué incluyeron ese archivo en GeoGebra?</b></summary>
+            <div class="qa-ans"><b>Respuesta ganadora:</b> Precisamente para cumplir la lección de la Diapositiva 13 del curso: demostrar en vivo que MCO siempre calcula una recta exacta (<code>FitLine</code>, error <code>1.07e-14</code> vs NumPy), pero que el criterio ingenieril (<code>MR-06</code>) nos exige rechazarla al ver <code>RSquare = 0.2800</code> y detectar el residuo extremo del grupo 6 (Agricultura, <code>e₆ ≈ -11.33</code>).</div>
+          </details>
+          <details class="qa-card">
+            <summary><span class="qa-tag">Pregunta difícil</span> <b>¿Por qué <code>greenShare</code> dio <code>R² = 0.00004</code> frente a <code>n_essential</code>?</b></summary>
+            <div class="qa-ans"><b>Respuesta ganadora:</b> Porque un oficio ecológico depende del <b>tipo temático de tareas</b> (ej. Agricultura/silvicultura tiene <code>13.7 %</code> verde, el más alto), no de la cantidad total de habilidades que exige el cargo. ---</div>
+          </details></div>
+      </div>
+      </div>
+    </article>
+
+    <article class="case-section" id="caso-03" data-block="mco">
+      <div class="case-head indigo">
+        <div>
+          <div class="row" style="gap:8px;margin-bottom:6px">
+            <span class="pill indigo">Caso 03 · Bloque 1 · MCO</span>
+            <span class="pill dark">IDEA-RL-04</span>
+            <span class="pill white">R² = 97.29 % → −4.96 en 2027</span>
+          </div>
+          <h3>Caso 03 — IDEA-RL-04: Deriva Anual y Extrapolación 2027</h3>
+          <p class="case-files">Fuentes verificadas: <code>rl04_annual_macro_series.csv</code>, <code>rl04_ols_regime_comparison.csv</code>, <code>rl04_extrapolation_failure_audit.csv</code>, <code>rl04_raw_partition_parity.csv</code></p>
+        </div>
+        <div class="row" style="flex-shrink:0">
+          <a class="btn indigo" href="../03_IDEA_RL_04_Deriva_Anual_Extrapolacion/presentacion_IDEA_RL_04.html">▶ Abrir Diapositivas HTML</a>
+          <a class="btn ghost" href="../03_IDEA_RL_04_Deriva_Anual_Extrapolacion/GUIA_FACIL_IDEA_RL_04.md" target="_blank">📖 Guía Fácil (.md)</a>
+        </div>
+      </div>
+      <div class="case-body">
+        
+      <div class="grid2" style="margin-top:12px">
+        <div class="subcard">
+          <h4>⏱ En 30 segundos ("Si solo tienes 1 minuto, di esto")</h4>
+          <p>Estudiamos 20 años del mercado laboral (<code>2000–2019</code>) y demostramos <b>tres lecciones clave de MCO</b>: (1) incluir los 4 años censurados al final (<code>2020–2023</code>, con solo <code>59, 3, 3, 1</code> inicios) invierte el signo de la pendiente y desploma <code>R²</code> (<code>0.75 → 0.08</code>); (2) centrar el año en <code>t = año − 2000</code> hace interpretable <code>a₀</code> y mejora <code>4,672×</code> la estabilidad numérica; y (3) extrapolar una recta con <code>R² = 97.29 %</code> produce <b>duraciones laborales negativas (<code>-0.20</code> desde 2021 hasta <code>-4.96</code> en 2027)</b>.</p>
+        </div>
+        <div class="subcard teal">
+          <h4>💡 Analogía lista para contar en voz alta</h4>
+          <p><i>Tu café caliente baja 4 °C por minuto de 80 °C a 40 °C en 10 minutos; si estiras la recta al minuto 30, predice <code>-40 °C</code> (congelado), lo cual es físicamente imposible.</i></p>
+        </div>
+      </div>
+        
+      <div class="subcard" style="margin-top:12px">
+        <h4>📂 Problema, capa de datos, variables y reglas aplicadas</h4>
+        <ul class="clean"><li><b>Capas:</b> <code>03_processed</code> (serie anual <code>2000–2023</code>, <code>1,509,997</code> inicios en <code>2000–2019</code>) + <code>01_raw</code> (<code>1,993,291</code> filas crudas para auditar paridad <code>train/test/val</code>).</li><li><b>Reglas activas:</b> <b><code>MR-09</code> (<code>~es_vigente</code>)</b> estricta en <code>mean_dur_q</code>, <code>MR-06</code>, <code>MR-07</code>, <code>MR-08</code>.</li></ul>
+      </div>
+        
+      <div class="subcard indigo" style="margin-top:12px">
+        <h4>∑ Fórmulas explicadas símbolo por símbolo</h4>
+        <div class="stack" style="gap:8px;margin-bottom:10px"><div class="formula" data-plain="dur_estimada(t) = 16.4417 − 0.7926 · (año − 2000)">$$\widehat{\text{dur}}(t) = 16.4417 - 0.7926 \cdot (\text{año} - 2000)$$</div></div>
+        <ul class="clean"><li><code>t = año − 2000</code>: tiempo centrado (<code>t = 0</code> en el año 2000, <code>t = 19</code> en 2019, <code>t = 27</code> en 2027).</li><li><code>a₀ = 16.4417</code>: duración promedio esperada (en trimestres) para un empleo cerrado iniciado en el año 2000. <i>(Sin centrar daba <code>+1,601.64</code> trimestres en el año 0 d. C., sin sentido físico).</i></li><li><code>a₁ = -0.7926</code>: caída promedio por cada año posterior (<code>-0.79</code> trimestres/año).</li><li><b>Cruce por cero:</b> <code>t₀ = 16.4417 / 0.7926 = 20.74</code> → año <b><code>2020.74</code></b> (por eso desde <code>2021</code> ya es negativo!).</li></ul>
+      </div>
+        
+      <div class="subcard" style="margin-top:12px">
+        <h4>🔎 Cadena exacta de evidencia: Dato CSV → Cálculo → Control → Conclusión</h4>
+        <div class="tbl-wrap"><table class=""><thead><tr><th>Hallazgo</th><th>Dato (<code>CSV</code>)</th><th>Resultado exacto</th><th>Control crítico</th><th>Conclusión defendible</th></tr></thead><tbody><tr><td><b>1. Efecto palanca de la cola censurada</b></td><td><code>rl04_ols_regime_comparison.csv</code> (<code>mean_skills</code>)</td><td><code>2000–2019 (n=20)</code>: <code>a₁ = +0.0967</code>, <code>R² = 0.7475</code>. <code>2000–2023 (n=24)</code>: <b><code>a₁ = -0.1011</code>, <code>R² = 0.0826</code></b> (Rechazado).</td><td>En <code>2020–2023</code> solo hay <code>59, 3, 3, 1</code> inicios (<code>mean_skills</code> cae a <code>14.0</code> con <code>n=1</code>). Por residuos al cuadrado + alto apalancamiento en el borde, esos 4 puntos voltean la recta.</td><td>Nunca ajustes MCO sin revisar primero el soporte muestral por periodo.</td></tr><tr><td><b>2. Filtro <code>MR-09</code> elimina rebote falso de 2019</b></td><td><code>rl04_annual_macro_series.csv</code> (<code>mean_dur_q</code> vs. <code>mean_dur_q_incl_active</code>)</td><td>Con vigentes: 2018 <code>6.61 →</code> 2019 <code>8.31</code> (rebote artificial, <code>R² = 0.9288</code>). Solo cerrados (<code>~es_vigente</code>): <b>2018 <code>3.14 →</code> 2019 <code>2.27</code> (<code>R² = 0.9729</code>)</b>.</td><td>Excluir empleos activos (<code>es_vigente == True</code>, imputados a <code>2026-Q1</code>) devuelve coherencia total con <code>RL-01</code> y <code>LG-01</code>.</td><td>El rebote de 2019 era un artefacto de censura; filtrando <code>~es_vigente</code> el ajuste interno sube a <code>R² = 97.29 %</code>.</td></tr><tr><td><b>3. Alto <code>R²</code> NO legitima extrapolar</b></td><td><code>rl04_extrapolation_failure_audit.csv</code></td><td><code>2020</code>: <code>+0.59</code> · <code>2021</code>: <b><code>-0.20</code></b> · <code>2026</code>: <code>-4.17</code> · <code>2027</code>: <b><code>-4.96</code> trimestres</b> (<code>physically_invalid = True</code>).</td><td>Un empleo iniciado en 2019 y ya cerrado no pudo durar 10 años (censura derecha calendario).</td><td>Un <code>R² = 97.29 %</code> describe el pasado censurado, pero extrapolar produce valores físicamente imposibles desde 2021.</td></tr><tr><td><b>4. Centrado numérico y paridad <code>01_raw</code></b></td><td><code>rl04_ols_regime_comparison.csv</code> y <code>rl04_raw_partition_parity.csv</code></td><td>Diff vs <code>polyfit</code> en <code>mean_dur_q</code>: <code>1.66e-11</code> (sin centrar) → <b><code>3.55e-15</code></b> (centrado, <b><code>4,672×</code></b> mejor). En <code>01_raw</code>: <code>train/test/val</code> tienen pendientes casi iguales (<code>+0.1855 / +0.1808 / +0.1848 %/año</code>).</td><td>Centrar evita cancelación numérica (<code>2010²</code>) sin alterar <code>a₁</code>, <code>R²</code> ni <code>Sy/x</code>; <code>01_raw</code> prueba ausencia de sesgo de división.</td><td>Siempre centrar el eje temporal en MCO; las 3 particiones crudas de JobHop v2 son temporalmente homogéneas.</td></tr></tbody></table></div>
+      </div>
+        
+      <div class="grid2" style="margin-top:12px">
+        <div class="subcard amber">
+          <h4>🎬 Qué mostrar en vivo (Simulador · Gráfica · GeoGebra)</h4>
+          <ul class="clean"><li><b>Simulador (Diap. 4):</b> Pulsa <b><code>2005 (Válido)</code></b> (verde), <b><code>2019 (Borde)</code></b>, <b><code>2023 (Censurado)</code></b> (ya sale rojo <code>-1.79</code>!) y <b><code>2027 (¡Falla!)</code></b> (<code>-4.96 trimestres · FÍSICAMENTE IMPOSIBLE</code>).</li><li><b>Tabla (Diap. 6):</b> Señala las dos filas de <code>mean_dur_q (cerr.)</code>: <code>Sin centrar (a₀ = 1,601.64, diff 1.66e-11)</code> vs. <code>Centrado (a₀ = 16.4417, diff 3.55e-15)</code> con exactamente el mismo <code>a₁</code> y <code>R²</code>.</li><li><b>GeoGebra (Diap. 7):</b> Muestra que <code>Q_pred = (27, -4.9585)</code> cae visualmente muy por debajo del eje X.</li></ul>
+        </div>
+        <div class="subcard">
+          <h4>🛡 Salvaguardas al hablar (Qué SÍ decir vs. Qué NUNCA decir)</h4>
+          <div class="tbl-wrap"><table class="say-table"><thead><tr><th>✅ Frase correcta</th><th>❌ Frase prohibida</th></tr></thead><tbody><tr><td class="say-ok"><i>"La caída de <code>-0.79</code> trimestres/año en duración cerrada refleja censura calendario derecha, no necesariamente que los empleos duren cada vez menos en la economía."</i></td><td class="say-bad"><i>"Los empleos duran cada año 0.79 trimestres menos y en 2027 durarán menos de cero."</i></td></tr><tr><td class="say-ok"><i>"Centrar <code>t = año − 2000</code> deja intactos <code>a₁</code>, <code>R²</code> y <code>Sy/x</code>, pero hace interpretable <code>a₀</code> y gana <code>4,672×</code> en precisión."</i></td><td class="say-bad"><i>"Centrar <code>t − 2000</code> mejora el <code>R²</code> del modelo."</i> (¡Falso! <code>R²</code> es invariante a traslaciones).</td></tr></tbody></table></div>
+        </div>
+      </div>
+        
+      <div class="subcard rose" style="margin-top:12px">
+        <h4>🎯 Preguntas "corchadoras" del docente (clic para practicar tu respuesta)</h4>
+        <div class="stack" style="gap:8px">
+          <details class="qa-card">
+            <summary><span class="qa-tag">Pregunta difícil</span> <b>Si excluyeron los empleos vigentes (<code>~es_vigente</code>), ¿por qué la duración igual cae en línea recta hacia 2019?</b></summary>
+            <div class="qa-ans"><b>Respuesta ganadora:</b> Porque incluso entre empleos ya cerrados existe <b>censura derecha calendario</b>: un empleo iniciado en 2000 tuvo hasta 20 años para cerrarse con duraciones largas, mientras que uno iniciado en 2019 y ya cerrado antes del corte del dataset solo pudo haber durado unos pocos trimestres. Para proyectar duraciones al futuro habría que usar modelos de supervivencia (Kaplan-Meier / Cox), no extrapolación lineal.</div>
+          </details>
+          <details class="qa-card">
+            <summary><span class="qa-tag">Pregunta difícil</span> <b>¿Por qué sin centrar se pierde precisión frente a <code>numpy.polyfit</code>?</b></summary>
+            <div class="qa-ans"><b>Respuesta ganadora:</b> Porque <code>n∑x²</code> y <code>(∑x)²</code> con <code>x ≈ 2010</code> valen ambos <code>~1.615 × 10⁹</code> y coinciden en sus primeros 5 dígitos; al restarlos ocurre <b>cancelación catastrófica</b> en punto flotante <code>float64</code>. ---</div>
+          </details></div>
+      </div>
+      </div>
+    </article>
+
+    <article class="case-section" id="caso-04" data-block="mco">
+      <div class="case-head indigo">
+        <div>
+          <div class="row" style="gap:8px;margin-bottom:6px">
+            <span class="pill indigo">Caso 04 · Bloque 1 · MCO</span>
+            <span class="pill dark">IDEA-RL-05</span>
+            <span class="pill white">Sy/x −21.9 % · Err 7.22e-14</span>
+          </div>
+          <h3>Caso 04 — IDEA-RL-05: Outliers (4 Vías) e Invarianza Afín</h3>
+          <p class="case-files">Fuentes verificadas: <code>rl05_four_way_outlier_comparison.csv</code>, <code>rl05_affine_scale_invariance.csv</code></p>
+        </div>
+        <div class="row" style="flex-shrink:0">
+          <a class="btn indigo" href="../04_IDEA_RL_05_Outliers_E_Invarianza_Escala/presentacion_IDEA_RL_05.html">▶ Abrir Diapositivas HTML</a>
+          <a class="btn ghost" href="../04_IDEA_RL_05_Outliers_E_Invarianza_Escala/GUIA_FACIL_IDEA_RL_05.md" target="_blank">📖 Guía Fácil (.md)</a>
+        </div>
+      </div>
+      <div class="case-body">
+        
+      <div class="grid2" style="margin-top:12px">
+        <div class="subcard">
+          <h4>⏱ En 30 segundos ("Si solo tienes 1 minuto, di esto")</h4>
+          <p>Auditamos dos decisiones de ingeniería de datos sobre <code>1,738,738</code> empleos: (1) comparar <b>4 estrategias frente a outliers</b> (dejar crudo, winsorizar con IQR, limpio legado y borrar filas) mostrando que winsorizar reduce el error típico <code>Sy/x</code> en <b><code>-21.9 %</code></b> sin perder ni un registro (frente a <code>-9.6 %</code> de filas borradas en el flujo legado), revelando honestamente su <i>trade-off</i> en <code>knowledge → essential</code>; y (2) probar matemáticamente con <b>13+ dígitos de exactitud (<code>7.22 × 10⁻¹⁴</code>)</b> que <code>RobustScaler</code> en los archivos gigantes de <code>04_transformed</code> (2–8 GB) preserva <code>R²</code> intacto.</p>
+        </div>
+        <div class="subcard teal">
+          <h4>💡 Analogía lista para contar en voz alta</h4>
+          <p><i>(1) Un multimillonario en un salón jala el promedio por elevar errores al cuadrado (<code>e²</code>); winsorizar le pone un techo sin expulsarlo del salón. (2) Medir personas en centímetros/kilos o en pulgadas/libras cambia la pendiente por cambio de unidades, pero la fuerza real de la relación (<code>R²</code>) jamás cambia.</i></p>
+        </div>
+      </div>
+        
+      <div class="subcard" style="margin-top:12px">
+        <h4>📂 Problema, capa de datos, variables y reglas aplicadas</h4>
+        <ul class="clean"><li><b>Capas:</b> <code>03_processed</code> (Versión A y B, <code>1,738,738</code> filas), <code>02_interim</code> (legado <code>test+val</code>, <code>348,263</code> vs <code>314,904</code> filas) y <code>04_transformed</code> (<code>X_train.csv</code> <code>8.4 GB</code> y <code>X_test.csv</code> <code>2.1 GB</code> leídos por prefijo binario sin agotar RAM + <code>transformers.joblib</code>).</li><li><b>Pares evaluados:</b> <code>n_skills_competence → n_skills_essential</code> y <code>n_skills_knowledge → n_skills_essential</code>.</li><li><b>Reglas activas:</b> <code>MR-06</code>, <code>MR-07</code>, <code>MR-08</code>.</li></ul>
+      </div>
+        
+      <div class="subcard indigo" style="margin-top:12px">
+        <h4>∑ Fórmulas explicadas símbolo por símbolo</h4>
+        <div class="stack" style="gap:8px;margin-bottom:10px"><div class="formula" data-plain="x̃ = (x−cₓ)/sₓ, ỹ = (y−cᵧ)/sᵧ  ⇒  ã₁ = a₁·(sₓ/sᵧ),  ã₀ = (a₀+a₁cₓ−cᵧ)/sᵧ,  R̃² = R²,  S̃_{y/x} = S_{y/x}/sᵧ">$$\tilde{x} = \frac{x - c_x}{s_x}, \quad \tilde{y} = \frac{y - c_y}{s_y} \implies \tilde{a}_1 = a_1 \frac{s_x}{s_y}, \quad \tilde{a}_0 = \frac{a_0 + a_1 c_x - c_y}{s_y}, \quad \tilde{R}^2 = R^2, \quad \tilde{S}_{y/x} = \frac{S_{y/x}}{s_y}$$</div></div>
+        <ul class="clean"><li><code>cₓ, cᵧ</code>: centros de <code>RobustScaler</code> (la <b>mediana</b> real en JobPath: <code>competence = 18</code>, <code>knowledge = 3</code>, <code>essential = 20</code>).</li><li><code>sₓ, sᵧ</code>: escalas de <code>RobustScaler</code> (el <b>rango intercuartílico IQR = Q3 − Q1</b>: <code>competence = 11</code>, <code>knowledge = 5</code>, <code>essential = 13</code>).</li><li><code>ã₁, ã₀, R̃², S̃_{y/x}</code>: parámetros del modelo MCO tras escalar las columnas en <code>04_transformed</code>.</li><li><b>Por qué <code>R²</code> es invariante:</b> tanto <code>Sᵣ</code> como <code>Sₜ</code> quedan divididos por <code>sᵧ²</code>, que se cancela en <code>1 − Sᵣ/Sₜ</code>.</li></ul>
+      </div>
+        
+      <div class="subcard" style="margin-top:12px">
+        <h4>🔎 Cadena exacta de evidencia: Dato CSV → Cálculo → Control → Conclusión</h4>
+        <div class="tbl-wrap"><table class=""><thead><tr><th>Hallazgo</th><th>Dato (<code>CSV</code>)</th><th>Resultado exacto</th><th>Control / Matiz crítico</th><th>Conclusión defendible</th></tr></thead><tbody><tr><td><b>1. Winsorizar IQR supera a borrar filas</b></td><td><code>rl05_four_way_outlier_comparison.csv</code> (<code>competence → essential</code>)</td><td>Ver. A: <code>Sy/x = 4.0872</code>, <code>R² = 0.9072</code>. <b>Ver. B (IQR):</b> <code>Sy/x = 3.1915</code> (<b><code>-21.9 %</code></b>), <code>R² = 0.8983</code>, <b><code>0</code> filas perdidas</b>. Borrado legado: pierde <b><code>33,359</code> filas (<code>-9.58 %</code>)</b> y <code>Sy/x</code> casi no cambia (<code>4.1147 → 4.1105</code>).</td><td>Se documenta la <b>asimetría muestral</b>: <code>02_interim</code> legado solo contiene <code>test+val</code> (<code>348k</code>), mientras <code>03_processed</code> cubre todo (<code>1.74M</code>).</td><td>La winsorización IQR reduce la dispersión residual sin amputar perfiles profesionales de alta especialización.</td></tr><tr><td><b>2. Trade-off honesto en <code>knowledge → essential</code></b></td><td><code>rl05_four_way_outlier_comparison.csv</code> (<code>knowledge → essential</code>)</td><td>Ver. A: <code>Sy/x = 10.6664</code>, <code>R² = 0.3680</code> (🟡 Moderado). Ver. B: <code>Sy/x = 8.4934</code> (<code>-20.4 %</code>), pero <b><code>R² = 0.2795</code> (🔴 Rechazado <code>MR-06</code>)</b>.</td><td>Al recortar <code>knowledge</code> de <code>45 → 13.5</code>, <code>Sₜ</code> se comprime (<code>-44.4 %</code>) más rápido que <code>Sᵣ</code> (<code>-36.6 %</code>), bajando <code>R²</code>, y se rompe la identidad <code>E = C + K + U</code> en la cola extrema.</td><td>Por eso JobPath conserva <b>ambas versiones (A y B)</b> en experimentación CRISP-DM.</td></tr><tr><td><b>3. Certificación <code>04_transformed</code> (8/8 OK)</b></td><td><code>rl05_affine_scale_invariance.csv</code></td><td><code>con/sin × train/test × 2 pares</code> = <b>8/8 controles PASS</b>, error máximo global <b><code>7.216 × 10⁻¹⁴ &lt; 10⁻¹⁰</code></b> (<code>~13.1</code> dígitos).</td><td>Ejemplo <code>train</code> Ver. A: <code>competence</code> <code>ã₁ = 0.9548</code> (<code>R² = 0.9072</code>), <code>knowledge</code> <code>ã₁ = 0.7247</code> (<code>R² = 0.3689</code>), exactos a teoría.</td><td>El escalado <code>RobustScaler</code> en <code>04_transformed</code> es algebraicamente transparente y libre de corrupción o fuga.</td></tr></tbody></table></div>
+      </div>
+        
+      <div class="grid2" style="margin-top:12px">
+        <div class="subcard amber">
+          <h4>🎬 Qué mostrar en vivo (Simulador · Gráfica · GeoGebra)</h4>
+          <ul class="clean"><li><b>Simulador (Diap. 4):</b> Alterna entre <b><code>RobustScaler Comp. (11, 13)</code></b> (<code>ã₁ = 0.9548</code>, <code>S̃y/x = 0.3147</code>, <code>R² = 0.9072</code>) y <b><code>RobustScaler Know. (5, 13)</code></b> (<code>ã₁ = 0.7247</code>, <code>S̃y/x = 0.8207</code>, <code>R² = 0.3689</code>), mueve libremente los sliders y demuestra en vivo que <b><code>R²</code> no se mueve ni una milésima</b>, luego contrasta esos números exactos en la tabla de la <b>Diap. 7</b>.</li></ul>
+        </div>
+        <div class="subcard">
+          <h4>🛡 Salvaguardas al hablar (Qué SÍ decir vs. Qué NUNCA decir)</h4>
+          <div class="tbl-wrap"><table class="say-table"><thead><tr><th>✅ Frase correcta</th><th>❌ Frase prohibida</th></tr></thead><tbody><tr><td class="say-ok"><i>"Winsorizar baja <code>Sy/x</code> en ambos pares (<code>-21.9 %</code> y <code>-20.4 %</code>), pero en <code>knowledge</code> baja <code>R²</code> debajo de <code>0.30</code>; por eso mantenemos Versión A y B."</i></td><td class="say-bad"><i>"Winsorizar siempre mejora tanto <code>Sy/x</code> como <code>R²</code> en todas las variables."</i></td></tr><tr><td class="say-ok"><i>"<code>E = C + K + U</code> significa <code>Esenciales = Competencias + Conocimientos + Sin clasificar</code>."</i></td><td class="say-bad">Mencionar <code>E = C + K + U</code> sin explicar qué representa cada letra.</td></tr></tbody></table></div>
+        </div>
+      </div>
+        
+      <div class="subcard rose" style="margin-top:12px">
+        <h4>🎯 Preguntas "corchadoras" del docente (clic para practicar tu respuesta)</h4>
+        <div class="stack" style="gap:8px">
+          <details class="qa-card">
+            <summary><span class="qa-tag">Pregunta difícil</span> <b>¿Cómo leyeron archivos CSV de 8.4 GB sin colapsar la memoria RAM?</b></summary>
+            <div class="qa-ans"><b>Respuesta ganadora:</b> En <code>loaders.py</code> implementamos un lector binario por prefijo (<code>raw_line.split(b',', max_idx+1)</code>) que extrae únicamente las 3 columnas numéricas densas (<code>essential</code>, <code>competence</code>, <code>knowledge</code>) sin cargar las casi <code>2,985</code> columnas one-hot dispersas.</div>
+          </details>
+          <details class="qa-card">
+            <summary><span class="qa-tag">Pregunta difícil</span> <b>¿Por qué no hay script de GeoGebra para el Caso 04 (<code>RL-05</code>)?</b></summary>
+            <div class="qa-ans"><b>Respuesta ganadora:</b> Porque GeoGebra Classic en navegador no está diseñado para <code>1.74 millones</code> de puntos; por ello la verificación se hace en Python comparando contra <code>numpy.polyfit</code> y contra las fórmulas cerradas de invarianza afín con tolerancia <code>&lt; 10⁻¹⁰</code> (validado en <code>unittest</code>). ---</div>
+          </details></div>
+      </div>
+      </div>
+    </article>
+
+    <article class="case-section" id="caso-05" data-block="lag">
+      <div class="case-head teal">
+        <div>
+          <div class="row" style="gap:8px;margin-bottom:6px">
+            <span class="pill teal">Caso 05 · Bloque 2 · Lagrange</span>
+            <span class="pill dark">IDEA-LG-01</span>
+            <span class="pill white">Runge 19.4× menor · 0 viol.</span>
+          </div>
+          <h3>Caso 05 — IDEA-LG-01: Supervivencia S(q) y Runge</h3>
+          <p class="case-files">Fuentes verificadas: <code>lg01_survival_curve_S_q.csv</code>, <code>lg01_milestone_P3_weights_and_eval.csv</code>, <code>lg01_runge_phenomenon_benchmark.csv</code>, <code>lg_monomial_expansions.csv</code></p>
+        </div>
+        <div class="row" style="flex-shrink:0">
+          <a class="btn teal" href="../05_IDEA_LG_01_Supervivencia_Y_Runge/presentacion_IDEA_LG_01.html">▶ Abrir Diapositivas HTML</a>
+          <a class="btn ghost" href="../05_IDEA_LG_01_Supervivencia_Y_Runge/GUIA_FACIL_IDEA_LG_01.md" target="_blank">📖 Guía Fácil (.md)</a>
+        </div>
+      </div>
+      <div class="case-body">
+        
+      <div class="grid2" style="margin-top:12px">
+        <div class="subcard">
+          <h4>⏱ En 30 segundos ("Si solo tienes 1 minuto, di esto")</h4>
+          <p>Construimos la curva empírica de permanencia laboral <code>S(q)</code> sobre <code>1,643,772</code> empleos <b>cerrados (<code>~es_vigente</code>)</b>, la reconstruimos con un polinomio cúbico de Lagrange <code>P₃(q)</code> desde solo <b>4 hitos</b> (<code>1, 2, 5 y 10 años</code>), y demostramos en vivo el <b>Fenómeno de Runge</b> al subir a grado 16 con nodos equiespaciados (<code>-248 %</code> de probabilidad imposible!) frente a la estabilidad de <b>Chebyshev-Lobatto</b> (<b><code>19.4×</code></b> menos error y <b><code>0</code> violaciones <code>[0,1]</code> en todos los grados</b>) y <b>Lagrange Local <code>P₂</code></b>.</p>
+        </div>
+        <div class="subcard teal">
+          <h4>💡 Analogía lista para contar en voz alta</h4>
+          <p><i>Una varilla elástica pasa suavemente por 4 clavos. Si clavas 17 clavos a igual distancia en una curva muy empinada, la varilla da latigazos gigantes cerca de los bordes (Fenómeno de Runge). Solución: acercar los clavos hacia los extremos (Chebyshev-Lobatto) o usar trocitos cortos de 3 puntos (<code>P₂</code> local).</i></p>
+        </div>
+      </div>
+        
+      <div class="subcard" style="margin-top:12px">
+        <h4>📂 Problema, capa de datos, variables y reglas aplicadas</h4>
+        <ul class="clean"><li><b>Capa:</b> <code>03_processed</code> (Versión A filtrada estrictamente a <code>~es_vigente</code> → <code>1,643,772</code> empleos cerrados).</li><li><b>4 hitos de <code>P₃(q)</code>:</b> <code>q = 4</code> (1 año: <code>66.09 %</code>), <code>q = 8</code> (2 años: <code>37.05 %</code>), <code>q = 20</code> (5 años: <code>13.58 %</code>), <code>q = 40</code> (10 años: <code>4.30 %</code>).</li><li><b>Reglas activas:</b> <b><code>MR-09</code></b> (<code>~es_vigente</code>) y <b><code>MR-04</code></b> (deduplicación de nodos enteros tras redondear Chebyshev-Lobatto).</li></ul>
+      </div>
+        
+      <div class="subcard indigo" style="margin-top:12px">
+        <h4>∑ Fórmulas explicadas símbolo por símbolo</h4>
+        <div class="stack" style="gap:8px;margin-bottom:10px"><div class="formula" data-plain="Pₙ(q) = Σ S(qᵢ)·Lᵢ(q),   Lᵢ(q) = Π_{j≠i} (q − qⱼ) / (qᵢ − qⱼ)">$$P_n(q) = \sum_{i=0}^{n} S(q_i)\,L_i(q), \qquad L_i(q) = \prod_{\substack{j=0\\ j\ne i}}^{n} \frac{q - q_j}{q_i - q_j}$$</div><div class="formula" data-plain="qₖᴸᵒᵇ = round( (a+b)/2 + ((b−a)/2)·cos(kπ / n) ),   k = 0..n">$$q_k^{\text{Lob}} = \operatorname{round}\!\left(\frac{a+b}{2} + \frac{b-a}{2}\cos\!\left(\frac{k\pi}{n}\right)\right), \quad k = 0 \dots n$$</div></div>
+        <ul class="clean"><li><code>S(q)</code>: probabilidad empírica de que un empleo cerrado dure al menos <code>q</code> trimestres (<code>q = 4</code> es 1 año).</li><li><code>Lᵢ(q)</code>: polinomio base (peso con signo) asociado al nodo <code>qᵢ</code>. Cumple dos propiedades de oro: <b>Delta de Kronecker</b> (<code>Lᵢ(qᵢ) = 1</code>, <code>Lᵢ(qⱼ) = 0</code> para <code>j ≠ i</code>, error <code>0.0</code>) y <b>Partición de la unidad</b> (<code>∑Lᵢ(q) = 1</code> en cualquier <code>q</code>, error <code>4.44 × 10⁻¹⁶</code>).</li><li><b>Forma monómica expandida equivalente</b> (<code>lg_monomial_expansions.csv</code>): <code>P₃(q) = −7.91×10⁻⁵ q³ + 0.005845 q² − 0.133867 q + 1.107889</code> (idéntica a <code>Polynomial(P)</code> en GeoGebra, diff <code>5.05 × 10⁻¹⁵</code> vs SciPy).</li><li><code>qₖᴸᵒᵇ</code>: <b>nodos de Chebyshev-Lobatto</b> (<code>cos(kπ/n)</code>), que agrupan nodos en los bordes e <b>incluyen siempre exactamente los extremos <code>q = 1</code> y <code>q = 40</code></b>.</li></ul>
+      </div>
+        
+      <div class="subcard" style="margin-top:12px">
+        <h4>🔎 Cadena exacta de evidencia: Dato CSV → Cálculo → Control → Conclusión</h4>
+        <div class="tbl-wrap"><table class=""><thead><tr><th>Hallazgo</th><th>Dato (<code>CSV</code>)</th><th>Resultado exacto</th><th>Control crítico</th><th>Conclusión defendible</th></tr></thead><tbody><tr><td><b>1. Interpolación <code>P₃(12)</code> vs. extrapolación <code>P₃(48)</code></b></td><td><code>lg01_milestone_P3_weights_and_eval.csv</code></td><td>En 3 años (<code>q=12</code>): pesos <code>[-0.3889, +1.1667, +0.2333, -0.0111]</code> (<code>∑=1.0</code>), <code>P₃(12) = 0.2065</code> vs real <code>0.2519</code> (err <code>0.0455</code>). En 12 años (<code>q=48</code>, extrap.): pesos estallan <code>[-3.89, +6.42, -3.67, +2.14]</code>, dando <b><code>P₃(48) = -0.5984</code> (<code>-59.8 %</code>!)</b>.</td><td>Comprobación de unicidad vs <code>scipy.interpolate.lagrange</code>: <code>5.05 × 10⁻¹⁵</code>.</td><td>Dentro de <code>[4, 40]</code> los pesos están acotados; fuera del rango los pesos alternantes disparan el polinomio a probabilidades imposibles.</td></tr><tr><td><b>2. Explosión de Runge vs. Chebyshev-Lobatto y <code>P₂</code></b></td><td><code>lg01_runge_phenomenon_benchmark.csv</code> (grados <code>3, 5, 8, 12, 16</code>)</td><td>Grado 16 Equiespaciado: <b><code>E∞ = 2.5262</code></b>, <code>min = -2.4827</code> (<code>-248 %</code>, <code>2</code> violaciones). <b>Chebyshev-Lobatto (15 nodos únicos):</b> <b><code>E∞ = 0.1301</code></b> (<b><code>19.4×</code> mejor</b>), <b><code>0</code> violaciones en TODOS los grados (<code>3..16</code>)</b>. <b>Local <code>P₂</code> grado 12:</b> mejor <code>E∞ = 0.1196</code> (<code>0</code> violaciones).</td><td>En grado 16, al redondear 17 nodos coseno a enteros en <code>[1, 40]</code>, 2 pares cercanos a los bordes coinciden y se deduplican por <code>MR-04</code> → <code>15 nodos*</code>.</td><td>Aumentar el grado con nodos equiespaciados <b>destruye</b> el ajuste; Chebyshev-Lobatto y <code>P₂</code> local eliminan la explosión de bordes y las violaciones de <code>[0, 1]</code>.</td></tr><tr><td><b>3. No-monotonicidad y apilamiento anual (<i>heaping</i>)</b></td><td><code>lg01_milestone_P3_weights_and_eval.csv</code> y <code>lg01_survival_curve_S_q.csv</code></td><td><code>P₃(16) = 0.1384 &lt; P₃(28) = 0.2058</code> (la cúbica "sube" entre 4 y 7 años aunque <code>S(q)</code> siempre baja). Además <code>S(q)</code> cae en escalones cada 4 trimestres (1, 2, 3 años exactos).</td><td>Los polinomios de Lagrange no imponen monotonicidad y los saltos anuales crean un piso de error <code>~0.12–0.13</code>.</td><td>Para sistemas productivos de supervivencia, preferir <b><code>P₂</code> local</b> o <b>PCHIP</b> (interpolación cúbica monótona).</td></tr></tbody></table></div>
+      </div>
+        
+      <div class="grid2" style="margin-top:12px">
+        <div class="subcard amber">
+          <h4>🎬 Qué mostrar en vivo (Simulador · Gráfica · GeoGebra)</h4>
+          <ul class="clean"><li><b>Simulador de pesos <code>L₀..L₃</code> (Diap. 4):</b> Haz clic en <b><code>Hito 1a (q=4)</code></b> (verás solo <code>L₀ = 1.00</code>, los otros en <code>0.00</code> = Kronecker), luego <b><code>Interpolar 3a (q=12)</code></b> (<code>P₃ = 20.65 %</code>, <code>ΣLᵢ = 1.0000</code>) y finalmente <b><code>Extrap. 12a (q=48)</code></b> (barras disparadas y alerta roja <code>-59.84 %</code>!).</li><li><b>Gráfica Runge (Diap. 5, Fig. 2):</b> Haz zoom y muestra la curva equiespaciada cayendo hasta <code>-2.48</code> frente a Chebyshev-Lobatto pegado a la curva real.</li><li><b>GeoGebra (Diap. 7):</b> Explica que <code>p(x)</code> (manual con <code>L₀..L₃</code>) y <code>q = Polynomial(P)</code> se superponen píxel por píxel (Teorema de Unicidad).</li></ul>
+        </div>
+        <div class="subcard">
+          <h4>🛡 Salvaguardas al hablar (Qué SÍ decir vs. Qué NUNCA decir)</h4>
+          <div class="tbl-wrap"><table class="say-table"><thead><tr><th>✅ Frase correcta</th><th>❌ Frase prohibida</th></tr></thead><tbody><tr><td class="say-ok"><i>"Usamos Chebyshev-Lobatto (<code>cos(kπ/n)</code>) porque ancla los extremos <code>q=1</code> y <code>q=40</code>, logrando <code>0</code> violaciones de <code>[0,1]</code> desde grado 3 hasta grado 16."</i></td><td class="say-bad"><i>"Con más nodos equiespaciados siempre mejora la interpolación polinomial."</i></td></tr><tr><td class="say-ok"><i>"P₃(q) ilustra perfectamente las bases <code>Lᵢ</code>, pero oscila hacia arriba en <code>q=28</code>; en producción se prefiere <code>P₂</code> local o PCHIP."</i></td><td class="say-bad"><i>"P₃(q) es monótonamente decreciente en todo <code>[4, 40]</code>."</i></td></tr></tbody></table></div>
+        </div>
+      </div>
+        
+      <div class="subcard rose" style="margin-top:12px">
+        <h4>🎯 Preguntas "corchadoras" del docente (clic para practicar tu respuesta)</h4>
+        <div class="stack" style="gap:8px">
+          <details class="qa-card">
+            <summary><span class="qa-tag">Pregunta difícil</span> <b>¿Por qué cambiaron de Chebyshev de 1.ª especie a Chebyshev-Lobatto (<code>cos(kπ/n)</code>)?</b></summary>
+            <div class="qa-ans"><b>Respuesta ganadora:</b> Porque los nodos de 1.ª especie son estrictamente interiores (<code>[2..39]</code> en grados 3 y 5); al evaluar en <code>q = 1</code> extrapolaban a la izquierda produciendo probabilidades <code>&gt; 1</code> (<code>1.11</code> y <code>1.23</code>). Chebyshev-Lobatto siempre incluye los extremos exactos <code>1</code> y <code>40</code>, eliminando toda extrapolación de borde y logrando <code>0</code> violaciones en todos los grados.</div>
+          </details>
+          <details class="qa-card">
+            <summary><span class="qa-tag">Pregunta difícil</span> <b>¿Por qué en grado 16 Chebyshev-Lobatto tiene <code>15 nodos*</code> en vez de <code>17</code>?</b></summary>
+            <div class="qa-ans"><b>Respuesta ganadora:</b> Porque la variable <code>q</code> son trimestres enteros en <code>[1, 40]</code>; al agruparse los nodos de coseno muy pegados cerca de <code>1</code> y <code>40</code>, al redondear a entero dos nodos caen sobre el mismo trimestre y la guarda <code>MR-04</code> los deduplica para impedir división por cero. ---</div>
+          </details></div>
+      </div>
+      </div>
+    </article>
+
+    <article class="case-section" id="caso-06" data-block="lag">
+      <div class="case-head teal">
+        <div>
+          <div class="row" style="gap:8px;margin-bottom:6px">
+            <span class="pill teal">Caso 06 · Bloque 2 · Lagrange</span>
+            <span class="pill dark">IDEA-LG-02</span>
+            <span class="pill white">Err 0.0002 · PCA vivo float64</span>
+          </div>
+          <h3>Caso 06 — IDEA-LG-02: PCA: Lagrange Directo e Inverso</h3>
+          <p class="case-files">Fuentes verificadas: <code>lg02_pca_50k_reference.csv</code>, <code>lg02_pca_forward_P3_eval.csv</code>, <code>lg02_pca_inverse_effective_dim.csv</code>, <code>lg_monomial_expansions.csv</code></p>
+        </div>
+        <div class="row" style="flex-shrink:0">
+          <a class="btn teal" href="../06_IDEA_LG_02_PCA_Lagrange_Inversa/presentacion_IDEA_LG_02.html">▶ Abrir Diapositivas HTML</a>
+          <a class="btn ghost" href="../06_IDEA_LG_02_PCA_Lagrange_Inversa/GUIA_FACIL_IDEA_LG_02.md" target="_blank">📖 Guía Fácil (.md)</a>
+        </div>
+      </div>
+      <div class="case-body">
+        
+      <div class="grid2" style="margin-top:12px">
+        <div class="subcard">
+          <h4>⏱ En 30 segundos ("Si solo tienes 1 minuto, di esto")</h4>
+          <p>Recalculamos <b>en vivo en <code>float64</code></b> las curvas de varianza acumulada del PCA (<code>50,000</code> filas, replicando <code>4.1_PCA_completo.ipynb</code>) y aplicamos Lagrange en dos sentidos: <b>directo</b> (predecir <code>V(4)</code> desde 4 nodos con solo <code>0.0002</code> de error) e <b>inverso</b> (darle la vuelta a la tabla para hallar cuántos componentes <code>k(V*)</code> requiere una meta de <code>80–95 %</code>), demostrando en vivo la <b>guarda <code>MR-04</code></b> cuando la colinealidad de Versión A produce <code>V(9) = V(10) = 1.0</code>.</p>
+        </div>
+        <div class="subcard teal">
+          <h4>💡 Analogía lista para contar en voz alta</h4>
+          <p><i>La batería del celular al revés: en sentido directo preguntas "llevo 40 min cargando, ¿qué % tengo?"; en sentido inverso preguntas "quiero llegar al 90 %, ¿cuántos minutos necesito?". En <code>100 %</code> falla invertir porque al minuto 90 y al minuto 100 ambos valen <code>100 %</code>, y restar <code>100 − 100 = 0</code> divide por cero.</i></p>
+        </div>
+      </div>
+        
+      <div class="subcard" style="margin-top:12px">
+        <h4>📂 Problema, capa de datos, variables y reglas aplicadas</h4>
+        <ul class="clean"><li><b>Capa:</b> <code>03_processed</code> (muestra fija <code>n = 50,000</code>, <code>random_state = 42</code>, Versión A con outliers y Versión B winsorizada IQR — <b>cero tablas hardcodeadas</b>).</li><li><b>Directo:</b> entrenamiento <code>k ∈ {1, 3, 5, 8}</code>, evaluación oculta <code>k ∈ {2, 4, 6, 7}</code>.</li><li><b>Inverso:</b> tramo estrictamente creciente <code>k = 1..6</code> para metas <code>V* ∈ {80 %, 85 %, 90 %, 95 %}</code>.</li><li><b>Regla clave:</b> <b><code>MR-04</code></b> (<code>validate_distinct_nodes()</code> bloquea la meseta <code>V_A(9) = V_A(10) = 1.0</code>).</li></ul>
+      </div>
+        
+      <div class="subcard indigo" style="margin-top:12px">
+        <h4>∑ Fórmulas explicadas símbolo por símbolo</h4>
+        <div class="stack" style="gap:8px;margin-bottom:10px"><div class="formula" data-plain="Directa: V̂(k) = Σ V(kᵢ)·Lᵢ(k)   |   Inversa (tramo creciente): k̂(V*) = Σ kᵢ·Lᵢ^(V)(V*)">$$\text{Directa: } \hat{V}(k) = \sum_i V(k_i)\,L_i(k), \qquad \text{Inversa (tramo creciente): } \hat{k}(V^*) = \sum_i k_i\,L_i^{(V)}(V^*)$$</div></div>
+        <ul class="clean"><li><code>k</code>: número de componentes principales (<code>1</code> a <code>10</code>).</li><li><code>V(k)</code>: varianza acumulada retenida por los primeros <code>k</code> componentes (<code>0</code> a <code>1</code>, es decir <code>0 %</code> a <code>100 %</code>).</li><li><code>V*</code>: meta deseada de varianza (ej. <code>0.90 = 90 %</code>).</li><li><code>k_rec = ceil(k̂)</code>: función techo (redondeo al entero superior) porque no existen "4.33 componentes" y hay que garantizar <code>V(k_rec) ≥ V*</code>.</li><li><b>Monomios exactos (<code>lg_monomial_expansions.csv</code>):</b></li><li>Ver. A: <code>P₃(k) = 0.002746k³ − 0.057466k² + 0.412549k − 0.028723</code></li><li>Ver. B: <code>P₃(k) = 0.002993k³ − 0.059596k² + 0.403991k + 0.049433</code></li></ul>
+      </div>
+        
+      <div class="subcard" style="margin-top:12px">
+        <h4>🔎 Cadena exacta de evidencia: Dato CSV → Cálculo → Control → Conclusión</h4>
+        <div class="tbl-wrap"><table class=""><thead><tr><th>Hallazgo</th><th>Dato (<code>CSV</code>)</th><th>Resultado exacto</th><th>Control crítico</th><th>Conclusión defendible</th></tr></thead><tbody><tr><td><b>1. Precisión directa en tabla suave y exacta</b></td><td><code>lg02_pca_forward_P3_eval.csv</code></td><td>Ver. A en <code>k = 4</code>: real <code>0.877604</code>, <code>P₃(4) = 0.877777</code> (<b>err <code>0.000173</code></b> = <code>0.017 %</code>). En <code>k = 2, 6, 7</code>: errores <code>0.014–0.035</code>, <code>∑Lᵢ = 1.0</code>.</td><td>SciPy diff <code>5.11 × 10⁻¹⁵</code> (Ver. A) y <code>1.55 × 10⁻¹⁵</code> (Ver. B).</td><td>En tablas deterministas suaves y sin ruido, Lagrange directo reconstruye valores intermedios con precisión milimétrica.</td></tr><tr><td><b>2. Inversa <code>k(V*)</code>: Versión B ahorra 1 componente</b></td><td><code>lg02_pca_inverse_effective_dim.csv</code></td><td>Meta <code>80 %</code>: Ver. A pide <code>4</code> (<code>3.20</code>) vs. Ver. B pide <b><code>3</code></b> (<code>2.94</code>, logra <code>80.59 %</code>). Meta <code>95 %</code>: Ver. A pide <code>6</code> (<code>5.16</code>) vs. Ver. B pide <b><code>5</code></b> (<code>4.92</code>, logra <code>95.36 %</code>).</td><td><code>8/8</code> combinaciones cumplen <code>meets_target = True</code>; el simulador usa <b>Local <code>P₂</code></b> (evita oscilación <code>P₅</code> en extremos como <code>55 %</code>).</td><td>Limpiar outliers con IQR compacta más varianza en menos dimensiones principales.</td></tr><tr><td><b>3. Rango 9 vs. ruptura de colinealidad y <code>MR-04</code></b></td><td><code>lg02_pca_50k_reference.csv</code> (en vivo <code>float64</code>)</td><td><code>PC10</code> Ver. A: <b><code>6.74 × 10⁻¹⁸</code></b> (cero de máquina → <code>V(9) = V(10) = 1.0</code>, <b>rango 9</b>). <code>PC10</code> Ver. B: <b><code>5.534 × 10⁻⁵</code></b> (rango completo 10).</td><td>Al intentar invertir los 10 puntos de Ver. A, <code>MR-04</code> lanza <code>ValueError: min gap = 0.000e+00 &lt; 1.0e-12</code>.</td><td>En Ver. A la identidad <code>E = C + K + U</code> vuelve redundante la 10.ª dimensión; la winsorización univariada IQR rompe esa igualdad exacta en las colas.</td></tr></tbody></table></div>
+      </div>
+        
+      <div class="grid2" style="margin-top:12px">
+        <div class="subcard amber">
+          <h4>🎬 Qué mostrar en vivo (Simulador · Gráfica · GeoGebra)</h4>
+          <ul class="clean"><li><b>Simulador <code>k(V*)</code> (Diap. 4):</b> Pulsa <b><code>80 %</code></b> (Ver. A = <code>4</code> comp. vs Ver. B = <code>3</code> comp.), <b><code>90 %</code></b> (<code>k = 4.33</code> y <code>4.10</code> → <code>5</code> comp.) y <b><code>95 %</code></b> (Ver. A = <code>6</code> vs Ver. B = <code>5</code>), y arrastra a <b><code>55 %</code></b> para mostrar que <code>Local P₂</code> se mantiene 100 % monótono (<code>kB = 1.46 → 2 comp.</code>).</li><li><b>GeoGebra (Diap. 7):</b> Resalta <code>A_eval = (4, 0.877777)</code> y la verificación de unicidad <code>p(x) = Polynomial(P)</code>.</li></ul>
+        </div>
+        <div class="subcard">
+          <h4>🛡 Salvaguardas al hablar (Qué SÍ decir vs. Qué NUNCA decir)</h4>
+          <div class="tbl-wrap"><table class="say-table"><thead><tr><th>✅ Frase correcta</th><th>❌ Frase prohibida</th></tr></thead><tbody><tr><td class="say-ok"><i>"Las curvas PCA de 50k filas se recalculan en vivo en <code>float64</code> desde <code>03_processed</code>, replicando <code>4.1_PCA_completo.ipynb</code>."</i></td><td class="say-bad"><i>"Copiamos los números de PCA a mano en el código."</i> (Eso ya se eliminó en V2).</td></tr><tr><td class="say-ok"><i>"Usamos <code>Lagrange Local P₂</code> en el simulador para garantizar monotonicidad incluso en <code>V* = 55 %</code>."</i></td><td class="say-bad"><i>"Podemos invertir los 10 componentes de Versión A a la vez sin filtrar la meseta."</i></td></tr></tbody></table></div>
+        </div>
+      </div>
+        
+      <div class="subcard rose" style="margin-top:12px">
+        <h4>🎯 Preguntas "corchadoras" del docente (clic para practicar tu respuesta)</h4>
+        <div class="stack" style="gap:8px">
+          <details class="qa-card">
+            <summary><span class="qa-tag">Pregunta difícil</span> <b>Si quisiéramos agregar el nodo <code>k = 6</code> al polinomio <code>P₃(k)</code> de Lagrange, ¿podemos reutilizar <code>L₀..L₃</code> sin recalcularlos?</b></summary>
+            <div class="qa-ans"><b>Respuesta ganadora:</b> <b>No.</b> Esa es la principal desventaja de Lagrange (Diapositiva 5 del curso): al añadir un punto nuevo hay que recalcular todos los <code>Lᵢ(x)</code> porque cambia cada producto. Para construir polinomios incrementalmente se usarían <b>diferencias divididas de Newton</b>.</div>
+          </details>
+          <details class="qa-card">
+            <summary><span class="qa-tag">Pregunta difícil</span> <b>¿Por qué en Versión B aparece varianza no nula (<code>5.53e-5</code>) en <code>PC10</code> si las columnas son las mismas?</b></summary>
+            <div class="qa-ans"><b>Respuesta ganadora:</b> Porque el recorte IQR se aplica columna por columna; cuando un registro supera el tope superior en <code>essential</code> pero no en sus sumandos <code>competence/knowledge/unclassified</code>, se rompe la relación lineal exacta <code>E = C + K + U</code>, devolviendo rango completo 10. ---</div>
+          </details></div>
+      </div>
+      </div>
+    </article>
+
+    <article class="case-section" id="caso-07" data-block="hyb">
+      <div class="case-head amber">
+        <div>
+          <div class="row" style="gap:8px;margin-bottom:6px">
+            <span class="pill amber">Caso 07 · Bloque 3 · Síntesis</span>
+            <span class="pill dark">IDEA-HYB-01</span>
+            <span class="pill white">Torneo 4×4 · LOOCV + Extrap.</span>
+          </div>
+          <h3>Caso 07 — IDEA-HYB-01: Laboratorio ¿Interpolar o Ajustar?</h3>
+          <p class="case-files">Fuentes verificadas: <code>hyb01_loocv_and_extrapolation_matrix.csv</code>, <code>hyb01_method_selection_rubric.csv</code></p>
+        </div>
+        <div class="row" style="flex-shrink:0">
+          <a class="btn amber" href="../07_IDEA_HYB_01_Laboratorio_Interpolar_vs_Ajustar/presentacion_IDEA_HYB_01.html">▶ Abrir Diapositivas HTML</a>
+          <a class="btn ghost" href="../07_IDEA_HYB_01_Laboratorio_Interpolar_vs_Ajustar/GUIA_FACIL_IDEA_HYB_01.md" target="_blank">📖 Guía Fácil (.md)</a>
+        </div>
+      </div>
+      <div class="case-body">
+        
+      <div class="grid2" style="margin-top:12px">
+        <div class="subcard">
+          <h4>⏱ En 30 segundos ("Si solo tienes 1 minuto, di esto")</h4>
+          <p>Enfrentamos los <b>4 métodos</b> (<code>MCO</code>, <code>Lagrange Global Equiespaciado</code>, <code>Chebyshev-Lobatto</code> y <code>Lagrange Local P₂</code>) sobre <b>4 terrenos reales de JobPath</b> mediante dos exámenes objetivos: <b>LOOCV interior</b> (dentro del rango) y <b>Extrapolación +2 pasos</b> (fuera del rango), demostrando con datos reales la Diapositiva 2 de ambas presentaciones del curso.</p>
+        </div>
+        <div class="subcard teal">
+          <h4>💡 Analogía lista para contar en voz alta</h4>
+          <p><i>Elegir el zapato correcto para cada deporte: los patines vuelan en pista lisa (<code>Lagrange Global</code> en PCA exacto), pero te hacen caer al instante en un terreno ondulado (<code>serie macro anual</code>, donde el error explota <code>108×</code>).</i></p>
+        </div>
+      </div>
+        
+      <div class="subcard" style="margin-top:12px">
+        <h4>📂 Problema, capa de datos, variables y reglas aplicadas</h4>
+        <ul class="clean"><li><b>4 regímenes reales:</b></li><li><b>Suave casi lineal (<code>n = 10</code>, <code>R² = 0.9955</code>):</b> <code>mean_skills(k)</code> por paso de carrera.</li><li><b>Serie macro curva con fluctuación (<code>n = 18</code>, <code>R² = 0.8995</code>):</b> <code>mean_skills(año)</code> <code>2000–2017</code> (forma en arco).</li><li><b>No lineal empinada (<code>n = 36</code>, <code>R² = 0.6935</code>):</b> curva de supervivencia <code>S(q)</code> en forma de L.</li><li><b>Tabla cóncava exacta (<code>n = 8</code>, <code>R² = 0.7964</code>):</b> varianza acumulada <code>PCA V(k)</code> Versión B.</li><li><b>Nota metodológica transparente:</b> en regímenes largos (<code>n = 18, 36</code>), los interpoladores globales se acotan a <b>grado <code>≤ 12</code></b> para evitar desbordamiento numérico extremo de grado 35.</li></ul>
+      </div>
+        
+      <div class="subcard indigo" style="margin-top:12px">
+        <h4>∑ Fórmulas explicadas símbolo por símbolo</h4>
+        <div class="stack" style="gap:8px;margin-bottom:10px"><div class="formula" data-plain="LOOCV-RMSE = √( [1/(n−2)]·Σ_{i=2}^{n−1} (yᵢ − f̂_{(-i)}(xᵢ))² )   |   Extrap-MAE₊₂ = (1/2)·Σ_{m=1}^{2} |y_{n+m} − f̂(x_{n+m})|">$$\text{LOOCV-RMSE} = \sqrt{\frac{1}{n-2}\sum_{i=2}^{n-1}\left(y_i - \hat{f}_{(-i)}(x_i)\right)^2}, \qquad \text{Extrap-MAE}_{+2} = \frac{1}{2}\sum_{m=1}^{2}\left|y_{n+m} - \hat{f}(x_{n+m})\right|$$</div></div>
+        <ul class="clean"><li><code>\hat{f}_{(-i)}(xᵢ)</code>: predicción del método entrenado <b>ocultando el punto <code>i</code></b>.</li><li><b>Por qué <code>i = 2..n−1</code>:</b> se evalúan solo puntos <b>interiores</b> (se excluyen los 2 extremos para no confundir interpolación con extrapolación).</li><li><b>Por qué NO medimos el error sobre los nodos de entrenamiento:</b> porque todo polinomio de Lagrange tiene error exactamente <code>0</code> en sus nodos por definición, lo que ocultaría sus oscilaciones entre nodos!</li></ul>
+      </div>
+        
+      <div class="subcard" style="margin-top:12px">
+        <h4>🔎 Cadena exacta de evidencia: Dato CSV → Cálculo → Control → Conclusión</h4>
+        <div class="tbl-wrap"><table class=""><thead><tr><th>Régimen</th><th>Ganador Dentro (LOOCV RMSE)</th><th>Ganador Extrap. (+2 MAE)</th><th>Peor Método (y magnitud de fallo)</th><th>Por qué ganó ese método</th></tr></thead><tbody><tr><td><b>1. Casi lineal (<code>Pasos</code>, <code>n=10</code>)</b></td><td><b>MCO</b> (<code>0.0558</code>)</td><td><b>MCO</b> (<code>0.0745</code>)</td><td>Lagrange Global (<code>0.2937</code> / <b><code>71.28</code></b> = <code>957×</code> peor!)</td><td>Con <code>R² = 0.9955</code> la señal es casi recta pura; MCO evita sobreajustar micro-variaciones.</td></tr><tr><td><b>2. Serie curva (<code>Anual</code>, <code>n=18</code>)</b></td><td><b>Local <code>P₂</code></b> (<code>0.1139</code>)</td><td><b>Local <code>P₂</code></b> (<code>0.1711</code>)</td><td>Lagrange Global (<b><code>12.32</code></b> = <code>108×</code> peor / <b><code>386.36</code></b>!)</td><td>La serie sube de <code>22.27</code> a un pico <code>24.27</code> (<code>2016</code>) y luego gira a la baja; una recta MCO deja sesgo de curvatura (<code>0.2396</code>), mientras <code>P₂</code> sigue el arco suavemente.</td></tr><tr><td><b>3. Empinada (<code>Superv.</code>, <code>n=36</code>)</b></td><td><b>Local <code>P₂</code></b> (<code>0.0524</code>)</td><td><b>Local <code>P₂</code></b> (<code>0.0060</code>)</td><td>Lagrange Global (<code>0.3777</code> / <b><code>38.89</code></b> = <code>6,495×</code> peor!)</td><td>La forma en L rompe la recta MCO (<code>0.1301</code>) y dispara Runge en Global; <code>P₂</code> local y Chebyshev-Lobatto (<code>0.0620</code>) doman la curvatura.</td></tr><tr><td><b>4. Tabla exacta (<code>PCA</code>, <code>n=8</code>)</b></td><td><b>Lagrange Global</b> (<b><code>0.0036</code></b>)</td><td><b>Local <code>P₂</code></b> (<code>0.0068</code>)</td><td>En LOOCV: <b>MCO</b> (<code>0.0765</code> = <code>21×</code> peor). En Extrap: Global (<code>0.2423</code>; Lobatto desempata con <code>0.1741</code>).</td><td>Pocos nodos (<code>n=8</code>), función exacta y sin ruido: el escenario soñado de Lagrange Global dentro del rango.</td></tr></tbody></table></div>
+      </div>
+        
+      <div class="grid2" style="margin-top:12px">
+        <div class="subcard amber">
+          <h4>🎬 Qué mostrar en vivo (Simulador · Gráfica · GeoGebra)</h4>
+          <ul class="clean"><li><b>Selector interactivo (Diap. 4):</b> Recorre en orden los 4 botones (<code>1 · Casi Lineal → 2 · Serie Curva → 3 · No Lineal → 4 · Tabla Exacta</code>) señalando cómo cambian automáticamente las <b>2 píldoras de ganadores (<code>Dentro</code> vs <code>Extrap. +2</code>)</b> y el error catastrófico de <code>Lagrange Global</code> (<code>71.28</code>, <code>386.36</code>, <code>38.89</code>).</li><li><b>Gráficas (Diap. 5):</b> Amplía la Figura 2 (mapa de calor relativo <code>1.0×</code> = ganador) para ver la rúbrica de un vistazo.</li></ul>
+        </div>
+        <div class="subcard">
+          <h4>🛡 Salvaguardas al hablar (Qué SÍ decir vs. Qué NUNCA decir)</h4>
+          <div class="tbl-wrap"><table class="say-table"><thead><tr><th>✅ Frase correcta</th><th>❌ Frase prohibida</th></tr></thead><tbody><tr><td class="say-ok"><i>"MCO y Lagrange no compiten para eliminarse: MCO gana en tendencias casi lineales, Lagrange Global en tablas exactas cortas (<code>n ≤ 8</code>), y <code>Local P₂</code> domina curvas suaves no lineales."</i></td><td class="say-bad"><i>"Lagrange siempre es mejor que MCO porque pasa por todos los puntos."</i></td></tr><tr><td class="say-ok"><i>"Renombramos el Régimen 2 a 'Serie Macro Curva con Fluctuación' porque tiene un arco real (<code>R²=0.90</code>), lo que explica por qué <code>P₂</code> supera a MCO."</i></td><td class="say-bad"><i>"MCO perdió en el Régimen 2 porque el algoritmo falló."</i></td></tr></tbody></table></div>
+        </div>
+      </div>
+        
+      <div class="subcard rose" style="margin-top:12px">
+        <h4>🎯 Preguntas "corchadoras" del docente (clic para practicar tu respuesta)</h4>
+        <div class="stack" style="gap:8px">
+          <details class="qa-card">
+            <summary><span class="qa-tag">Pregunta difícil</span> <b>Si las diapositivas dicen que MCO gana con ruido, ¿por qué en el Régimen 2 (<code>mean_skills</code> anual) MCO quedó 3.º detrás de <code>P₂</code> y Chebyshev-Lobatto?</b></summary>
+            <div class="qa-ans"><b>Respuesta ganadora:</b> Porque al inspeccionar los datos reales de <code>2000–2019</code>, vimos que <code>mean_skills</code> no es ruido puro sobre una línea recta, sino una <b>curva suave en campana/arco</b> (crece hasta <code>2016</code> y gira a la baja en <code>2017–2019</code>). Por eso renombramos ese régimen con honestidad: MCO tiene sesgo de curvatura al forzar una línea recta sobre un arco, mientras <code>P₂</code> se adapta localmente.</div>
+          </details>
+          <details class="qa-card">
+            <summary><span class="qa-tag">Pregunta difícil</span> <b>¿Por qué <code>Lagrange Local P₂</code> resultó tan buen comodín en 3 de 4 regímenes?</b></summary>
+            <div class="qa-ans"><b>Respuesta ganadora:</b> Porque cada predicción usa solo los 3 puntos vecinos más cercanos (grado 2), lo que le permite doblarse en curvas no lineales sin sufrir jamás el Fenómeno de Runge de grados altos. ---</div>
+          </details></div>
+      </div>
+      </div>
+    </article>
+
+    <article class="case-section" id="caso-08" data-block="hyb">
+      <div class="case-head amber">
+        <div>
+          <div class="row" style="gap:8px;margin-bottom:6px">
+            <span class="pill amber">Caso 08 · Bloque 3 · Verificación</span>
+            <span class="pill dark">IDEA-HYB-02</span>
+            <span class="pill white">19/19 tests · 19/19 SHA-256</span>
+          </div>
+          <h3>Caso 08 — IDEA-HYB-02: Pack GeoGebra y SHA-256</h3>
+          <p class="case-files">Fuentes verificadas: <code>verification_log.md</code>, <code>sha256_input_integrity.csv</code>, <code>geogebra_verification_index.md</code>, <code>tests/metodos_numericos/</code></p>
+        </div>
+        <div class="row" style="flex-shrink:0">
+          <a class="btn amber" href="../08_IDEA_HYB_02_Pack_Verificacion_GeoGebra/presentacion_IDEA_HYB_02.html">▶ Abrir Diapositivas HTML</a>
+          <a class="btn ghost" href="../08_IDEA_HYB_02_Pack_Verificacion_GeoGebra/GUIA_FACIL_IDEA_HYB_02.md" target="_blank">📖 Guía Fácil (.md)</a>
+        </div>
+      </div>
+      <div class="case-body">
+        
+      <div class="grid2" style="margin-top:12px">
+        <div class="subcard">
+          <h4>⏱ En 30 segundos ("Si solo tienes 1 minuto, di esto")</h4>
+          <p>Es el <b>sello de confianza e ingeniería</b> de todo el proyecto: demuestra que nuestras fórmulas escritas desde cero coinciden con <code>NumPy</code> y <code>SciPy</code> entre <b>11 y 16 dígitos exactos</b>, entrega <b>5 scripts listos para pegar en GeoGebra Classic</b>, certifica con <b>SHA-256 completo de 64 caracteres</b> que los <code>19</code> insumos de <code>data/</code> jamás fueron alterados, aprueba la <b>auditoría semántica bilingüe (EN+ES)</b> en <code>28</code> archivos (<code>0</code> violaciones) y pasa <b><code>19 / 19</code> pruebas automatizadas</b>.</p>
+        </div>
+        <div class="subcard teal">
+          <h4>💡 Analogía lista para contar en voz alta</h4>
+          <p><i>El doble conteo del banco + sobre sellado: contamos los billetes a mano (código propio), los pasamos por la contadora certificada (NumPy/SciPy), entregamos recibo a un auditor externo (GeoGebra) y sellamos la bóveda con huella dactilar (SHA-256).</i></p>
+        </div>
+      </div>
+        
+      <div class="subcard" style="margin-top:12px">
+        <h4>📂 Problema, capa de datos, variables y reglas aplicadas</h4>
+        <ul class="clean"><li><b>Cobertura:</b> los <code>39</code> modelos MCO del proyecto, todos los polinomios de Lagrange (<code>LG-01</code>, <code>LG-02</code>), las <code>8</code> pruebas de invarianza afín, las <code>12</code> figuras PNG a <code>150 DPI</code>, los <code>5</code> scripts GeoGebra + índice, los <code>19</code> archivos de entrada (<code>4</code> capas) y <code>28</code> archivos documentales auditados en inglés y español.</li></ul>
+      </div>
+        
+      <div class="subcard indigo" style="margin-top:12px">
+        <h4>∑ Fórmulas explicadas símbolo por símbolo</h4>
+        <div class="stack" style="gap:8px;margin-bottom:10px"><div class="formula" data-plain="D = −log₁₀( max(error, 10⁻¹⁶) ),   e_rel = |diff_abs| / max(|a₀|, |a₁|, 1)">$$D = -\log_{10}(\max(\text{error}, 10^{-16})), \qquad e_{\text{rel}} = \frac{|\text{diff}_{\text{abs}}|}{\max(|a_0|, |a_1|, 1)}$$</div></div>
+        <ul class="clean"><li><code>D</code>: número de <b>dígitos decimales exactos</b> que coinciden con <code>NumPy</code>/<code>SciPy</code> (ej. error <code>10⁻¹⁴ → D = 14</code> dígitos; línea de aprobación en <code>D = 10</code> equivale a <code>&lt; 10⁻¹⁰</code>). Se usa piso <code>10⁻¹⁶</code> porque <code>log₁₀(0)</code> no existe (<code>16</code> dígitos = precisión máquina <code>float64</code>).</li><li><code>e_rel</code>: error relativo que normaliza el tamaño del parámetro (clave cuando un intercepto sin centrar vale <code>2.18 millones</code>).</li></ul>
+      </div>
+        
+      <div class="subcard" style="margin-top:12px">
+        <h4>🔎 Cadena exacta de evidencia: Dato CSV → Cálculo → Control → Conclusión</h4>
+        <div class="tbl-wrap"><table class=""><thead><tr><th>Control auditado</th><th>Archivo fuente</th><th>Métrica exacta obtenida</th><th>Umbral exigido</th><th>Veredicto</th></tr></thead><tbody><tr><td><b>39 Modelos MCO vs <code>numpy.polyfit</code></b></td><td><code>ols_summary_all_ideas.csv</code> y <code>verification_log.md</code></td><td>Error <b>relativo</b> máx: <b><code>2.294 × 10⁻¹²</code></b> (<code>D = 11.64</code> dígitos, en <code>RL-05 Ver. B</code>). Bruto máx: <code>1.523e-07</code> en <code>n_starts</code> (`</td><td>a₀</td><td>=2.18e6<code>, rel </code>6.98e-14`).</td><td><code>&lt; 10⁻¹⁰</code> (<code>D ≥ 10</code>)</td><td>✔ PASS (<code>43×</code> bajo umbral)</td></tr><tr><td><b>8 Controles Invarianza Afín</b></td><td><code>rl05_affine_scale_invariance.csv</code></td><td><b><code>7.216 × 10⁻¹⁴</code></b> (<code>D = 13.14</code> dígitos)</td><td><code>&lt; 10⁻¹⁰</code></td><td>✔ PASS (<code>1,380×</code>)</td></tr><tr><td><b>Lagrange <code>LG-01 P₃</code> vs <code>SciPy</code></b></td><td><code>lg_monomial_expansions.csv</code></td><td>SciPy <b><code>5.05 × 10⁻¹⁵</code></b> · Unidad <b><code>4.44 × 10⁻¹⁶</code></b> · Kronecker <b><code>0.0</code></b></td><td><code>&lt; 10⁻¹⁰</code></td><td>✔ PASS (precisión máquina)</td></tr><tr><td><b>Integridad solo-lectura <code>data/</code></b></td><td><code>sha256_input_integrity.csv</code></td><td><b><code>19 / 19</code> intactos</b> con digest completo de <b>64 hex</b>: <code>13 full_sha256</code> (<code>≤ 64 MiB</code>: <code>01_raw</code> 3, <code>02_interim</code> 7, <code>04/map</code> 3) + <code>6 sampled_24MiB_plus_meta_sha256</code> (<code>&gt; 64 MiB</code>: <code>03_processed</code> 2, <code>X_train/X_test</code> 4).</td><td><code>100 %</code> sin mutación</td><td>✔ PASS</td></tr><tr><td><b>Auditoría bilingüe (<code>MR-07/08</code>) + Enlaces + Tests</b></td><td><code>test_pipeline_integration.py</code> y <code>verification_log.md</code></td><td><b><code>28</code> archivos escaneados (<code>0</code> violaciones EN+ES)</b> · <b><code>0</code> enlaces rotos</b> en <code>fuentes_notebooklm/</code> y <code>README.md</code> · <b><code>19 / 19</code> tests OK</b> (<code>2.39 s</code>).</td><td><code>0</code> fallos</td><td>✔ PASS</td></tr></tbody></table></div>
+      </div>
+        
+      <div class="grid2" style="margin-top:12px">
+        <div class="subcard amber">
+          <h4>🎬 Qué mostrar en vivo (Simulador · Gráfica · GeoGebra)</h4>
+          <ul class="clean"><li><b>Visor de 5 scripts GeoGebra (Diap. 4):</b> Haz clic en 2 o 3 pestañas (especialmente <code>RL-02</code> con alerta <code>MR-06</code> y <code>LG-01</code> con forma monómica), señala la barra verde/turquesa <i>"Qué compruebas"</i> y el botón <b><code>Copiar comandos</code></b>.</li><li><b>Dashboard (Diap. 5):</b> Haz zoom y explica la línea vertical en <code>10</code> dígitos (<code>&lt; 10⁻¹⁰</code>) y cómo todas las barras la superan holgadamente.</li><li><b>Tabla SHA-256 y 3 comandos (Diap. 6):</b> Muestra el desglose transparente <code>13 completos + 6 muestreados 24 MiB</code> y los 3 comandos reproducibles.</li></ul>
+        </div>
+        <div class="subcard">
+          <h4>🛡 Salvaguardas al hablar (Qué SÍ decir vs. Qué NUNCA decir)</h4>
+          <div class="tbl-wrap"><table class="say-table"><thead><tr><th>✅ Frase correcta</th><th>❌ Frase prohibida</th></tr></thead><tbody><tr><td class="say-ok"><i>"Guardamos los 64 caracteres SHA-256 completos y declaramos <code>hash_mode</code>: hash íntegro en los 13 archivos <code>≤ 64 MiB</code> y muestreo 24 MiB + tamaño exacto en los 6 archivos masivos de 1.4–8.4 GB."</i></td><td class="say-bad"><i>"Calculamos SHA-256 byte por byte sobre los 22 GB en 1 segundo."</i> (Sería impreciso frente a la auditoría).</td></tr><tr><td class="say-ok"><i>"El error relativo máximo de MCO en los 39 modelos es <code>2.29 × 10⁻¹²</code> (supera en <code>43×</code> el umbral <code>10⁻¹⁰</code>)."</i></td><td class="say-bad"><i>"El error absoluto en todos los 39 modelos fue <code>10⁻¹⁴</code>."</i></td></tr></tbody></table></div>
+        </div>
+      </div>
+        
+      <div class="subcard rose" style="margin-top:12px">
+        <h4>🎯 Preguntas "corchadoras" del docente (clic para practicar tu respuesta)</h4>
+        <div class="stack" style="gap:8px">
+          <details class="qa-card">
+            <summary><span class="qa-tag">Pregunta difícil</span> <b>¿Por qué empiezan las pruebas unitarias con los ejemplos de las diapositivas de clase (Servidor Web, LOC, Temperatura CPU) antes de probar JobPath?</b></summary>
+            <div class="qa-ans"><b>Respuesta ganadora:</b> Son nuestros <i>golden fixtures</i> (pruebas doradas): al verificar primero que <code>ols.py</code> y <code>lagrange.py</code> reproducen a 10+ decimales las soluciones hechas a mano en clase (<code>a₁=28.5714</code>, <code>a₁=2.05</code>, <code>P₂(65)=66.375</code>, <code>P₂(2)=11</code>), probamos que el motor matemático es correcto antes de escalarlo a <code>1.74 millones</code> de filas.</div>
+          </details>
+          <details class="qa-card">
+            <summary><span class="qa-tag">Pregunta difícil</span> <b>¿Qué pasa si abren las presentaciones HTML en el salón sin conexión a internet?</b></summary>
+            <div class="qa-ans"><b>Respuesta ganadora:</b> Son 100 % autocontenidas: las 12 imágenes van embebidas en <code>base64</code>, todos los simuladores corren en JavaScript local y las 14 fórmulas tienen respaldo offline automático (<code>data-plain</code> en Unicode) si el CDN de KaTeX no carga. ---</div>
+          </details></div>
+      </div>
+      </div>
+    </article>
+    </section>
+
+    <section class="sec-box" id="glosario">
+      <h2 class="sec-title">📚 3. Glosario Maestro Interactivo (A–Z · 43 términos)</h2>
+      <div class="search-row">
+        <input type="search" id="gloSearch" class="search-input" placeholder="Buscar término, símbolo o regla (ej. WLS, Simpson, Runge, MR-09, E = C + K + U, SHA-256)..." oninput="renderGlossary()">
+        <div class="row" id="gloCats">
+          <button class="ctrl ghost on" onclick="setGloCat('all',this)">Todos</button>
+          <button class="ctrl ghost" onclick="setGloCat('mco',this)">MCO</button>
+          <button class="ctrl ghost" onclick="setGloCat('lagrange',this)">Lagrange / PCA</button>
+          <button class="ctrl ghost" onclick="setGloCat('dominio',this)">JobPath / ESCO</button>
+          <button class="ctrl ghost" onclick="setGloCat('verif',this)">Verificación / MR</button>
+        </div>
+      </div>
+      <p class="muted" id="gloCount" style="font-size:13px;margin-bottom:8px"></p>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th style="width:24%">Término / Símbolo</th><th>Significado claro (para explicar en voz alta)</th><th style="width:22%">Dónde aparece</th></tr></thead>
+          <tbody id="gloBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="sec-box" id="acordeon">
+      <h2 class="sec-title">⚡ 4. Acordeón Final de 1 Página, Tiempos y Checklist Previo</h2>
+      <h3 style="font-size:16px;font-weight:800;margin-bottom:8px">4.1 Los 8 Casos en Una Sola Vista</h3>
+      <div class="tbl-wrap"><table class=""><thead><tr><th>#</th><th>Caso</th><th>Pregunta clave</th><th>Fórmula / Método estrella</th><th>Cifra estrella (V2)</th><th>Conclusión en 1 frase</th><th>Cuidado #1 al hablar</th></tr></thead><tbody><tr><td><b>01</b></td><td><code>RL-01</code></td><td>¿Cómo cambian las variables por paso <code>k=1..10</code>?</td><td>MCO + WLS + cohorte <code>≥10</code></td><td><code>R² = 0.9955</code> (<code>+0.225/paso</code>), WLS diff <code>1.67 %</code></td><td>Competencias ESCO suben casi en recta; <code>mean_green</code> exhibe Paradoja de Simpson y duración falla en <code>k=15</code>.</td><td><code>MR-07/08</code> (oficio ESCO, no causalidad).</td></tr><tr><td><b>02</b></td><td><code>RL-02</code></td><td>¿Qué habilidades transfieren y cuándo rechazar MCO?</td><td>MCO + Semáforo <code>MR-06</code> + ISCO-08</td><td>Transferibilidad <code>57.9 %</code> (Gerentes <code>74.0 %</code>); <code>greenShare R² = 0.00004</code></td><td>Casi 6 de cada 10 habilidades extra transfieren; ser "verde" es ortogonal al número de habilidades.</td><td>Avisar acople parte-todo y rechazo <code>R²=0.28</code> en <code>ggb_rl02</code>.</td></tr><tr><td><b>03</b></td><td><code>RL-04</code></td><td>¿Qué pasa al incluir cola censurada y extrapolar a 2027?</td><td>MCO centrado <code>t = año − 2000</code> + <code>MR-09</code></td><td><code>R² = 0.9729</code> cerrados → <b><code>-4.96</code> trim. en 2027</b>; centrado <b><code>4,672×</code></b> mejor</td><td>4 años censurados invierten la pendiente (<code>0.75 → 0.08</code>) y extrapolar produce duraciones negativas desde 2021.</td><td>Alto <code>R²</code> interno <b>no</b> valida extrapolar.</td></tr><tr><td><b>04</b></td><td><code>RL-05</code></td><td>¿Conviene winsorizar y <code>RobustScaler</code> daña <code>R²</code>?</td><td>4 vías outliers + Invarianza afín</td><td><code>Sy/x -21.9 %</code> (<code>0</code> filas perdidas); err máx <code>7.22 × 10⁻¹⁴</code></td><td>Winsorizar vence a borrar filas (<code>-9.6 %</code>) con trade-off en <code>knowledge</code>; <code>04_transformed</code> preserva <code>R²</code> intacto.</td><td>Mencionar que <code>knowledge</code> baja a <code>R²=0.2795</code> (Rechazado).</td></tr><tr><td><b>05</b></td><td><code>LG-01</code></td><td>¿Cómo reconstruir <code>S(q)</code> sin caer en Runge?</td><td>Lagrange <code>P₃</code>, Chebyshev-Lobatto, <code>P₂</code></td><td>Runge <b><code>19.4×</code></b> menor (<code>2.53 → 0.1301</code>), <b><code>0</code> violaciones</b> <code>[0,1]</code></td><td>Equiespaciado grado 16 explota (<code>-248 %</code>); Chebyshev-Lobatto y <code>P₂</code> local eliminan Runge y violaciones.</td><td>Explicar <code>15 nodos*</code> (deduplicación), no-monotonicidad y <i>heaping</i>.</td></tr><tr><td><b>06</b></td><td><code>LG-02</code></td><td>¿Cuántos componentes PCA pide <code>80–95 %</code> de varianza?</td><td>Lagrange directo <code>P₃</code> + inverso <code>P₂</code> + <code>MR-04</code></td><td>Err <code>P₃(4) = 0.0002</code>; Ver. B ahorra 1 comp. (<code>5</code> vs <code>6</code> en <code>95 %</code>)</td><td>En tablas exactas Lagrange brilla; <code>MR-04</code> protege contra la meseta de rango 9 (<code>V(9)=V(10)=1.0</code>).</td><td>Enfatizar PCA en vivo <code>float64</code> y <code>Local P₂</code> en simulador.</td></tr><tr><td><b>07</b></td><td><code>HYB-01</code></td><td>¿Cuándo usar MCO, Global, Chebyshev o Local <code>P₂</code>?</td><td>Torneo <code>4 × 4</code> (LOOCV + Extrap. <code>+2</code>)</td><td>Global estalla <code>108×</code> en anual (<code>12.32</code>); gana <code>0.0036</code> en PCA</td><td>Cada método tiene su terreno: MCO (lineal), Global (tabla exacta corta), <code>P₂</code> local (curvas no lineales).</td><td>Aclarar que Régimen 2 es curvo en arco (<code>R²=0.90</code>).</td></tr><tr><td><b>08</b></td><td><code>HYB-02</code></td><td>¿Cómo probamos exactitud y que <code>data/</code> no se tocó?</td><td>Triple verificación + SHA-256 64-hex + Tests</td><td>MCO rel <code>2.29 × 10⁻¹²</code>; <code>19/19</code> SHA-256; <code>19/19</code> tests; <code>0</code> viol. EN+ES</td><td>Cero cajas negras: 11–16 dígitos exactos vs NumPy/SciPy, 5 scripts GeoGebra y gobernanza reproducible.</td><td>Explicar <code>hash_mode</code> (<code>13</code> completos + <code>6</code> muestreados 24 MiB).</td></tr></tbody></table></div>
+      <div class="grid2" style="margin-top:18px">
+        <div class="subcard indigo">
+          <h4>⏱ 4.2 Guion de Tiempos Recomendado</h4>
+          <ul class="clean"><li><b>Versión rápida (10 minutos):</b> Apertura (<code>1 min</code>) → Bloque MCO <code>01–04</code> (<code>4 min</code>: énfasis en simulador RL-01, semáforo ISCO-5 RL-02, simulador 2027 RL-04 y selector 2 pares RL-05) → Bloque Lagrange <code>05–06</code> (<code>2.5 min</code>: simulador <code>L₀..L₃</code> + gráfica Runge y simulador PCA <code>k(V*)</code>) → Síntesis y Verificación <code>07–08</code> (<code>2.5 min</code>: selector de regímenes HYB-01 + visor GeoGebra y SHA-256 HYB-02).</li><li><b>Versión completa (20–25 minutos):</b> Apertura (<code>1.5 min</code>) + <b><code>2.5 min</code> por cada caso</b> siguiendo el ritmo fijo: <i>Analogía (20 s) → Fórmula clave (25 s) → Simulador en vivo (40 s) → Gráfica con zoom + tabla (40 s) → GeoGebra + salvaguarda (25 s)</i>.</li></ul>
+        </div>
+        <div class="subcard teal">
+          <h4>✅ 4.3 Checklist Técnico 2 Minutos Antes de Presentar</h4>
+          <div class="chk-list" id="chkList"><label class="chk-item"><input type="checkbox" data-chk="chk_0" onchange="saveChk()"><span>Abrir <a href="../presentaciones_separadas.html"><code>presentaciones_separadas.html</code></a> en navegador a pantalla completa (<code>F</code>).</span></label><label class="chk-item"><input type="checkbox" data-chk="chk_1" onchange="saveChk()"><span>Verificar atajos: <code>← →</code> o <code>Espacio</code> para pasar diapositiva, <code>Esc</code> para cerrar el zoom (<code>lightbox</code>) de las gráficas.</span></label><label class="chk-item"><input type="checkbox" data-chk="chk_2" onchange="saveChk()"><span>Probar una vez los 3 simuladores estrella: <code>RL-04</code> (<code>2027 → -4.96</code>), <code>RL-05</code> (<code>Knowledge 5, 13 → 0.7247 / R² 0.3689</code>) y <code>LG-01</code> (<code>q=4</code>, <code>q=12</code>, <code>q=48</code>).</span></label><label class="chk-item"><input type="checkbox" data-chk="chk_3" onchange="saveChk()"><span>Tener a mano una pestaña abierta de <code>https://www.geogebra.org/classic</code> por si el docente pide pegar en vivo uno de los 5 scripts (recomendado: <code>ggb_lg01_survival_p3_milestones.txt</code> o <code>ggb_rl04_annual_duration_extrapolation.txt</code>).</span></label><label class="chk-item"><input type="checkbox" data-chk="chk_4" onchange="saveChk()"><span>Sin internet en el aula: tranquilidad total — imágenes (<code>base64</code>), simuladores JS y las <b>14 fórmulas (<code>data-plain</code>)</b> funcionan 100 % offline.</span></label></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+// 1. Reading progress bar
+window.addEventListener('scroll', () => {
+  const h = document.documentElement;
+  const pct = (h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight)) * 100;
+  document.getElementById('progress').style.width = pct.toFixed(1) + '%';
+});
+
+// 2. KaTeX rendering + 100% offline Unicode fallback
+window.addEventListener('load', () => {
+  if (window.renderMathInElement) {
+    renderMathInElement(document.body, {
+      delimiters: [{left: '$$', right: '$$', display: true}, {left: '\\(', right: '\\)', display: false}],
+      throwOnError: false
+    });
+  } else {
+    document.querySelectorAll('.formula[data-plain]').forEach(el => {
+      el.innerHTML = '<span class="mono" style="font-weight:700;display:block;text-align:center">' + el.dataset.plain + '</span>';
+    });
+  }
+});
+
+// 3. Filter cases by block
+function filterCases(block, btn) {
+  document.querySelectorAll('.filter-bar button[data-f]').forEach(b => b.classList.remove('on'));
+  if (btn) btn.classList.add('on');
+  document.querySelectorAll('.case-section').forEach(sec => {
+    sec.classList.toggle('hidden', block !== 'all' && sec.dataset.block !== block);
+  });
+}
+
+// 4. Toggle all Q&A flashcards
+function toggleAllQA(open) {
+  document.querySelectorAll('details.qa-card').forEach(d => { d.open = open; });
+}
+
+// 5. Interactive Glossary A-Z
+const GLOSSARY = [{"term_html": "<b><code>01_raw</code> → <code>04_transformed</code></b>", "term_plain": "01_raw → 04_transformed", "def_html": "Las 4 etapas del pipeline de datos: crudos (<code>01</code>), limpios/ESCO (<code>02</code>), datasets analíticos A y B (<code>03</code>) y matrices escaladas ML (<code>04</code>).", "def_plain": "Las 4 etapas del pipeline de datos: crudos (01), limpios/ESCO (02), datasets analíticos A y B (03) y matrices escaladas ML (04).", "where_html": "Transversal (Casos 01–08).", "cat": "verif"}, {"term_html": "<b><code>a₀</code> (Intercepto)</b>", "term_plain": "a₀ (Intercepto)", "def_html": "Valor que predice la recta cuando <code>X = 0</code>. Al centrar <code>t = año − 2000</code>, se vuelve el valor real en el año 2000.", "def_plain": "Valor que predice la recta cuando X = 0. Al centrar t = año − 2000, se vuelve el valor real en el año 2000.", "where_html": "Casos 01–04.", "cat": "mco"}, {"term_html": "<b><code>a₁</code> (Pendiente)</b>", "term_plain": "a₁ (Pendiente)", "def_html": "Cuánto sube o baja <code>Y</code> en promedio por cada unidad que aumenta <code>X</code> (<code>Δŷ / Δx</code>).", "def_plain": "Cuánto sube o baja Y en promedio por cada unidad que aumenta X (Δŷ / Δx).", "where_html": "Casos 01–04.", "cat": "mco"}, {"term_html": "<b>Acople parte-todo</b>", "term_plain": "Acople parte-todo", "def_html": "Cuando <code>X</code> es un subconjunto aditivo de <code>Y</code> (ej. <code>n_ess_comp</code> forma parte de <code>n_essential</code>), lo que eleva <code>R²</code> por estructura interna del catálogo.", "def_plain": "Cuando X es un subconjunto aditivo de Y (ej. n_ess_comp forma parte de n_essential), lo que eleva R² por estructura interna del catálogo.", "where_html": "Caso 02 (<code>RL-02</code>).", "cat": "mco"}, {"term_html": "<b>Apilamiento anual (<i>heaping</i>)</b>", "term_plain": "Apilamiento anual (heaping)", "def_html": "Tendencia en hojas de vida a reportar duraciones exactas de 1, 2 o 3 años, generando escalones cada 4 trimestres en <code>S(q)</code>.", "def_plain": "Tendencia en hojas de vida a reportar duraciones exactas de 1, 2 o 3 años, generando escalones cada 4 trimestres en S(q).", "where_html": "Caso 05 (<code>LG-01</code>).", "cat": "lagrange"}, {"term_html": "<b>Cancelación numérica</b>", "term_plain": "Cancelación numérica", "def_html": "Pérdida de precisión decimal al restar dos números enormes casi iguales (ej. <code>n∑x² − (∑x)²</code> con años <code>2010²</code>). Se evita centrando <code>X</code>.", "def_plain": "Pérdida de precisión decimal al restar dos números enormes casi iguales (ej. n∑x² − (∑x)² con años 2010²). Se evita centrando X.", "where_html": "Caso 03 (<code>RL-04</code>).", "cat": "mco"}, {"term_html": "<b><code>ceil(k)</code> (Función techo)</b>", "term_plain": "ceil(k) (Función techo)", "def_html": "Redondear hacia arriba al entero siguiente (ej. <code>ceil(4.33) = 5</code> componentes) para no quedarse por debajo de una meta de varianza <code>V*</code>.", "def_plain": "Redondear hacia arriba al entero siguiente (ej. ceil(4.33) = 5 componentes) para no quedarse por debajo de una meta de varianza V.", "where_html": "Caso 06 (<code>LG-02</code>).", "cat": "lagrange"}, {"term_html": "<b>Censura a la derecha (<code>~es_vigente</code>)</b>", "term_plain": "Censura a la derecha (~es_vigente)", "def_html": "Registros recientes cuyo desenlace final aún no ha ocurrido (empleos todavía activos sin fecha real de fin).", "def_plain": "Registros recientes cuyo desenlace final aún no ha ocurrido (empleos todavía activos sin fecha real de fin).", "where_html": "Casos 01, 03, 05 (<code>MR-09</code>).", "cat": "verif"}, {"term_html": "<b>Centrado de variable</b>", "term_plain": "Centrado de variable", "def_html": "Restar un origen de referencia (<code>t = año − 2000</code>) para mejorar estabilidad numérica e interpretabilidad de <code>a₀</code> sin cambiar <code>a₁</code> ni <code>R²</code>.", "def_plain": "Restar un origen de referencia (t = año − 2000) para mejorar estabilidad numérica e interpretabilidad de a₀ sin cambiar a₁ ni R².", "where_html": "Caso 03 (<code>RL-04</code>).", "cat": "mco"}, {"term_html": "<b>Centroide <code>(x̄, ȳ)</code></b>", "term_plain": "Centroide (x̄, ȳ)", "def_html": "Punto formado por el promedio de <code>X</code> y el promedio de <code>Y</code>; toda recta MCO pasa exactamente por él.", "def_plain": "Punto formado por el promedio de X y el promedio de Y; toda recta MCO pasa exactamente por él.", "where_html": "Casos 01–04.", "cat": "mco"}, {"term_html": "<b>Chebyshev-Lobatto</b>", "term_plain": "Chebyshev-Lobatto", "def_html": "Distribución de nodos <code>cos(kπ/n)</code> más densos en los bordes e incluyendo siempre los extremos <code>[a, b]</code>; mitiga el Fenómeno de Runge sin violar <code>[0, 1]</code>.", "def_plain": "Distribución de nodos cos(kπ/n) más densos en los bordes e incluyendo siempre los extremos [a, b]; mitiga el Fenómeno de Runge sin violar [0, 1].", "where_html": "Casos 05 y 07.", "cat": "lagrange"}, {"term_html": "<b>Colinealidad / Rango 9</b>", "term_plain": "Colinealidad / Rango 9", "def_html": "Cuando una columna es combinación lineal exacta de otras (<code>E = C + K + U</code>), solo 9 de 10 columnas son independientes y <code>PC10 ≈ 0</code>.", "def_plain": "Cuando una columna es combinación lineal exacta de otras (E = C + K + U), solo 9 de 10 columnas son independientes y PC10 ≈ 0.", "where_html": "Caso 06 (<code>LG-02</code>).", "cat": "lagrange"}, {"term_html": "<b>Delta de Kronecker <code>Lᵢ(xⱼ)=δᵢⱼ</code></b>", "term_plain": "Delta de Kronecker Lᵢ(xⱼ)=δᵢⱼ", "def_html": "Propiedad de las bases de Lagrange: cada peso <code>Lᵢ</code> vale <code>1</code> en su propio nodo y <code>0</code> en todos los demás.", "def_plain": "Propiedad de las bases de Lagrange: cada peso Lᵢ vale 1 en su propio nodo y 0 en todos los demás.", "where_html": "Casos 05 y 06.", "cat": "lagrange"}, {"term_html": "<b><code>E = C + K + U</code></b>", "term_plain": "E = C + K + U", "def_html": "Identidad de ESCO: <code>Esenciales = Competencias + Conocimientos + Sin clasificar</code>.", "def_plain": "Identidad de ESCO: Esenciales = Competencias + Conocimientos + Sin clasificar.", "where_html": "Casos 04 y 06.", "cat": "dominio"}, {"term_html": "<b><code>E∞</code> (Error máximo)</b>", "term_plain": "E∞ (Error máximo)", "def_html": "Peor error absoluto puntual `max", "def_plain": "Peor error absoluto puntual max", "where_html": "y − ŷ", "cat": "lagrange"}, {"term_html": "<b>ESCO v1.2.1 / ISCO-08</b>", "term_plain": "ESCO v1.2.1 / ISCO-08", "def_html": "Clasificación europea oficial de <code>3,039</code> oficios y sus competencias (<code>ESCO</code>), organizada en <code>10</code> grandes grupos profesionales (<code>ISCO-08</code>).", "def_plain": "Clasificación europea oficial de 3,039 oficios y sus competencias (ESCO), organizada en 10 grandes grupos profesionales (ISCO-08).", "where_html": "Todos los casos (esp. Caso 02).", "cat": "dominio"}, {"term_html": "<b>Extrapolación</b>", "term_plain": "Extrapolación", "def_html": "Usar un modelo para predecir <b>fuera</b> del rango observado de <code>X</code> (zona peligrosa en MCO y explosiva en Lagrange global).", "def_plain": "Usar un modelo para predecir fuera del rango observado de X (zona peligrosa en MCO y explosiva en Lagrange global).", "where_html": "Casos 01, 03, 05, 07.", "cat": "mco"}, {"term_html": "<b>Fenómeno de Runge</b>", "term_plain": "Fenómeno de Runge", "def_html": "Oscilaciones gigantes cerca de los extremos al aumentar el grado de un polinomio interpolante con nodos equiespaciados.", "def_plain": "Oscilaciones gigantes cerca de los extremos al aumentar el grado de un polinomio interpolante con nodos equiespaciados.", "where_html": "Casos 05 y 07.", "cat": "lagrange"}, {"term_html": "<b><code>float64</code></b>", "term_plain": "float64", "def_html": "Estándar IEEE 754 de doble precisión (~15–16 dígitos decimales significativos).", "def_plain": "Estándar IEEE 754 de doble precisión (~15–16 dígitos decimales significativos).", "where_html": "Casos 06 y 08.", "cat": "verif"}, {"term_html": "<b>Forma monómica</b>", "term_plain": "Forma monómica", "def_html": "Escritura expandida del polinomio como <code>c₃x³ + c₂x² + c₁x + c₀</code>, algebraicamente idéntica a la forma de Lagrange.", "def_plain": "Escritura expandida del polinomio como c₃x³ + c₂x² + c₁x + c₀, algebraicamente idéntica a la forma de Lagrange.", "where_html": "Casos 05 y 06.", "cat": "lagrange"}, {"term_html": "<b><code>greenShare</code></b>", "term_plain": "greenShare", "def_html": "Fracción de habilidades ligadas a sostenibilidad / transición verde exigidas por cada ocupación ESCO.", "def_plain": "Fracción de habilidades ligadas a sostenibilidad / transición verde exigidas por cada ocupación ESCO.", "where_html": "Casos 01, 02, 03.", "cat": "dominio"}, {"term_html": "<b><code>hash_mode</code></b>", "term_plain": "hash_mode", "def_html": "Modo transparente de verificación SHA-256: <code>full_sha256</code> (<code>≤ 64 MiB</code>) o <code>sampled_24MiB_plus_meta_sha256</code> (<code>&gt; 64 MiB</code>).", "def_plain": "Modo transparente de verificación SHA-256: full_sha256 (≤ 64 MiB) o sampled_24MiB_plus_meta_sha256 (> 64 MiB).", "where_html": "Caso 08 (<code>HYB-02</code>).", "cat": "verif"}, {"term_html": "<b>Interpolación inversa</b>", "term_plain": "Interpolación inversa", "def_html": "Intercambiar ejes para hallar el valor de entrada <code>k</code> necesario para alcanzar una salida objetivo <code>V*</code> (exige monotonía estricta).", "def_plain": "Intercambiar ejes para hallar el valor de entrada k necesario para alcanzar una salida objetivo V (exige monotonía estricta).", "where_html": "Caso 06 (<code>LG-02</code>).", "cat": "lagrange"}, {"term_html": "<b>Invarianza afín</b>", "term_plain": "Invarianza afín", "def_html": "Propiedad algebraica por la cual escalar linealmente <code>X</code> e <code>Y</code> (<code>RobustScaler</code>) no modifica <code>R²</code> y escala predeciblemente <code>a₁</code>, <code>a₀</code> y <code>Sy/x</code>.", "def_plain": "Propiedad algebraica por la cual escalar linealmente X e Y (RobustScaler) no modifica R² y escala predeciblemente a₁, a₀ y Sy/x.", "where_html": "Caso 04 (<code>RL-05</code>).", "cat": "mco"}, {"term_html": "<b>Lagrange Local <code>P₂</code></b>", "term_plain": "Lagrange Local P₂", "def_html": "Construir parábolas locales usando solo los 3 nodos más cercanos a cada consulta; evita el Fenómeno de Runge y funciona muy bien en curvas no lineales.", "def_plain": "Construir parábolas locales usando solo los 3 nodos más cercanos a cada consulta; evita el Fenómeno de Runge y funciona muy bien en curvas no lineales.", "where_html": "Casos 05, 06, 07.", "cat": "lagrange"}, {"term_html": "<b>LOOCV</b>", "term_plain": "LOOCV", "def_html": "<i>Leave-One-Out Cross-Validation</i>: ocultar cada punto interior uno a uno, re-ajustar sin verlo y medir el error de predicción.", "def_plain": "Leave-One-Out Cross-Validation: ocultar cada punto interior uno a uno, re-ajustar sin verlo y medir el error de predicción.", "where_html": "Caso 07 (<code>HYB-01</code>).", "cat": "verif"}, {"term_html": "<b><code>−log₁₀(error)</code></b>", "term_plain": "−log₁₀(error)", "def_html": "Transformación que convierte errores pequeños en cantidad de dígitos exactos (<code>10⁻¹⁴ → 14</code> dígitos; umbral <code>10⁻¹⁰ → 10</code>).", "def_plain": "Transformación que convierte errores pequeños en cantidad de dígitos exactos (10⁻¹⁴ → 14 dígitos; umbral 10⁻¹⁰ → 10).", "where_html": "Caso 08 (<code>HYB-02</code>).", "cat": "verif"}, {"term_html": "<b>MAE / RMSE</b>", "term_plain": "MAE / RMSE", "def_html": "<code>MAE</code> = promedio de errores absolutos; <code>RMSE</code> = raíz del promedio de errores al cuadrado (penaliza más los errores grandes). Menor = mejor.", "def_plain": "MAE = promedio de errores absolutos; RMSE = raíz del promedio de errores al cuadrado (penaliza más los errores grandes). Menor = mejor.", "where_html": "Casos 05 y 07.", "cat": "verif"}, {"term_html": "<b>MCO (OLS)</b>", "term_plain": "MCO (OLS)", "def_html": "Mínimos Cuadrados Ordinarios: halla la recta única que minimiza la suma de residuos al cuadrado <code>Sᵣ = ∑eᵢ²</code>.", "def_plain": "Mínimos Cuadrados Ordinarios: halla la recta única que minimiza la suma de residuos al cuadrado Sᵣ = ∑eᵢ².", "where_html": "Casos 01–04, 07, 08.", "cat": "mco"}, {"term_html": "<b><code>MR-04</code> a <code>MR-09</code></b>", "term_plain": "MR-04 a MR-09", "def_html": "Reglas metodológicas del proyecto (nodos distintos, rechazo <code>R²&lt;0.30</code>, no causalidad, atribución ESCO, solo empleos cerrados).", "def_plain": "Reglas metodológicas del proyecto (nodos distintos, rechazo R²<0.30, no causalidad, atribución ESCO, solo empleos cerrados).", "where_html": "Transversal.", "cat": "verif"}, {"term_html": "<b>Ortogonalidad</b>", "term_plain": "Ortogonalidad", "def_html": "Ausencia total de relación lineal entre dos variables (<code>R² ≈ 0</code>, como <code>greenShare</code> vs <code>n_essential</code>).", "def_plain": "Ausencia total de relación lineal entre dos variables (R² ≈ 0, como greenShare vs n_essential).", "where_html": "Caso 02 (<code>RL-02</code>).", "cat": "mco"}, {"term_html": "<b>Outlier / Winsorización IQR</b>", "term_plain": "Outlier / Winsorización IQR", "def_html": "Dato extremo; winsorizar recorta valores fuera de <code>[Q1−1.5·IQR, Q3+1.5·IQR]</code> al límite en vez de borrar la fila.", "def_plain": "Dato extremo; winsorizar recorta valores fuera de [Q1−1.5·IQR, Q3+1.5·IQR] al límite en vez de borrar la fila.", "where_html": "Casos 04 y 06.", "cat": "mco"}, {"term_html": "<b>Paradoja de Simpson</b>", "term_plain": "Paradoja de Simpson", "def_html": "Tendencia observada en el agregado global que desaparece o <b>invierte su signo</b> al analizar subgrupos/cohortes fijas (como <code>mean_green</code>).", "def_plain": "Tendencia observada en el agregado global que desaparece o invierte su signo al analizar subgrupos/cohortes fijas (como mean_green).", "where_html": "Caso 01 (<code>RL-01</code>).", "cat": "dominio"}, {"term_html": "<b>Partición de la unidad (<code>∑Lᵢ=1</code>)</b>", "term_plain": "Partición de la unidad (∑Lᵢ=1)", "def_html": "Propiedad exacta de Lagrange: en cualquier punto <code>x</code> (incluso extrapolando), la suma de todos los pesos base vale siempre <code>1</code>.", "def_plain": "Propiedad exacta de Lagrange: en cualquier punto x (incluso extrapolando), la suma de todos los pesos base vale siempre 1.", "where_html": "Casos 05 y 06.", "cat": "lagrange"}, {"term_html": "<b>PCA</b>", "term_plain": "PCA", "def_html": "Análisis de Componentes Principales: transforma variables correlacionadas en componentes ortogonales ordenados por varianza explicada.", "def_plain": "Análisis de Componentes Principales: transforma variables correlacionadas en componentes ortogonales ordenados por varianza explicada.", "where_html": "Caso 06 (<code>LG-02</code>).", "cat": "lagrange"}, {"term_html": "<b>PCHIP</b>", "term_plain": "PCHIP", "def_html": "Interpolación cúbica por tramos que preserva la monotonicidad (no crea rebotes falsos hacia arriba en curvas decrecientes).", "def_plain": "Interpolación cúbica por tramos que preserva la monotonicidad (no crea rebotes falsos hacia arriba en curvas decrecientes).", "where_html": "Caso 05 (<code>LG-01</code>).", "cat": "lagrange"}, {"term_html": "<b><code>R²</code> y <code>r</code></b>", "term_plain": "R² y r", "def_html": "<code>R²</code> (<code>0</code> a <code>1</code>): fracción de variación explicada por la recta. <code>r</code> (<code>-1</code> a <code>+1</code>): dirección (<code>+</code>/<code>-</code>) y fuerza de la relación lineal (<code>r² = R²</code>).", "def_plain": "R² (0 a 1): fracción de variación explicada por la recta. r (-1 a +1): dirección (+/-) y fuerza de la relación lineal (r² = R²).", "where_html": "Casos 01–04, 07.", "cat": "mco"}, {"term_html": "<b>Residuo (<code>eᵢ</code>)</b>", "term_plain": "Residuo (eᵢ)", "def_html": "Error vertical entre el dato real y la recta: <code>eᵢ = yᵢ − ŷᵢ</code>.", "def_plain": "Error vertical entre el dato real y la recta: eᵢ = yᵢ − ŷᵢ.", "where_html": "Casos 01–04.", "cat": "mco"}, {"term_html": "<b><code>RobustScaler</code></b>", "term_plain": "RobustScaler", "def_html": "Transformador <code>(x − mediana) / IQR</code> resistente a valores atípicos usado en <code>04_transformed</code>.", "def_plain": "Transformador (x − mediana) / IQR resistente a valores atípicos usado en 04_transformed.", "where_html": "Caso 04 (<code>RL-05</code>).", "cat": "mco"}, {"term_html": "<b>SHA-256 (64 hex)</b>", "term_plain": "SHA-256 (64 hex)", "def_html": "Huella digital criptográfica de 256 bits (64 caracteres hexadecimales) que certifica que ningún archivo en <code>data/</code> fue modificado.", "def_plain": "Huella digital criptográfica de 256 bits (64 caracteres hexadecimales) que certifica que ningún archivo en data/ fue modificado.", "where_html": "Caso 08 (<code>HYB-02</code>).", "cat": "verif"}, {"term_html": "<b><code>Sₜ</code>, <code>Sᵣ</code> y <code>Sy/x</code></b>", "term_plain": "Sₜ, Sᵣ y Sy/x", "def_html": "<code>Sₜ</code> = variación total; <code>Sᵣ</code> = suma de errores al cuadrado; <code>Sy/x = √(Sᵣ/(n−2))</code> = error típico vertical en unidades de <code>Y</code>.", "def_plain": "Sₜ = variación total; Sᵣ = suma de errores al cuadrado; Sy/x = √(Sᵣ/(n−2)) = error típico vertical en unidades de Y.", "where_html": "Casos 01–04.", "cat": "mco"}, {"term_html": "<b>Teorema de unicidad</b>", "term_plain": "Teorema de unicidad", "def_html": "Dados <code>n + 1</code> puntos con <code>xᵢ</code> distintos, existe un <b>único</b> polinomio de grado <code>≤ n</code> que pasa por todos (<code>p(x) ≡ Polynomial(P)</code>).", "def_plain": "Dados n + 1 puntos con xᵢ distintos, existe un único polinomio de grado ≤ n que pasa por todos (p(x) ≡ Polynomial(P)).", "where_html": "Casos 05 y 06.", "cat": "lagrange"}, {"term_html": "<b>WLS</b>", "term_plain": "WLS", "def_html": "Mínimos Cuadrados Ponderados: asigna mayor peso a observaciones con mayor tamaño muestral (<code>n_k</code>) para comprobar robustez frente a heterocedasticidad.", "def_plain": "Mínimos Cuadrados Ponderados: asigna mayor peso a observaciones con mayor tamaño muestral (n_k) para comprobar robustez frente a heterocedasticidad.", "where_html": "Caso 01 (<code>RL-01</code>).", "cat": "mco"}];
+let gloCat = 'all';
+function setGloCat(cat, btn) {
+  gloCat = cat;
+  document.querySelectorAll('#gloCats button').forEach(b => b.classList.remove('on'));
+  if (btn) btn.classList.add('on');
+  renderGlossary();
+}
+function renderGlossary() {
+  const q = (document.getElementById('gloSearch').value || '').trim().toLowerCase();
+  const hits = GLOSSARY.filter(item => {
+    if (gloCat !== 'all' && item.cat !== gloCat) return false;
+    if (!q) return true;
+    return (item.term_plain + ' ' + item.def_plain).toLowerCase().includes(q);
+  });
+  document.getElementById('gloCount').textContent = 'Mostrando ' + hits.length + ' de ' + GLOSSARY.length + ' términos.';
+  document.getElementById('gloBody').innerHTML = hits.map(it =>
+    '<tr><td><b>' + it.term_html + '</b></td><td>' + it.def_html + '</td><td>' + it.where_html + '</td></tr>'
+  ).join('') || '<tr><td colspan="3" style="text-align:center;color:var(--muted)">No se encontraron términos para esa búsqueda.</td></tr>';
+}
+renderGlossary();
+
+// 6. Interactive Rehearsal Timer
+let baseSec = 600, remSec = 600, tHandle = null;
+function fmtTime(s) {
+  const m = Math.floor(s / 60), r = s % 60;
+  return String(m).padStart(2, '0') + ':' + String(r).padStart(2, '0');
+}
+function updTimer() { document.getElementById('timerDisp').textContent = fmtTime(remSec); }
+function setTimer(sec) {
+  stopTimer(); baseSec = sec; remSec = sec; updTimer();
+}
+function stopTimer() {
+  if (tHandle) { clearInterval(tHandle); tHandle = null; }
+  document.getElementById('btnRun').textContent = '▶ Iniciar';
+}
+function toggleTimer() {
+  if (tHandle) { stopTimer(); return; }
+  document.getElementById('btnRun').textContent = '⏸ Pausar';
+  tHandle = setInterval(() => {
+    if (remSec > 0) { remSec--; updTimer(); }
+    else { stopTimer(); }
+  }, 1000);
+}
+function resetTimer() { stopTimer(); remSec = baseSec; updTimer(); }
+
+// 7. Persistent Checklist (localStorage)
+function saveChk() {
+  const st = {};
+  document.querySelectorAll('#chkList input[type=checkbox]').forEach(cb => {
+    st[cb.dataset.chk] = cb.checked;
+    cb.closest('.chk-item').classList.toggle('done', cb.checked);
+  });
+  try { localStorage.setItem('jobpath_study_chk', JSON.stringify(st)); } catch (e) {}
+}
+(function loadChk() {
+  try {
+    const st = JSON.parse(localStorage.getItem('jobpath_study_chk') || '{}');
+    document.querySelectorAll('#chkList input[type=checkbox]').forEach(cb => {
+      if (st[cb.dataset.chk]) {
+        cb.checked = true;
+        cb.closest('.chk-item').classList.add('done');
+      }
+    });
+  } catch (e) {}
+})();
+
+// Expand all Q&A automatically before printing
+window.addEventListener('beforeprint', () => toggleAllQA(true));
+</script>
+</body>
+</html>
