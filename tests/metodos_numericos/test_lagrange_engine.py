@@ -80,6 +80,20 @@ class TestLagrangeEngine(unittest.TestCase):
         yq = piecewise_lagrange_eval(xs, ys, xq, degree=2)
         np.testing.assert_allclose(yq, 2.0 * xq**2 - 3.0 * xq + 7.0, atol=1e-10)
 
+    def test_chebyshev_lobatto_includes_exact_endpoints(self) -> None:
+        # Float Chebyshev-Lobatto nodes must anchor exact endpoints [a, b] with length degree + 1
+        lob_f = chebyshev_nodes(1.0, 40.0, degree=12, snap_int=False, kind="lobatto")
+        self.assertEqual(len(lob_f), 13)
+        self.assertAlmostEqual(float(lob_f[0]), 1.0, places=12)
+        self.assertAlmostEqual(float(lob_f[-1]), 40.0, places=12)
+        self.assertTrue(np.all(np.diff(lob_f) > 0))
+
+        # Integer-snapped Chebyshev-Lobatto must stay strictly increasing and include both endpoints
+        lob_i = chebyshev_nodes(1.0, 40.0, degree=16, snap_int=True, kind="lobatto")
+        self.assertTrue(np.all(np.diff(lob_i) > 0))
+        self.assertEqual(float(lob_i[0]), 1.0)
+        self.assertEqual(float(lob_i[-1]), 40.0)
+
 
 if __name__ == "__main__":
     unittest.main()
