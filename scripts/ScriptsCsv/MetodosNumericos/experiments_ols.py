@@ -60,61 +60,104 @@ class RL05Bundle:
     scaler_source: str
 
 
+def _wls_slope_intercept(x: np.ndarray, y: np.ndarray, weights: np.ndarray) -> tuple[float, float]:
+    """Compute closed-form Weighted Least Squares (WLS) intercept and slope."""
+    xv = np.asarray(x, dtype=np.float64)
+    yv = np.asarray(y, dtype=np.float64)
+    wv = np.asarray(weights, dtype=np.float64)
+    w_sum = float(np.sum(wv))
+    xw = float(np.sum(wv * xv) / w_sum)
+    yw = float(np.sum(wv * yv) / w_sum)
+    dx = xv - xw
+    dy = yv - yw
+    a1 = float(np.sum(wv * dx * dy) / np.sum(wv * dx * dx))
+    a0 = float(yw - a1 * xw)
+    return a0, a1
+
+
 def run_rl01_career_steps(df_a: pd.DataFrame) -> RL01Bundle:
-    """IDEA-RL-01: Career-step progression OLS (job_order 1..10) + extrapolation & cohort check."""
+    """IDEA-RL-01: Career-step progression OLS (job_order 1..10) + WLS, cohort & MR-09 closed-job dur_q."""
     clf = df_a.loc[df_a["saber_skills"] == "ok"].copy()
     clf.sort_values(["resume_id", "start_ord", "end_ord"], inplace=True)
     clf["job_order"] = clf.groupby("resume_id").cumcount() + 1
 
+    # Strict MR-09 censoring consistency: compute tenure duration ONLY on closed jobs (~es_vigente)
+    clf_closed = clf.loc[~clf["es_vigente"]]
+
     # Full classified step profile (k = 1..15 so we can compare extrapolation at k=11, 12, 15 against observed!)
-    step_all = (
+    step_base = (
         clf.loc[clf["job_order"] <= 15]
         .groupby("job_order", as_index=False)
         .agg(
             n_rows=("resume_id", "size"),
             mean_skills=("n_skills_essential", "mean"),
-            mean_dur_q=("dur_q", "mean"),
-            median_dur_q=("dur_q", "median"),
             mean_green=("greenShare", "mean"),
             reincide_rate=("reincide", "mean"),
         )
     )
+    step_dur = (
+        clf_closed.loc[clf_closed["job_order"] <= 15]
+        .groupby("job_order", as_index=False)
+        .agg(
+            n_closed_rows=("resume_id", "size"),
+            mean_dur_q=("dur_q", "mean"),
+            median_dur_q=("dur_q", "median"),
+        )
+    )
+    step_all = step_base.merge(step_dur, on="job_order", how="left")[
+        ["job_order", "n_rows", "n_closed_rows", "mean_skills", "mean_dur_q", "median_dur_q", "mean_green", "reincide_rate"]
+    ]
     step_10 = step_all.loc[step_all["job_order"] <= 10].copy()
 
     # Cohort-controlled sensitivity check: persons with >= 10 classified jobs (controls survivorship!)
     job_counts = clf.groupby("resume_id")["job_order"].transform("max")
-    step_ge10 = (
-        clf.loc[(job_counts >= 10) & (clf["job_order"] <= 10)]
+    coh_mask = (job_counts >= 10) & (clf["job_order"] <= 10)
+    step_ge10_base = (
+        clf.loc[coh_mask]
         .groupby("job_order", as_index=False)
         .agg(
             n_rows=("resume_id", "size"),
             mean_skills=("n_skills_essential", "mean"),
-            mean_dur_q=("dur_q", "mean"),
             mean_green=("greenShare", "mean"),
             reincide_rate=("reincide", "mean"),
         )
     )
+    step_ge10_dur = (
+        clf.loc[coh_mask & (~clf["es_vigente"])]
+        .groupby("job_order", as_index=False)
+        .agg(
+            n_closed_rows=("resume_id", "size"),
+            mean_dur_q=("dur_q", "mean"),
+        )
+    )
+    step_ge10 = step_ge10_base.merge(step_ge10_dur, on="job_order", how="left")
 
     specs = [
         ("mean_skills", "Essential skills required by occupation (mean)"),
         ("reincide_rate", "Occupation recurrence rate P(veces_ese_oficio > 1)"),
-        ("mean_dur_q", "Mean tenure duration (quarters)"),
+        ("mean_dur_q", "Mean closed-job tenure duration (quarters, ~es_vigente)"),
         ("mean_green", "Mean ESCO greenShare intensity"),
     ]
     models: Dict[str, OLSResult] = {}
     rows: List[Dict[str, object]] = []
 
     for col, label in specs:
+        w_col = "n_closed_rows" if col == "mean_dur_q" else "n_rows"
         res = regresion_lineal(step_10["job_order"].values, step_10[col].values, name=f"{col} ~ job_order (1..10)")
+        wls_a0, wls_a1 = _wls_slope_intercept(step_10["job_order"].values, step_10[col].values, step_10[w_col].values)
+        wls_rel = abs(wls_a1 - res.a1) / max(abs(res.a1), 1e-12) * 100.0
         models[col] = res
         row = res.to_dict()
         row.update(
             {
                 "idea_id": "IDEA-RL-01",
-                "dataset_version": "Version A (with outliers)",
+                "dataset_version": "Version A (closed-only dur_q per MR-09)" if col == "mean_dur_q" else "Version A (with outliers)",
                 "x_var": "job_order (1..10)",
                 "y_var": col,
                 "y_label": label,
+                "wls_a0": wls_a0,
+                "wls_a1": wls_a1,
+                "wls_slope_rel_diff_pct": wls_rel,
             }
         )
         rows.append(row)
@@ -125,14 +168,21 @@ def run_rl01_career_steps(df_a: pd.DataFrame) -> RL01Bundle:
             step_ge10[col].values,
             name=f"{col} ~ job_order (cohort >=10 jobs)",
         )
+        wls_c_a0, wls_c_a1 = _wls_slope_intercept(
+            step_ge10["job_order"].values, step_ge10[col].values, step_ge10[w_col].values
+        )
+        wls_c_rel = abs(wls_c_a1 - res_coh.a1) / max(abs(res_coh.a1), 1e-12) * 100.0
         row_coh = res_coh.to_dict()
         row_coh.update(
             {
                 "idea_id": "IDEA-RL-01 (cohort >=10)",
-                "dataset_version": "Version A (persons with >=10 jobs)",
+                "dataset_version": "Version A (persons >=10 jobs, ~es_vigente)" if col == "mean_dur_q" else "Version A (persons with >=10 jobs)",
                 "x_var": "job_order (1..10)",
                 "y_var": col,
                 "y_label": label,
+                "wls_a0": wls_c_a0,
+                "wls_a1": wls_c_a1,
+                "wls_slope_rel_diff_pct": wls_c_rel,
             }
         )
         rows.append(row_coh)
@@ -263,21 +313,43 @@ def run_rl02_esco_catalog(cfg: NumericalMethodsConfig) -> RL02Bundle:
 
 
 def run_rl04_annual_drift(cfg: NumericalMethodsConfig, df_a: pd.DataFrame) -> RL04Bundle:
-    """IDEA-RL-04: Annual macro-cohort drift (2000-2019 vs. 2000-2023) + extrapolation & raw split audit."""
+    """IDEA-RL-04: Annual macro-cohort drift (2000-2019 vs. 2000-2023) + MR-09 closed dur_q & raw split audit."""
     clf = df_a.loc[(df_a["saber_skills"] == "ok") & (df_a["start_year"] >= 2000) & (df_a["start_year"] <= 2023)].copy()
-    ann = (
+    ann_base = (
         clf.groupby("start_year", as_index=False)
         .agg(
             n_starts=("resume_id", "size"),
             mean_skills=("n_skills_essential", "mean"),
             mean_knowledge=("n_skills_knowledge", "mean"),
-            mean_dur_q=("dur_q", "mean"),
+            mean_dur_q_incl_active=("dur_q", "mean"),
             mean_green=("greenShare", "mean"),
             reincide_rate=("reincide", "mean"),
         )
         .sort_values("start_year")
         .reset_index(drop=True)
     )
+    # Strict MR-09 censoring consistency: closed jobs only (~es_vigente) for mean_dur_q
+    ann_closed = (
+        clf.loc[~clf["es_vigente"]]
+        .groupby("start_year", as_index=False)
+        .agg(
+            n_closed_starts=("resume_id", "size"),
+            mean_dur_q=("dur_q", "mean"),
+        )
+    )
+    ann = ann_base.merge(ann_closed, on="start_year", how="left")[
+        [
+            "start_year",
+            "n_starts",
+            "n_closed_starts",
+            "mean_skills",
+            "mean_knowledge",
+            "mean_dur_q",
+            "mean_dur_q_incl_active",
+            "mean_green",
+            "reincide_rate",
+        ]
+    ]
     ann["year_centered"] = ann["start_year"] - 2000.0
 
     ann_valid = ann.loc[ann["start_year"] <= 2019].copy()

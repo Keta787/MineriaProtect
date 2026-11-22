@@ -3,12 +3,17 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
 
-from .config import NumericalMethodsConfig, VERIFIED_PCA_50K
+from scripts.ScriptsCsv.Transformacion.date_features import add_date_ordinals, add_job_order, add_start_year
+from scripts.ScriptsCsv.Transformacion.encoding import ordinal_from_mapping
+from scripts.ScriptsCsv.Transformacion.pca_diagnostic import run_pca
+from scripts.ScriptsCsv.Transformacion.scaling import fit_transform_full
+
+from .config import NumericalMethodsConfig, SEED
 from .lagrange import (
     LagrangeDiagnostics,
     chebyshev_nodes,
@@ -17,6 +22,28 @@ from .lagrange import (
     lagrange_eval,
     piecewise_lagrange_eval,
 )
+from .loaders import load_processed_numeric
+
+_PCA_UNIV_ORDER: Dict[str, int] = {
+    "No reportado": 0,
+    "Secondary school": 1,
+    "Bachelor": 2,
+    "Master": 3,
+    "PhD": 4,
+}
+_PCA_SCALING_PLAN: Dict[str, str] = {
+    "start_ord": "robust",
+    "end_ord": "robust",
+    "dur_q": "robust",
+    "n_skills_essential": "robust",
+    "n_skills_competence": "robust",
+    "n_skills_knowledge": "robust",
+    "n_skills_sin_tipo": "robust",
+    "veces_ese_oficio": "robust",
+    "start_year": "robust",
+    "job_order": "robust",
+    "univ_ord": "minmax",
+}
 
 
 @dataclass(frozen=True)
@@ -37,6 +64,7 @@ class LG02Bundle:
     diagnostics: Dict[str, LagrangeDiagnostics]
     plateau_guard_triggered: bool
     plateau_guard_message: str
+    pca_source: str = "live_50k_from_03_processed_float64"
 
 
 def run_lg01_survival_runge(df_a: pd.DataFrame) -> LG01Bundle:
@@ -112,8 +140,8 @@ def run_lg01_survival_runge(df_a: pd.DataFrame) -> LG01Bundle:
         )
         runge_curves[f"eq_deg{deg}"] = p_eq
 
-        # Strategy B: Chebyshev-snapped nodes on [1, 40]
-        ch_x = chebyshev_nodes(1.0, 40.0, degree=deg, snap_int=True)
+        # Strategy B: Chebyshev-Lobatto (2nd-kind, endpoint-anchored) snapped nodes on [1, 40]
+        ch_x = chebyshev_nodes(1.0, 40.0, degree=deg, snap_int=True, kind="lobatto")
         ch_y = np.array([surv[int(x) - 1] for x in ch_x])
         p_ch, _, _ = lagrange_eval(ch_x, ch_y, qs)
         err_ch = np.abs(surv - p_ch)
@@ -160,19 +188,74 @@ def run_lg01_survival_runge(df_a: pd.DataFrame) -> LG01Bundle:
     )
 
 
-def run_lg02_pca_curves(cfg: NumericalMethodsConfig) -> LG02Bundle:
-    """IDEA-LG-02: Forward & monotonic inverse Lagrange interpolation on 50k PCA cumulative variance."""
+def _compute_live_pca_50k_curve(df: pd.DataFrame, sample_size: int = 50_000, seed: int = SEED) -> Tuple[np.ndarray, np.ndarray]:
+    """Recompute the 50k PCA cumulative & marginal variance curve directly from 03_processed in float64.
+
+    Replicates notebooks/refactor/4.1_PCA_completo.ipynb (Cells 2-3) verbatim so IDEA-LG-02
+    never relies on hardcoded constants.
+    """
+    base = df[
+        [
+            "resume_id",
+            "start_date",
+            "end_date",
+            "university_level",
+            "n_skills_essential",
+            "n_skills_competence",
+            "n_skills_knowledge",
+            "n_skills_sin_tipo",
+            "veces_ese_oficio",
+        ]
+    ].copy()
+    base = add_date_ordinals(base, "start_date", "end_date")
+    base = add_start_year(base)
+    base = add_job_order(base, "resume_id", "start_ord")
+    base["university_level"] = base["university_level"].fillna("No reportado")
+    base = ordinal_from_mapping(base, "university_level", _PCA_UNIV_ORDER, "univ_ord")
+    work = base.loc[base["n_skills_essential"].notna()].copy().reset_index(drop=True)
+    cols = sorted(set(_PCA_SCALING_PLAN))
+    sample = work[cols].sample(n=min(sample_size, len(work)), random_state=seed)
+    _, scaled = fit_transform_full(sample, _PCA_SCALING_PLAN)
+    var_df, _, _ = run_pca(scaled, n_components=10)
+    cum_var = var_df["cumulative_variance"].to_numpy(dtype=np.float64)
+    marg_var = var_df["explained_variance_ratio"].to_numpy(dtype=np.float64)
+    return cum_var, marg_var
+
+
+def run_lg02_pca_curves(
+    cfg: NumericalMethodsConfig,
+    df_a: Optional[pd.DataFrame] = None,
+    df_b: Optional[pd.DataFrame] = None,
+) -> LG02Bundle:
+    """IDEA-LG-02: Forward & monotonic inverse Lagrange interpolation on live 50k PCA cumulative variance."""
     ks = np.arange(1, 11, dtype=np.float64)
-    va = np.array(VERIFIED_PCA_50K["con_outliers"], dtype=np.float64)
-    vb = np.array(VERIFIED_PCA_50K["sin_outliers"], dtype=np.float64)
+    ref_csv = cfg.tables_dir / "lg02_pca_50k_reference.csv"
+
+    if df_a is not None and df_b is not None:
+        va, ma = _compute_live_pca_50k_curve(df_a)
+        vb, mb = _compute_live_pca_50k_curve(df_b)
+        pca_source = "live_50k_from_03_processed_float64"
+    elif ref_csv.exists():
+        cached = pd.read_csv(ref_csv)
+        va = cached["cum_var_version_a"].to_numpy(dtype=np.float64)
+        vb = cached["cum_var_version_b"].to_numpy(dtype=np.float64)
+        ma = cached["marginal_var_version_a"].to_numpy(dtype=np.float64)
+        mb = cached["marginal_var_version_b"].to_numpy(dtype=np.float64)
+        pca_source = "cached_live_50k_from_03_processed_csv"
+    else:
+        dfa_loc = load_processed_numeric(cfg, version="con_outliers", attach_greenshare=False)
+        dfb_loc = load_processed_numeric(cfg, version="sin_outliers", attach_greenshare=False)
+        va, ma = _compute_live_pca_50k_curve(dfa_loc)
+        vb, mb = _compute_live_pca_50k_curve(dfb_loc)
+        pca_source = "live_50k_from_03_processed_float64"
 
     pca_df = pd.DataFrame(
         {
             "k_components": ks.astype(int),
             "cum_var_version_a": va,
             "cum_var_version_b": vb,
-            "marginal_var_version_a": np.diff(np.insert(va, 0, 0.0)),
-            "marginal_var_version_b": np.diff(np.insert(vb, 0, 0.0)),
+            "marginal_var_version_a": ma,
+            "marginal_var_version_b": mb,
         }
     )
 
@@ -242,4 +325,5 @@ def run_lg02_pca_curves(cfg: NumericalMethodsConfig) -> LG02Bundle:
         diagnostics=diags,
         plateau_guard_triggered=plateau_triggered,
         plateau_guard_message=plateau_msg,
+        pca_source=pca_source,
     )

@@ -70,7 +70,7 @@ def generate_all_figures(
     panels = [
         ("mean_skills", "Competencias Esenciales Exigidas (Media)", "Competencias esenciales (conteo)"),
         ("reincide_rate", "Tasa de Reincidencia en el Oficio", "P(veces_ese_oficio > 1)"),
-        ("mean_dur_q", "Duración Promedio del Empleo (Trimestres)", "Trimestres"),
+        ("mean_dur_q", "Duración Media de Empleos Cerrados (~es_vigente)", "Trimestres"),
         ("mean_green", "Intensidad Verde Media ESCO (greenShare)", "greenShare (0–1)"),
     ]
     for ax, (col, ttl, ylab) in zip(axes.flat, panels):
@@ -180,7 +180,7 @@ def generate_all_figures(
     ax1.scatter(ann_c["start_year"], ann_c["mean_skills"], color=PALETTE["rose"], marker="X", s=70, label="Cola escasa 2020–2023")
     ax1.plot(xg, ms_v.a0 + ms_v.a1 * xg, color=PALETTE["teal"], lw=2.4, label=f"MCO 2000–2019 (a₁={ms_v.a1:+.4f}, R²={ms_v.r2:.3f})")
     ax1.plot(xg, ms_f.a0 + ms_f.a1 * xg, color=PALETTE["rose"], ls="--", lw=2.0, label=f"MCO 2000–2023 (a₁={ms_f.a1:+.4f}, R²={ms_f.r2:.3f})")
-    _style_ax(ax1, "Distorsión por Censura: Invierte Pendiente y Colapsa R² (0.748 → 0.083)", "Año de inicio del empleo", "Media de competencias esenciales exigidas")
+    _style_ax(ax1, f"Distorsión por Censura: Invierte Pendiente y Colapsa R² ({ms_v.r2:.3f} → {ms_f.r2:.3f})", "Año de inicio del empleo", "Media de competencias esenciales exigidas")
     ax1.legend(fontsize=7.5, loc="lower left")
 
     md_v = rl04.models["mean_dur_q_2000_2019"]
@@ -188,11 +188,11 @@ def generate_all_figures(
     ax2.axvspan(2000, 2019.4, color=PALETTE["teal"], alpha=0.06)
     ax2.axvspan(2019.4, 2028.5, color=PALETTE["rose"], alpha=0.08, label="Zona de riesgo por extrapolación")
     ax2.axhline(0.0, color=PALETTE["ink"], lw=1.2, ls=":")
-    ax2.scatter(ann_v["start_year"], ann_v["mean_dur_q"], color=PALETTE["indigo"], s=45, label="Observado 2000–2019")
+    ax2.scatter(ann_v["start_year"], ann_v["mean_dur_q"], color=PALETTE["indigo"], s=45, label="Observado cerrados 2000–2019")
     ax2.plot(xg2, md_v.a0 + md_v.a1 * xg2, color=PALETTE["teal"], lw=2.4, label=f"MCO 2000–2019 (R²={md_v.r2:.3f})")
     y27 = md_v.a0 + md_v.a1 * 2027.0
     ax2.scatter([2027], [y27], color=PALETTE["rose"], s=85, zorder=5, label=f"Extrapolado 2027 = {y27:.2f} trim. (< 0!)")
-    _style_ax(ax2, "Falla de Extrapolación (Diap. 12): Duración Negativa tras 2026", "Año de inicio del empleo", "Duración media observada (trimestres)")
+    _style_ax(ax2, "Falla de Extrapolación (MR-09 Cerrados): Duración Negativa en 2027", "Año de inicio del empleo", "Duración media cerrados (trimestres)")
     ax2.legend(fontsize=7.7, loc="upper right")
     out["nm05"] = _save(fig, fdir / "nm05_rl04_annual_drift_and_censoring_extrapolation.png", dpi)
 
@@ -265,11 +265,14 @@ def generate_all_figures(
     ax1.legend(fontsize=8.0)
 
     qs = lg01.runge_curves["qs"]
+    eq16_err = float(rb.loc[(rb["degree"] == 16) & (rb["node_strategy"] == "Equispaced Global Lagrange"), "max_abs_err"].iloc[0])
+    ch16_err = float(rb.loc[(rb["degree"] == 16) & (rb["node_strategy"] == "Chebyshev-Snapped Global Lagrange"), "max_abs_err"].iloc[0])
+    ratio_16 = eq16_err / max(ch16_err, 1e-12)
     ax2.axhline(0.0, color=PALETTE["muted"], lw=0.9, ls=":")
     ax2.axhline(1.0, color=PALETTE["muted"], lw=0.9, ls=":")
     ax2.plot(qs, lg01.runge_curves["true"], color=PALETTE["ink"], lw=2.6, label="Curva real S(q)")
     ax2.plot(qs, lg01.runge_curves["eq_deg16"], color=PALETTE["rose"], lw=1.8, ls="--", label="Equiespaciado grado 16 (¡EXPLOSIÓN RUNGE!)")
-    ax2.plot(qs, lg01.runge_curves["cheb_deg16"], color=PALETTE["teal"], lw=2.0, label="Chebyshev grado 16 (18.9× menos error)")
+    ax2.plot(qs, lg01.runge_curves["cheb_deg16"], color=PALETTE["teal"], lw=2.0, label=f"Chebyshev-Lobatto grado 16 ({ratio_16:.1f}× menos error, 0 viol.)")
     ax2.plot(qs, lg01.runge_curves["pw2_deg16"], color=PALETTE["amber"], lw=2.0, ls="-.", label="Local por tramos P₂")
     ax2.set_ylim(-0.6, 1.4)
     _style_ax(ax2, "Prueba Visual Grado 16: Oscilación en Extremos vs. Mitigaciones", "Antigüedad q (trimestres)", "Probabilidad estimada de permanencia")
@@ -311,7 +314,7 @@ def generate_all_figures(
     # --- nm10: IDEA-HYB-01 Superposición Visual de los 4 Regímenes ---
     reg_titles_es = [
         "1. Suave Casi Lineal · Pasos de Carrera mean_skills(k)",
-        "2. Serie Macro Ruidosa · Anual mean_skills(año)",
+        "2. Serie Macro Curva con Fluctuación · Anual mean_skills(año)",
         "3. No Lineal Monótona Empinada · Supervivencia S(q)",
         "4. Tabla Cóncava Exacta · Varianza PCA V(k) (Ver. B)",
     ]
@@ -447,7 +450,7 @@ def regenerate_figures_from_tables(cfg: NumericalMethodsConfig | None = None) ->
     m_qs = np.array([4.0, 8.0, 20.0, 40.0])
     m_ys = np.array([surv[int(q) - 1] for q in m_qs])
     eq16_idx = np.unique(np.round(np.linspace(0, 39, 17)).astype(int))
-    ch16_x = chebyshev_nodes(1.0, 40.0, degree=16, snap_int=True)
+    ch16_x = chebyshev_nodes(1.0, 40.0, degree=16, snap_int=True, kind="lobatto")
     ch16_y = np.array([surv[int(x) - 1] for x in ch16_x])
     lg01 = LG01Bundle(
         survival_curve=surv_df,

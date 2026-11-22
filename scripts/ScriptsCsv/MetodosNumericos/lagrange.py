@@ -186,10 +186,13 @@ def chebyshev_nodes(
     b: float,
     degree: int,
     snap_int: bool = False,
+    kind: str = "first",
 ) -> np.ndarray:
-    """Generate Chebyshev nodes of the first kind mapped to [a, b], sorted ascending.
+    """Generate Chebyshev nodes mapped to [a, b], sorted ascending.
 
-    x_k = (a+b)/2 + ((b-a)/2) * cos((2k + 1) * pi / (2 * (degree + 1))), k = 0..degree.
+    - kind="first" (roots of T_{n+1}): cos((2k + 1) * pi / (2 * (degree + 1))), strictly interior.
+    - kind="lobatto" (Chebyshev-Lobatto / 2nd-kind extrema): cos(k * pi / degree), always includes
+      endpoints a and b, eliminating boundary extrapolation at low degrees.
     When snap_int=True (for discrete integer grids like quarters 1..40), rounds to
     nearest integer and deduplicates to preserve MR-04 strict distinctness.
     """
@@ -199,7 +202,12 @@ def chebyshev_nodes(
         raise ValueError("Polynomial degree must be >= 1.")
 
     k = np.arange(degree + 1, dtype=np.float64)
-    t = np.cos((2.0 * k + 1.0) * np.pi / (2.0 * (degree + 1)))
+    if kind == "lobatto":
+        t = np.cos(k * np.pi / float(degree))
+    elif kind == "first":
+        t = np.cos((2.0 * k + 1.0) * np.pi / (2.0 * (degree + 1)))
+    else:
+        raise ValueError(f"Unsupported Chebyshev node kind={kind!r}; expected 'first' or 'lobatto'.")
     nodes = 0.5 * (a + b) + 0.5 * (b - a) * t
     nodes = np.sort(nodes)
     if snap_int:

@@ -21,6 +21,21 @@ def _fmt_points(xs: Sequence[float], ys: Sequence[float], decimals: int = 4) -> 
     return "P = {" + ", ".join(pairs) + "}"
 
 
+def _fmt_monomial(coeffs_desc: Sequence[float] | None, var: str = "x") -> str:
+    if not coeffs_desc:
+        return ""
+    deg = len(coeffs_desc) - 1
+    parts: List[str] = []
+    for idx, c in enumerate(coeffs_desc):
+        p = deg - idx
+        sign = "+" if c >= 0 else "-"
+        mag = abs(float(c))
+        c_str = f"{mag:.6e}" if (mag != 0.0 and mag < 1e-3) else f"{mag:.6f}"
+        term = f"{c_str}*{var}^{p}" if p > 1 else (f"{c_str}*{var}" if p == 1 else c_str)
+        parts.append((f"-{term}" if sign == "-" else term) if idx == 0 else f" {sign} {term}")
+    return "".join(parts)
+
+
 def _build_ols_script(
     title: str,
     xs: Sequence[float],
@@ -33,20 +48,27 @@ def _build_ols_script(
     y_bar: float,
     x_pred: float,
     y_pred: float,
+    extra_note: str = "",
 ) -> str:
     lines = [
         f"# JobPath GeoGebra Verification — {title}",
         "# Paste each command sequentially into GeoGebra Classic Algebra Input (https://www.geogebra.org/classic)",
         "# Spanish equivalents: AjusteLineal(P), CoeficienteCorrelación(P), RCuadrado(P, f)",
         f"# Expected Python OLS: a0 = {a0:.6f}, a1 = {a1:.6f}, r = {r:.6f}, R2 = {r2:.6f}",
-        _fmt_points(xs, ys, decimals=6),
-        "f = FitLine(P)",
-        "r = CorrelationCoefficient(P)",
-        "R2 = RSquare(P, f)",
-        f"Centroid = ({x_bar:.6f}, {y_bar:.6f})",
-        f"Q_pred = ({x_pred:g}, f({x_pred:g}))",
-        f"# Expected Q_pred y-coordinate: {y_pred:.6f}",
     ]
+    if extra_note:
+        lines.append(extra_note)
+    lines.extend(
+        [
+            _fmt_points(xs, ys, decimals=6),
+            "f = FitLine(P)",
+            "r = CorrelationCoefficient(P)",
+            "R2 = RSquare(P, f)",
+            f"Centroid = ({x_bar:.6f}, {y_bar:.6f})",
+            f"Q_pred = ({x_pred:g}, f({x_pred:g}))",
+            f"# Expected Q_pred y-coordinate: {y_pred:.6f}",
+        ]
+    )
     return "\n".join(lines) + "\n"
 
 
@@ -56,6 +78,7 @@ def _build_lagrange_script(
     ys: Sequence[float],
     eval_x: float,
     expected_y: float,
+    monomial_desc: Sequence[float] | None = None,
 ) -> str:
     n = len(xs)
     lines = [
@@ -63,8 +86,10 @@ def _build_lagrange_script(
         "# Paste each command sequentially into GeoGebra Classic Algebra Input (https://www.geogebra.org/classic)",
         "# Spanish equivalent: q = Polinomio(P). Verify that p(x) and q(x) coincide identically.",
         f"# Expected Python Lagrange: P_{n-1}({eval_x:g}) = {expected_y:.6f}",
-        _fmt_points(xs, ys, decimals=6),
     ]
+    if monomial_desc:
+        lines.append(f"# Expanded monomial form: P_{n-1}(x) = {_fmt_monomial(monomial_desc, var='x')}")
+    lines.append(_fmt_points(xs, ys, decimals=6))
     terms: List[str] = []
     for i in range(n):
         num_parts = [f"(x - {xs[j]:g})" for j in range(n) if j != i]
@@ -124,16 +149,17 @@ def export_hyb02_geogebra_pack(
         y_bar=m2.y_mean,
         x_pred=45.0,
         y_pred=m2.a0 + m2.a1 * 45.0,
+        extra_note="# WARNING (MR-06): R2 = 0.2800 < 0.30 -> Model REJECTED for operational forecasting; Q_pred=(45, f(45)) is an arithmetic formula check only.",
     )
     p2 = cfg.geogebra_dir / "ggb_rl02_isco10_transferability.txt"
     p2.write_text(txt_rl02, encoding="utf-8")
     exported["rl02"] = p2
 
-    # 3. IDEA-RL-04: Annual mean_dur_q ~ (year - 2000) for 2000..2019 (extrapolate to 2027 -> t=27!)
+    # 3. IDEA-RL-04: Annual closed-job mean_dur_q ~ (year - 2000) for 2000..2019 (extrapolate to 2027 -> t=27!)
     a_v = rl04.annual_series.loc[rl04.annual_series["start_year"] <= 2019]
     m4 = rl04.models["mean_dur_q_centered_2000_2019"]
     txt_rl04 = _build_ols_script(
-        title="IDEA-RL-04 (Annual mean_dur_q ~ year-2000, 2000..2019; extrap t=27 -> year 2027)",
+        title="IDEA-RL-04 (Annual closed-job mean_dur_q ~ year-2000, 2000..2019; extrap t=27 -> year 2027)",
         xs=a_v["year_centered"].tolist(),
         ys=a_v["mean_dur_q"].tolist(),
         a0=m4.a0,
@@ -144,6 +170,7 @@ def export_hyb02_geogebra_pack(
         y_bar=m4.y_mean,
         x_pred=27.0,
         y_pred=m4.a0 + m4.a1 * 27.0,
+        extra_note="# Strict MR-09 censoring consistency: mean_dur_q computed ONLY on closed jobs (~es_vigente); Q_pred(27) < 0 proves extrapolation failure.",
     )
     p4 = cfg.geogebra_dir / "ggb_rl04_annual_duration_extrapolation.txt"
     p4.write_text(txt_rl04, encoding="utf-8")
@@ -158,6 +185,7 @@ def export_hyb02_geogebra_pack(
         ys=mn["S_q"].tolist(),
         eval_x=12.0,
         expected_y=float(ev12["P3_pred"]),
+        monomial_desc=lg01.milestone_diagnostics.monomial_coeffs_desc,
     )
     p5 = cfg.geogebra_dir / "ggb_lg01_survival_p3_milestones.txt"
     p5.write_text(txt_lg01, encoding="utf-8")
@@ -175,6 +203,7 @@ def export_hyb02_geogebra_pack(
         ys=anc["cum_var_version_a"].tolist(),
         eval_x=4.0,
         expected_y=float(ev4["P3_pred"]),
+        monomial_desc=lg02.diagnostics["forward_Version A (con_outliers)"].monomial_coeffs_desc,
     )
     p6 = cfg.geogebra_dir / "ggb_lg02_pca_forward_p3.txt"
     p6.write_text(txt_lg02, encoding="utf-8")
@@ -189,8 +218,8 @@ def export_hyb02_geogebra_pack(
         "| Case Study | File | Method | Expected Key Output (Python Verified `< 1e-10`) |",
         "|---|---|---|---|",
         f"| `IDEA-RL-01` | `{p1.name}` | OLS `FitLine` | `a0 = {m1.a0:.6f}`, `a1 = {m1.a1:.6f}`, `R2 = {m1.r2:.6f}`, `f(12) = {m1.a0 + m1.a1*12:.6f}` |",
-        f"| `IDEA-RL-02` | `{p2.name}` | OLS `FitLine` | `a0 = {m2.a0:.6f}`, `a1 = {m2.a1:.6f}`, `R2 = {m2.r2:.6f}` |",
-        f"| `IDEA-RL-04` | `{p4.name}` | OLS `FitLine` | `a0 = {m4.a0:.6f}`, `a1 = {m4.a1:.6f}`, `R2 = {m4.r2:.6f}`, `f(27) = {m4.a0 + m4.a1*27:.6f}` (negative!) |",
+        f"| `IDEA-RL-02` | `{p2.name}` | OLS `FitLine` (`MR-06` Rejected) | `a0 = {m2.a0:.6f}`, `a1 = {m2.a1:.6f}`, `R2 = {m2.r2:.6f}` (`< 0.30`: `f(45)` solo verificación aritmética) |",
+        f"| `IDEA-RL-04` | `{p4.name}` | OLS `FitLine` (`MR-09` `~es_vigente`) | `a0 = {m4.a0:.6f}`, `a1 = {m4.a1:.6f}`, `R2 = {m4.r2:.6f}`, `f(27) = {m4.a0 + m4.a1*27:.6f}` (negative!) |",
         f"| `IDEA-LG-01` | `{p5.name}` | Lagrange `P3` vs `Polynomial(P)` | `P3(12) = {float(ev12['P3_pred']):.6f}` (true `S(12) = {float(ev12['true_S_q']):.6f}`) |",
         f"| `IDEA-LG-02` | `{p6.name}` | Lagrange `P3` vs `Polynomial(P)` | `P3(4) = {float(ev4['P3_pred']):.6f}` (true `V(4) = {float(ev4['true_cum_var']):.6f}`) |",
         "",

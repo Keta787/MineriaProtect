@@ -50,9 +50,9 @@ def _evaluate_four_methods_on_regime(
         g_idx = np.arange(n)
     y_fine_glob, _, _ = lagrange_eval(xs[g_idx], ys[g_idx], x_fine)
 
-    # Chebyshev-snapped subset (degree = min(8, n-1))
+    # Chebyshev-Lobatto subset (degree = min(8, n-1); anchored at endpoints)
     ch_deg = min(8, n - 1)
-    ch_cont = chebyshev_nodes(float(xs[0]), float(xs[-1]), degree=ch_deg, snap_int=False)
+    ch_cont = chebyshev_nodes(float(xs[0]), float(xs[-1]), degree=ch_deg, snap_int=False, kind="lobatto")
     ch_idx = np.unique(np.array([int(np.argmin(np.abs(xs - c))) for c in ch_cont]))
     y_fine_cheb, _, _ = lagrange_eval(xs[ch_idx], ys[ch_idx], x_fine)
 
@@ -97,8 +97,8 @@ def _evaluate_four_methods_on_regime(
             yh_g, _, _ = lagrange_eval(x_tr, y_tr, [xq])
         errs["Global Lagrange (Equispaced)"].append(abs(yq - float(yh_g[0])))
 
-        # 3. Chebyshev-selected Lagrange (exclude point i naturally via x_tr)
-        ch_pts = chebyshev_nodes(float(x_tr[0]), float(x_tr[-1]), degree=min(8, len(x_tr) - 1), snap_int=False)
+        # 3. Chebyshev-Lobatto Lagrange (exclude point i naturally via x_tr)
+        ch_pts = chebyshev_nodes(float(x_tr[0]), float(x_tr[-1]), degree=min(8, len(x_tr) - 1), snap_int=False, kind="lobatto")
         ch_tr_idx = np.unique(np.array([int(np.argmin(np.abs(x_tr - c))) for c in ch_pts]))
         yh_c, _, _ = lagrange_eval(x_tr[ch_tr_idx], y_tr[ch_tr_idx], [xq])
         errs["Chebyshev-Node Lagrange"].append(abs(yq - float(yh_c[0])))
@@ -177,7 +177,7 @@ def run_hyb01_interpolate_vs_fit(
             r1_ex["mean_skills"].to_numpy(dtype=np.float64),
         ),
         (
-            "2. Noisy Macro Series · Annual mean_skills(year)",
+            "2. Curved Macro Series · Annual mean_skills(year)",
             r2_tr["start_year"].to_numpy(dtype=np.float64),
             r2_tr["mean_skills"].to_numpy(dtype=np.float64),
             r2_ex["start_year"].to_numpy(dtype=np.float64),

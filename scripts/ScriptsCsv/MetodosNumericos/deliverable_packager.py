@@ -12,7 +12,9 @@ from __future__ import annotations
 
 import base64
 import html
+import re
 import shutil
+import zipfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Tuple
@@ -56,24 +58,25 @@ IDEA_SPECS: Tuple[IdeaSpec, ...] = (
         priority="P0",
         purpose=(
             "Cuantificar la tasa lineal de cambio con la que las personas transitan hacia oficios ESCO "
-            "más complejos, más repetidos, de menor duración promedio o con distinta intensidad verde a "
-            "medida que avanzan desde su 1.er empleo (k = 1) hasta su 10.º empleo (k = 10), sintetizando "
-            "1,738,738 experiencias clasificadas en pendientes interpretables para el observatorio laboral."
+            "más complejos, más repetidos, de menor duración en empleos cerrados (~es_vigente, MR-09) o "
+            "con distinta intensidad verde a medida que avanzan desde su 1.er empleo (k = 1) hasta su "
+            "10.º empleo (k = 10), sintetizando 1,738,738 experiencias clasificadas en pendientes "
+            "interpretables y auditando sensibilidad por cohorte (>=10 empleos) y ponderación WLS."
         ),
         data_inputs=(
-            "`data/03_processed/empleos_unificado_limpio.csv` (Versión A · 1,871,014 filas; filtrado a 1,738,738 experiencias clasificadas `saber_skills == 'ok'`)",
+            "`data/03_processed/empleos_unificado_limpio.csv` (Versión A · 1,871,014 filas; filtrado a 1,738,738 experiencias clasificadas `saber_skills == 'ok'`; `mean_dur_q` calculado estrictamente sobre `1,643,772` empleos cerrados `~es_vigente` por MR-09)",
             "`data/02_interim/ESCO/greenShareOcc_en_limpio.csv` (unido en RAM por `occupation_code`, cubriendo el 92.93 % del universo)",
         ),
         code_modules=(
             "`scripts/ScriptsCsv/MetodosNumericos/loaders.py` (`load_processed_numeric`, `load_greenshare_lookup`)",
             "`scripts/ScriptsCsv/MetodosNumericos/ols.py` (`regresion_lineal`, `build_summation_and_residual_table`, `predict_ols`)",
-            "`scripts/ScriptsCsv/MetodosNumericos/experiments_ols.py` (`run_rl01_career_steps`)",
+            "`scripts/ScriptsCsv/MetodosNumericos/experiments_ols.py` (`run_rl01_career_steps`, `_wls_slope_intercept`)",
         ),
         how_it_was_built=(
             "Se cargó `empleos_unificado_limpio.csv` con `usecols` seguro en memoria (excluyendo columnas de texto largo `skills`, `knowledge`, `sin_tipo`) y se cruzó `greenShare` en RAM sin modificar archivos en disco.",
             "Se ordenó cronológicamente la trayectoria de cada persona (`resume_id`) por `(start_ord, end_ord)` asignando el paso secuencial `job_order = 1, 2, ..., 15`.",
-            "Se agregaron las medias por paso de carrera `k = 1..10` (`n = 10` nodos) para cuatro variables: `mean_skills`, `reincide_rate`, `mean_dur_q` y `mean_green`.",
-            "Se ejecutó un control de sensibilidad restringido a personas con `>= 10` empleos clasificados para verificar el efecto de sesgo de supervivencia.",
+            "Se agregaron las medias por paso de carrera `k = 1..10` (`n = 10` nodos) para `mean_skills`, `reincide_rate` y `mean_green`, y estrictamente sobre empleos cerrados (`~es_vigente`, regla MR-09) para `mean_dur_q` y `median_dur_q`.",
+            "Se ejecutó un control de sensibilidad restringido a personas con `>= 10` empleos clasificados (detectando Paradoja de Simpson en `mean_green` y sesgo mecánico de trayectoria en `reincide_rate`) y una verificación por Mínimos Cuadrados Ponderados (WLS con pesos `n_rows` / `n_closed_rows`).",
             "Se ajustó el modelo lineal por ecuaciones normales cerradas (`regresion_lineal`), generando la tabla completa de sumas (`Σx, Σy, Σx², Σxy`), cuadrados de residuos (`Sr`), centroide `(x̄, ȳ)` y validación frente a `numpy.polyfit(x, y, 1)` (`< 1e-10`).",
             "Se auditó la extrapolación fuera de rango en `k = 11, 12, 15` (`is_extrapolation = True`) contrastando las predicciones frente a las medias reales observadas.",
         ),
@@ -92,14 +95,16 @@ IDEA_SPECS: Tuple[IdeaSpec, ...] = (
             "rl01_extrapolation_audit.csv",
         ),
         figures=(
-            ("nm01_rl01_career_steps_panel.png", "Panel 4× de regresión MCO por paso de carrera k=1..10 con centroides y zona sombreada de extrapolación (k>10)."),
+            ("nm01_rl01_career_steps_panel.png", "Panel 4× de regresión MCO por paso de carrera k=1..10 (con mean_dur_q sobre empleos cerrados ~es_vigente), centroides y zona de extrapolación (k>10)."),
             ("nm02_rl01_residual_squares_and_extrapolation.png", "Representación geométrica de cuadrados de residuos (minimización de Sr) y residuos verticales e_i para mean_skills ~ job_order."),
         ),
         geogebra_files=("ggb_rl01_career_steps_skills.txt",),
         pitfalls=(
             "Asociación descriptiva, nunca causalidad (MR-07): las pendientes describen tendencias entre pasos, no implican que cambiar de empleo cause mayor adquisición de habilidades.",
             "Regla de atribución ESCO (MR-08): `mean_skills` mide cuántas competencias esenciales exige el oficio ocupado, no cuántas domina la persona.",
-            "Sesgo de supervivencia y censura: llegan menos personas a `k = 10` (`25,321` registros frente a `352,093` en `k = 1`); por eso se reporta también la cohorte controlada de personas con `>= 10` empleos.",
+            "Paradoja de Simpson y sesgo de composición longitudinal: al pasar del universo completo a la cohorte fija (`>= 10` empleos), la pendiente de `mean_green` invierte su signo (`-0.000219` → `+0.000183`) y en `reincide_rate` el `R²` cae de `0.9625` a `0.4475` (`a₁`: `+0.0213` → `+0.0072`) por el sesgo mecánico de evaluar `veces_ese_oficio > 1` sobre toda la carrera.",
+            "Agregación ecológica no ponderada vs. WLS: `k = 1` concentra `352,093` filas frente a `25,321` en `k = 10` (13.9× menos). La auditoría ponderada WLS (`wls_a1 = +0.2287` vs. MCO `+0.2250`, diferencia relativa de solo `1.67 %`) confirma que la tendencia de `mean_skills` es robusta al desbalance de tamaños.",
+            "Consistencia de censura (MR-09): `mean_dur_q` se calcula estrictamente sobre empleos cerrados (`~es_vigente`), elevando el ajuste en `k = 1..10` a `R² = 0.9233` (`S_{y/x} = 0.7928`) y evitando contaminación por empleos vigentes imputados a `2026-Q1`.",
         ),
     ),
     IdeaSpec(
@@ -133,7 +138,7 @@ IDEA_SPECS: Tuple[IdeaSpec, ...] = (
             "Se cruzaron las 126,051 relaciones oficio-competencia con `skills_en_limpio.csv` (`reuseLevel`) usando indicadores binarios vectorizados (`essential`, `optional`, `competence`, `knowledge`, `cross-sector`, `sector-specific`, `transversal`).",
             "Se agregaron los conteos a nivel de los `n = 3,039` oficios únicos (`conceptUri`) y se incorporó `greenShare` (3,039/3,039 = 100 % de cobertura) más el gran grupo ISCO-08 de 1 dígito.",
             "Se ajustó MCO en 7 pares estructurales contrastando acoples fuertes (`n_essential ~ n_ess_comp`), transferibilidad moderada (`n_cross_sector ~ n_total_rel`) e hipótesis nulas/ortogonales rechazadas (`n_optional ~ n_essential`, `greenShare ~ n_essential`).",
-            "Se estratificó la ley de transferibilidad `n_cross_sector ~ n_total_rel` por separado en los 10 grandes grupos ISCO-08 y se exportaron sus 10 centroides para verificación en GeoGebra.",
+            "Se estratificó la ley de transferibilidad `n_cross_sector ~ n_total_rel` por separado en los 10 grandes grupos ISCO-08 y se exportaron sus 10 centroides para verificación aritmética en GeoGebra.",
         ),
         formulas_md=(
             r"$$\widehat{\texttt{n\_cross\_sector}} = a_0 + a_1 \cdot \texttt{n\_total\_rel}, \qquad \text{Rechazar modelo lineal si } R^2 < 0.30 \text{ (MR-06)}$$",
@@ -151,8 +156,9 @@ IDEA_SPECS: Tuple[IdeaSpec, ...] = (
         ),
         geogebra_files=("ggb_rl02_isco10_transferability.txt",),
         pitfalls=(
-            "Acople parte-todo en `n_essential ~ n_ess_comp`: las competencias prácticas son componente del total esencial ($E = C + K + U$); la pendiente $a_1 = 1.1227 > 1$ refleja cuánto conocimiento teórico acompaña a cada competencia práctica adicional.",
-            "Ortogonalidad verde (`greenShare ~ n_essential`, $R^2 = 0.0000$): demuestra empíricamente que los oficios verdes no equivalen simplemente a oficios con más competencias totales.",
+            "Acople parte-todo en `n_essential ~ n_ess_comp` (`R² = 0.8643`) y `n_total_rel ~ n_competence` (`R² = 0.7319`): el predictor `x` es subconjunto aditivo de `y` (`E = C + K + U`); la pendiente `a₁ = 1.1227 > 1` describe el acompañamiento estructural de conocimientos teóricos, nunca una relación causal ni predictiva independiente.",
+            "Ortogonalidad verde (`greenShare ~ n_essential`, `R² = 0.000045`): demuestra empíricamente que los oficios verdes no equivalen simplemente a oficios con más competencias totales.",
+            "Modelo de 10 centroides ISCO en GeoGebra (`R² = 0.2800 < 0.30`, rechazado por MR-06): el punto `Q_pred = (45, f(45)) = 22.9327` en `ggb_rl02_isco10_transferability.txt` sirve exclusivamente como verificación aritmética de las fórmulas MCO contra Python, pero NO es una predicción operativa válida debido a la fuerte heterogeneidad sectorial (ISCO-6 Agricultura presenta un residuo de `-11.33` habilidades).",
         ),
     ),
     IdeaSpec(
@@ -168,10 +174,11 @@ IDEA_SPECS: Tuple[IdeaSpec, ...] = (
             "Medir dos décadas de evolución estructural del mercado laboral (2000–2019), auditar la "
             "paridad entre las particiones crudas `train/test/val` de `01_raw` y presentar una prueba "
             "empírica contundente de la Diapositiva 12: cómo la censura a la derecha tras 2019 invierte "
-            "la tendencia y hace que la extrapolación prediga duraciones laborales negativas."
+            "la tendencia y hace que la extrapolación de duración en empleos cerrados (~es_vigente, MR-09) "
+            "prediga duraciones laborales negativas tras 2020 (-4.96 trimestres en 2027)."
         ),
         data_inputs=(
-            "`data/03_processed/empleos_unificado_limpio.csv` (experiencias clasificadas con `start_year` entre 2000 y 2023)",
+            "`data/03_processed/empleos_unificado_limpio.csv` (experiencias clasificadas `2000–2023`; `mean_dur_q` calculado estrictamente sobre empleos cerrados `~es_vigente` según MR-09, conservando `mean_dur_q_incl_active` en el CSV como referencia auditable)",
             "`data/02_interim/ESCO/greenShareOcc_en_limpio.csv`",
             "`data/01_raw/JobHop_v2_train.csv`, `JobHop_v2_test.csv`, `JobHop_v2_val.csv` (1,993,291 filas crudas para auditoría de paridad temporal)",
         ),
@@ -180,10 +187,10 @@ IDEA_SPECS: Tuple[IdeaSpec, ...] = (
             "`scripts/ScriptsCsv/MetodosNumericos/experiments_ols.py` (`run_rl04_annual_drift`)",
         ),
         how_it_was_built=(
-            "Se agruparon las experiencias clasificadas por año de inicio (`2000–2023`) calculando volumen (`n_starts`), complejidad media (`mean_skills`), duración media (`mean_dur_q`), intensidad verde (`mean_green`) y tasa de reincidencia.",
-            "Se compararon dos ventanas: soporte válido (`2000–2019`, `n = 20`) frente a la serie contaminada con la cola censurada (`2000–2023`, `n = 24`, donde `n_starts` colapsa a `59, 3, 3, 1`).",
-            "Se ajustó MCO tanto en años absolutos como en años centrados `t = año - 2000` (mejorando interpretabilidad del intercepto y evitando cancelación numérica en `np.polyfit`).",
-            "Se extrapoló el modelo `2000–2019` hacia `2020–2027`, marcando automáticamente las predicciones físicamente imposibles (`y_hat < 0`).",
+            "Se agruparon las experiencias clasificadas por año de inicio (`2000–2023`) calculando volumen (`n_starts`), volumen cerrado (`n_closed_starts`), complejidad media (`mean_skills`), duración media en empleos cerrados (`mean_dur_q`, excluyendo `es_vigente == True` para eliminar el rebote artificial de 2019), intensidad verde (`mean_green`) y tasa de reincidencia.",
+            "Se compararon tres regímenes (los 15 modelos completos en `rl04_ols_regime_comparison.csv`): soporte válido (`2000–2019`, `n = 20`), serie contaminada con la cola censurada (`2000–2023`, `n = 24`, donde `n_starts` colapsa a `59, 3, 3, 1`) y soporte válido centrado (`t = año - 2000`, `n = 20`).",
+            "Se verificó que centrar `t = año - 2000` conserva exactamente pendiente, `R²` y `Sy/x`, hace interpretable el intercepto (`16.44` trimestres en el año 2000) y reduce el error numérico frente a `numpy.polyfit` en más de 2,000×–7,000×.",
+            "Se extrapoló el modelo `2000–2019` hacia `2020–2027`, marcando automáticamente las predicciones físicamente imposibles (`y_hat < 0`, desde 2021 hasta `-4.96` trimestres en 2027).",
             "Se auditó la tendencia anual de participación porcentual en las 3 particiones crudas de `01_raw` confirmando estabilidad sin sesgo de partición.",
         ),
         formulas_md=(
@@ -199,12 +206,12 @@ IDEA_SPECS: Tuple[IdeaSpec, ...] = (
             "rl04_raw_partition_parity.csv",
         ),
         figures=(
-            ("nm05_rl04_annual_drift_and_censoring_extrapolation.png", "Izquierda: la cola censurada invierte la pendiente y colapsa R² (0.748 -> 0.083). Derecha: extrapolar duración predice -0.56 trimestres en 2027."),
+            ("nm05_rl04_annual_drift_and_censoring_extrapolation.png", "Izquierda: la cola censurada invierte la pendiente de mean_skills y colapsa R² (0.748 → 0.083). Derecha: sobre empleos cerrados (~es_vigente, R² = 0.9729), extrapolar duración predice -4.96 trimestres en 2027."),
         ),
         geogebra_files=("ggb_rl04_annual_duration_extrapolation.txt",),
         pitfalls=(
-            "Artefacto mecánico de censura a la derecha (MR-09): la caída lineal de `mean_dur_q` (-0.71 trimestres/año) refleja principalmente el menor tiempo calendario transcurrido desde inicios cercanos a la captura del CV.",
-            "Sin centrar el año (`x ~ 2010`), el intercepto crece a órdenes de `10^6`, degradando el número de condición de Vandermonde; centrar en `t - 2000` reduce el error absoluto 7,000 veces.",
+            "Consistencia estricta de censura (MR-09): excluir `es_vigente == True` en `mean_dur_q` elimina el rebote artificial en 2019 (`8.31` con vigentes imputados a `2026-Q1` frente a `2.27` real en cerrados) y mejora `R²` de `0.9288` a `0.9729`, pero la caída lineal (`-0.7926` trimestres/año) sigue siendo un artefacto mecánico del horizonte calendario disponible.",
+            "Sin centrar el año (`x ~ 2010`), el intercepto crece a órdenes de `10^6`, degradando el número de condición; centrar en `t - 2000` reduce el error absoluto frente a `numpy.polyfit` en más de `4,600×` en `mean_dur_q` (`1.66e-11 → 3.55e-15`) y `2,000×` en `n_starts`.",
         ),
     ),
     IdeaSpec(
@@ -225,7 +232,7 @@ IDEA_SPECS: Tuple[IdeaSpec, ...] = (
         data_inputs=(
             "`data/03_processed/empleos_unificado_limpio.csv` (Versión A · 1,738,738 experiencias clasificadas)",
             "`data/03_processed/empleos_limpio_con_competencias_sin_outliers.csv` (Versión B · winsorizada IQR k=1.5)",
-            "`data/02_interim/Jobhop/empleos_limpio.csv` y `empleos_limpio_sin_outliers .csv` (flujo legado con borrado de filas; espacio final preservado según MR-12)",
+            "`data/02_interim/Jobhop/empleos_limpio.csv` y `empleos_limpio_sin_outliers .csv` (flujo legado `test+val` con borrado de filas; espacio final preservado según MR-12)",
             "`data/04_transformed/{con_outliers,sin_outliers}/{train,test}/X_*.csv` (leídos mediante lector binario de prefijo sin cargar jamás las 2,985 columnas completas)",
             "`data/04_transformed/transformers/{con_outliers,sin_outliers}/transformers.joblib` (centros y escalas IQR de `RobustScaler`)",
         ),
@@ -235,10 +242,10 @@ IDEA_SPECS: Tuple[IdeaSpec, ...] = (
             "`scripts/ScriptsCsv/MetodosNumericos/experiments_ols.py` (`run_rl05_outlier_and_scaling`)",
         ),
         how_it_was_built=(
-            "Se ajustó MCO para `n_skills_essential ~ n_skills_competence` y `n_skills_essential ~ n_skills_knowledge` en las 4 variantes del dataset (Versión A, Versión B, Legado Limpio y Legado con Borrado de Filas).",
-            "Se extrajeron los parámetros exactos `(center_, scale_)` de `RobustScaler` desde `transformers.joblib` (`essential: (20, 13)`, `competence: (18, 11)`, `knowledge: (3, 5)`).",
+            "Se ajustó MCO para dos pares contrastantes (`n_skills_essential ~ n_skills_competence` y `n_skills_essential ~ n_skills_knowledge`) en las 4 variantes del dataset (Versión A, Versión B, Legado Limpio y Legado con Borrado de Filas).",
+            "Se extrajeron los parámetros exactos `(center_, scale_)` de `RobustScaler` (`essential: (20, 13)`, `competence: (18, 11)`, `knowledge: (3, 5)`).",
             "Se leyeron exclusivamente las 3 columnas escaladas densas desde los 4 archivos CSV de 2–8 GB en `04_transformed` usando partición binaria del prefijo (`raw_line.split(b',', max_idx+1)`), manteniendo consumo mínimo de RAM.",
-            "Se cruzaron `train` y `test` vía `split_map_resume_id.csv` verificando las 8 identidades de invarianza afín con error máximo `7.22e-14 < 1e-10`.",
+            "Se cruzaron `train` (`1,391,018` filas) y `test` (`347,720` filas) vía `split_map_resume_id.csv`, verificando las 8 identidades de invarianza afín con error máximo `7.22e-14 < 1e-10` y confirmando que el contraste A vs. B se reproduce también sobre la submuestra `test`.",
         ),
         formulas_md=(
             r"$$\tilde{x} = \frac{x - c_x}{s_x}, \quad \tilde{y} = \frac{y - c_y}{s_y} \implies \tilde{a}_1 = a_1 \frac{s_x}{s_y}, \quad \tilde{a}_0 = \frac{a_0 + a_1 c_x - c_y}{s_y}, \quad \tilde{R}^2 = R^2, \quad \tilde{S}_{y/x} = \frac{S_{y/x}}{s_y}$$",
@@ -255,8 +262,9 @@ IDEA_SPECS: Tuple[IdeaSpec, ...] = (
         ),
         geogebra_files=(),
         pitfalls=(
-            "La winsorización IQR (Versión B) comprime la dispersión (`Sy/x`: 4.087 -> 3.192) sin perder registros, pero rompe la identidad aditiva exacta `E = C + K + U` en la cola derecha recortada.",
-            "`transformers.joblib` fue serializado con `scikit-learn 1.9.1` frente a `1.7.2` local; `extract_scaler_params()` aísla las constantes escalares con respaldo verificado.",
+            "Compromiso (trade-off) de la winsorización IQR en ambos pares: en `competence → essential`, la Versión B reduce `Sy/x` en `-21.9 %` (`4.0872 → 3.1915`) conservando `R² = 0.8983`; en cambio, en `knowledge → essential`, recortar la cola superior (`x_max: 45 → 13.5`) reduce `Sy/x` en `-20.4 %` (`10.6664 → 8.4934`) pero comprime `S_t` más que `S_r`, haciendo caer `R²` de `0.3680` (Moderado) a `0.2795` (Rechazado `< 0.30`).",
+            "Asimetría muestral en la comparación de 4 vías: las variantes legadas de `02_interim` cubren únicamente `test+val` (`348,263` y `314,904` filas, perdiendo `33,359` registros = `9.58 %`), mientras que las Versiones A y B cubren el universo completo `train+test+val` (`1,738,738` filas); las filas `test` (`347,720`) de `rl05_affine_scale_invariance.csv` permiten comparar A y B a igual tamaño muestral.",
+            "Compatibilidad `joblib`: `transformers.joblib` fue serializado con `scikit-learn 1.9.1` frente a `1.7.2` local; `extract_scaler_params()` aísla las constantes escalares con respaldo verificado (`max_invariance_err = 7.22e-14`), demostrando numéricamente que los parámetros coinciden con `X_train`/`X_test` en disco.",
         ),
     ),
     IdeaSpec(
@@ -266,48 +274,54 @@ IDEA_SPECS: Tuple[IdeaSpec, ...] = (
         topic_family="Lagrange",
         topic_label_es="Interpolación de Lagrange",
         source_html="interpolacion_lagrange.html",
-        slides_ref="Diapositivas 2–12 (Bases L_i, Partición de la Unidad, Fenómeno de Runge, Chebyshev y Tramos)",
+        slides_ref="Diapositivas 2–12 (Bases L_i, Forma Expandida, Partición de la Unidad, Fenómeno de Runge, Chebyshev y Tramos)",
         priority="P0",
         purpose=(
             "Reconstruir la función continua de permanencia laboral S(q) = P(dur_q >= q) a partir de "
             "una tabla compacta de 4 hitos ejecutivos (1, 2, 5 y 10 años) sin consultar 1.64M filas, "
-            "y demostrar con datos reales el Fenómeno de Runge junto a sus dos soluciones teóricas: "
-            "nodos de Chebyshev e interpolación local cuadrática por tramos P₂."
+            "obtener su forma monomial expandida exacta y demostrar con datos reales el Fenómeno de Runge "
+            "junto a sus dos soluciones teóricas: nodos de Chebyshev-Lobatto (0 violaciones en todos los grados) "
+            "e interpolación local cuadrática por tramos P₂."
         ),
         data_inputs=(
             "`data/03_processed/empleos_unificado_limpio.csv` filtrado estrictamente a experiencias cerradas clasificadas (`saber_skills == 'ok'` y `~es_vigente`, `n = 1,643,772` empleos según MR-09)",
         ),
         code_modules=(
-            "`scripts/ScriptsCsv/MetodosNumericos/lagrange.py` (`lagrange_basis`, `lagrange_eval`, `diagnose_lagrange`, `chebyshev_nodes`, `piecewise_lagrange_eval`)",
+            "`scripts/ScriptsCsv/MetodosNumericos/lagrange.py` (`lagrange_basis`, `lagrange_eval`, `expand_monomial_coefficients`, `diagnose_lagrange`, `chebyshev_nodes(kind='lobatto')`, `piecewise_lagrange_eval`)",
             "`scripts/ScriptsCsv/MetodosNumericos/experiments_lagrange.py` (`run_lg01_survival_runge`)",
         ),
         how_it_was_built=(
             "Se excluyeron los empleos vigentes censurados (`es_vigente == True`) y se calculó la curva exacta de permanencia `S(q) = P(dur_q >= q)` en cada trimestre `q = 1..40` (de 0.25 a 10 años).",
-            "Se construyó el polinomio cúbico de Lagrange `P₃(q)` pasando exactamente por los 4 hitos `q = {4, 8, 20, 40}`, descomponiendo sus pesos base `L₀(q)..L₃(q)` y verificando delta de Kronecker (`0.00e+00`), partición de la unidad (`4.44e-16`) y coincidencia con `scipy.interpolate.lagrange` (`5.05e-15`).",
-            "Se ejecutó el experimento del Fenómeno de Runge para grados `n en {3, 5, 8, 12, 16}` comparando: (a) Lagrange Global Equiespaciado, (b) Lagrange Global con Nodos Chebyshev redondeados/deduplicados y (c) Lagrange Local Cuadrático por Tramos `P₂`.",
-            "Se midieron error máximo `E∞`, RMSE, MAE, extremos predichos y violaciones de probabilidad fuera de `[0, 1]`.",
+            "Se construyó el polinomio cúbico de Lagrange `P₃(q)` pasando exactamente por los 4 hitos `q = {4, 8, 20, 40}`, exportando sus pesos base `L₀(q)..L₃(q)`, su forma monomial expandida (`lg_monomial_expansions.csv`) y verificando delta de Kronecker (`0.00e+00`), partición de la unidad (`4.44e-16`) y coincidencia con `scipy.interpolate.lagrange` (`5.05e-15`).",
+            "Se ejecutó el experimento del Fenómeno de Runge para grados `n en {3, 5, 8, 12, 16}` comparando: (a) Lagrange Global Equiespaciado, (b) Lagrange Global con Nodos Chebyshev-Lobatto (2.ª especie, anclados en los extremos `1` y `40`, eliminando toda extrapolación de borde en grados bajos) y (c) Lagrange Local Cuadrático por Tramos `P₂`.",
+            "Se midieron error máximo `E∞`, RMSE, MAE, extremos predichos y violaciones de probabilidad fuera de `[0, 1]` (confirmando `0` violaciones de Chebyshev-Lobatto en los 5 grados).",
         ),
         formulas_md=(
             r"$$P_n(q) = \sum_{i=0}^{n} S(q_i)\,L_i(q), \qquad L_i(q) = \prod_{\substack{j=0\\ j\ne i}}^{n}\frac{q - q_j}{q_i - q_j}, \qquad \sum_{i=0}^{n} L_i(q) = 1$$",
-            r"$$q_k^{\text{Cheb}} = \operatorname{round}\!\left(\frac{a+b}{2} + \frac{b-a}{2}\cos\!\left(\frac{(2k+1)\pi}{2(n+1)}\right)\right)$$",
+            r"$$P_3(q) = -7.9099\times 10^{-5}\,q^3 + 0.005845\,q^2 - 0.133867\,q + 1.107889$$",
+            r"$$q_k^{\text{Cheb-Lobatto}} = \operatorname{round}\!\left(\frac{a+b}{2} + \frac{b-a}{2}\cos\!\left(\frac{k\pi}{n}\right)\right), \quad k=0,1,\dots,n$$",
         ),
         formulas_html=(
             r"P_n(q) = \sum_{i=0}^{n} S(q_i)L_i(q), \quad L_i(q_j)=\delta_{ij}, \quad \sum_{i=0}^{n}L_i(q)=1",
-            r"q_k^{\text{Cheb}} = \frac{a+b}{2} + \frac{b-a}{2}\cos\!\left(\frac{(2k+1)\pi}{2(n+1)}\right)",
+            r"P_3(q) = -7.9099\times 10^{-5}q^3 + 0.005845q^2 - 0.133867q + 1.107889",
+            r"q_k^{\text{Cheb-Lobatto}} = \frac{a+b}{2} + \frac{b-a}{2}\cos\!\left(\frac{k\pi}{n}\right)",
         ),
         tables=(
             "lg01_milestone_P3_weights_and_eval.csv",
             "lg01_runge_phenomenon_benchmark.csv",
             "lg01_survival_curve_S_q.csv",
+            "lg_monomial_expansions.csv",
         ),
         figures=(
             ("nm07_lg01_survival_milestones_and_weights.png", "Izquierda: polinomio cúbico P₃(q) sobre 4 hitos frente a la curva real S(q). Derecha: polinomios base L₀..L₃ con pesos exactos en q=12."),
-            ("nm08_lg01_runge_phenomenon_vs_chebyshev.png", "Prueba empírica del Fenómeno de Runge: grado 16 equiespaciado explota a E∞ = 2.5262, mientras Chebyshev lo acota en 0.1334 (18.9× menos error) y P₂ por tramos se mantiene estable."),
+            ("nm08_lg01_runge_phenomenon_vs_chebyshev.png", "Prueba empírica del Fenómeno de Runge: grado 16 equiespaciado explota a E∞ = 2.5262, mientras Chebyshev-Lobatto lo acota en 0.1301 (19.4× menos error y 0 violaciones [0,1] en todos los grados) y P₂ por tramos se mantiene estable."),
         ),
         geogebra_files=("ggb_lg01_survival_p3_milestones.txt",),
         pitfalls=(
-            "Incluir empleos activos (`es_vigente == True`, imputados en `2026-Q1`) distorsionaría artificialmente las permanencias largas; se filtra estrictamente a empleos cerrados (MR-09).",
-            "Al proyectar nodos continuos de Chebyshev sobre trimestres enteros, grados altos pueden producir colisiones de índices; la deduplicación explícita garantiza nodos estrictamente distintos (MR-04).",
+            "No-monotonicidad del polinomio cúbico `P₃(q)`: un polinomio de Lagrange no impone restricciones de monotonía; tras caer a `0.1384` en `q = 16`, `P₃` rebota al alza hasta `0.2058` en `q = 28` (2.56× el valor real `0.0804`), demostrando por qué en tramos largos convienen interpoladores monótonos (PCHIP) o por tramos `P₂`.",
+            "Escalones anuales (*annual heaping*) cada 4 trimestres: en `lg01_survival_curve_S_q.csv`, el redondeo anual de fechas en hojas de vida produce saltos abruptos en `q = 3, 6, 10, 14, 18...` (`S(1)=S(2)=1.0`), creando un piso irreductible de error polinomial `E∞ ≈ 0.12–0.18` incluso con Chebyshev-Lobatto y `P₂`.",
+            "Ventaja de Chebyshev-Lobatto (2.ª especie) sobre 1.ª especie: incluir los extremos `q = 1` y `q = 40` como nodos elimina la extrapolación implícita de borde que causaba valores `> 1.0` en grados 3 y 5, logrando `0` violaciones `[0,1]` en todos los grados y reduciendo el error en grado 16 en `19.4×`.",
+            "Deduplicación en malla entera (MR-04): al redondear nodos de Chebyshev-Lobatto en grado 16 sobre `[1, 40]`, los nodos muy agrupados en los extremos se deduplican a `15` nodos estrictamente distintos para evitar divisiones por cero.",
         ),
     ),
     IdeaSpec(
@@ -317,45 +331,49 @@ IDEA_SPECS: Tuple[IdeaSpec, ...] = (
         topic_family="Lagrange",
         topic_label_es="Interpolación de Lagrange",
         source_html="interpolacion_lagrange.html",
-        slides_ref="Diapositivas 2–10 (Interpolación Tabular Exacta, Unicidad y Nodos Distintos x_i ≠ x_j)",
+        slides_ref="Diapositivas 2–10 (Interpolación Tabular Exacta, Forma Expandida, Unicidad y Nodos Distintos x_i ≠ x_j)",
         priority="P0",
         purpose=(
-            "Interpolar la curva de varianza explicada acumulada de PCA (`4.1_PCA_completo`, muestra 50k) "
-            "desde nodos dispersos y aplicar interpolación inversa de Lagrange k(V*) para estimar la "
-            "dimensionalidad continua necesaria para alcanzar umbrales objetivo (80 %, 85 %, 90 %, 95 %), "
-            "verificando en vivo la guarda de nodos distintos (MR-04) ante la meseta de rango 9 de la Versión A."
+            "Recomputar en vivo la curva de varianza explicada acumulada de PCA (muestra reproducible 50k "
+            "desde `data/03_processed` en precisión completa `float64`), interpolarla en sentido directo "
+            "con `P₃(k)` y en sentido inverso `k(V*)` para metas de 80 %–95 %, verificando en vivo la guarda "
+            "de nodos distintos (MR-04) ante la meseta de rango 9 de la Versión A."
         ),
         data_inputs=(
-            "`notebooks/refactor/4.1_PCA_completo.ipynb` (curvas verificadas de varianza acumulada 50k sobre `data/04_transformed/{con_outliers,sin_outliers}/train/X_train.csv`)",
-            "`data/04_transformed/con_outliers/train/X_train.csv` y `sin_outliers/train/X_train.csv` (auditados vía SHA-256)",
+            "`data/03_processed/empleos_unificado_limpio.csv` y `empleos_limpio_con_competencias_sin_outliers.csv` (PCA 50k recomputado en vivo en `float64` replicando `4.1_PCA_completo.ipynb`, sin constantes hardcodeadas)",
+            "`data/04_transformed/con_outliers/train/X_train.csv` y `sin_outliers/train/X_train.csv` (auditados vía SHA-256 completo de 64 caracteres)",
         ),
         code_modules=(
-            "`scripts/ScriptsCsv/MetodosNumericos/lagrange.py` (`lagrange_eval`, `inverse_lagrange_eval`, `validate_distinct_nodes`)",
-            "`scripts/ScriptsCsv/MetodosNumericos/experiments_lagrange.py` (`run_lg02_pca_curves`)",
+            "`scripts/ScriptsCsv/MetodosNumericos/lagrange.py` (`lagrange_eval`, `expand_monomial_coefficients`, `inverse_lagrange_eval`, `validate_distinct_nodes`)",
+            "`scripts/ScriptsCsv/MetodosNumericos/experiments_lagrange.py` (`_compute_live_pca_50k_curve`, `run_lg02_pca_curves`)",
         ),
         how_it_was_built=(
-            "Se cargaron las curvas PCA de 10 componentes para Versión A (`con_outliers`, donde `PC10 = 6.74e-18` por colinealidad exacta `E = C + K + U`) y Versión B (`sin_outliers`, donde el recorte IQR rompe la colinealidad dejando `PC10 = 5.5e-5`).",
-            "Se construyó el interpolante directo cúbico `P₃(k)` con nodos dispersos `k = {1, 3, 5, 8}` evaluando su precisión en los componentes retenidos `k = {2, 4, 6, 7}`.",
+            "Se recomputaron en vivo (`float64`, `seed = 42`, `n = 50,000`) las curvas PCA de 10 componentes directamente desde `03_processed` para Versión A (`con_outliers`, donde `PC10 = 6.74e-18` por colinealidad exacta `E = C + K + U`, produciendo `V(9) = V(10) = 1.0` en IEEE 754) y Versión B (`sin_outliers`, donde la winsorización IQR rompe la colinealidad dejando `PC10 = 5.53e-5`).",
+            "Se construyó el interpolante directo cúbico `P₃(k)` con nodos dispersos `k = {1, 3, 5, 8}`, exportando su forma monomial expandida (`lg_monomial_expansions.csv`) y evaluando su precisión en `k = {2, 4, 6, 7}` (error `0.00017` en `k = 4` Versión A).",
             "Se restringió el dominio al tramo estrictamente creciente `k = 1..6` y se invirtieron los ejes `(V(k), k)` con Lagrange local `P₂` y global `P₅` para hallar `k(0.80), k(0.85), k(0.90), k(0.95)`, comprobando `V(ceil(k)) >= V*` en los 8 casos.",
             "Se invocó deliberadamente `inverse_lagrange_eval` sobre los 10 puntos completos de Versión A demostrando que la regla `MR-04` bloquea el empate `V(9) = V(10) = 1.0` en lugar de dividir por cero.",
         ),
         formulas_md=(
             r"$$\text{Directa: } \hat{V}(k) = \sum_{i} V(k_i) L_i(k) \qquad\text{Inversa (estrictamente monótona): } \hat{k}(V^*) = \sum_{i} k_i L_i^{(V)}(V^*)$$",
+            r"$$P_{3,\text{Ver.A}}(k) = 0.002746\,k^3 - 0.057466\,k^2 + 0.412549\,k - 0.028723$$",
         ),
         formulas_html=(
             r"\text{Directa: }\hat{V}(k)=\sum_i V(k_i)L_i(k), \qquad \text{Inversa: }\hat{k}(V^*)=\sum_i k_i L_i^{(V)}(V^*)",
+            r"P_{3,\text{Ver.A}}(k) = 0.002746k^3 - 0.057466k^2 + 0.412549k - 0.028723",
         ),
         tables=(
             "lg02_pca_50k_reference.csv",
             "lg02_pca_forward_P3_eval.csv",
             "lg02_pca_inverse_effective_dim.csv",
+            "lg_monomial_expansions.csv",
         ),
         figures=(
-            ("nm09_lg02_pca_forward_and_inverse_lagrange.png", "Izquierda: Lagrange directo P₃(k) sobre PCA Versión A y B señalando la meseta de rango 9. Derecha: dimensionalidad efectiva k(V*) por interpolación inversa."),
+            ("nm09_lg02_pca_forward_and_inverse_lagrange.png", "Izquierda: Lagrange directo P₃(k) sobre PCA 50k recomputado en vivo (Versión A y B) señalando la meseta de rango 9. Derecha: dimensionalidad efectiva k(V*) por interpolación inversa."),
         ),
         geogebra_files=("ggb_lg02_pca_forward_p3.txt",),
         pitfalls=(
-            "La interpolación inversa exige ordenadas estrictamente distintas y monótonas: pasar `k = 9, 10` simultáneamente en Versión A produce una singularidad `V(9) - V(10) = 0`, interceptada automáticamente por `validate_distinct_nodes()`.",
+            "La interpolación inversa exige ordenadas estrictamente distintas y monótonas: pasar `k = 9, 10` simultáneamente en Versión A produce una singularidad `V(9) - V(10) = 0`, interceptada automáticamente por `validate_distinct_nodes()` (`MR-04`).",
+            "Reproducibilidad completa desde disco: las curvas PCA ya no dependen de tuplas hardcodeadas; se recomputan en precisión `float64` idéntica a `4.1_PCA_completo.ipynb` directamente sobre `data/03_processed`.",
         ),
     ),
     IdeaSpec(
@@ -375,7 +393,7 @@ IDEA_SPECS: Tuple[IdeaSpec, ...] = (
         ),
         data_inputs=(
             "Régimen 1: `rl01_career_step_profile.csv` (`mean_skills(k)`, suave casi lineal, `k=1..10`, extrap. `k=11,12`)",
-            "Régimen 2: `rl04_annual_macro_series.csv` (`mean_skills(año)`, serie macro ruidosa, `2000..2017`, extrap. `2018,2019`)",
+            "Régimen 2: `rl04_annual_macro_series.csv` (`mean_skills(año)`, serie macro curva en arco con fluctuación, `2000..2017`, extrap. `2018,2019`)",
             "Régimen 3: `lg01_survival_curve_S_q.csv` (`S(q)`, curva monótona no lineal empinada, `q=1..36`, extrap. `q=38,40`)",
             "Régimen 4: `lg02_pca_50k_reference.csv` (`V(k)` Versión B, tabla cóncava exacta, `k=1..8`, extrap. `k=9,10`)",
         ),
@@ -383,8 +401,8 @@ IDEA_SPECS: Tuple[IdeaSpec, ...] = (
             "`scripts/ScriptsCsv/MetodosNumericos/comparison.py` (`run_hyb01_interpolate_vs_fit`, `_evaluate_four_methods_on_regime`)",
         ),
         how_it_was_built=(
-            "Se seleccionaron 4 curvas reales de JobPath que cubren los escenarios clásicos de análisis numérico: tendencia casi lineal, serie temporal ruidosa, decaimiento no lineal pronunciado y tabla cóncava exacta.",
-            "Se evaluaron en igualdad de condiciones 4 métodos: (1) Regresión Lineal MCO, (2) Lagrange Global Equiespaciado, (3) Lagrange con Nodos Chebyshev y (4) Lagrange Local Cuadrático por Tramos `P₂`.",
+            "Se seleccionaron 4 curvas reales de JobPath que cubren los escenarios clásicos de análisis numérico: tendencia casi lineal, serie temporal curva con fluctuación (arco `2000–2017`), decaimiento no lineal pronunciado y tabla cóncava exacta.",
+            "Se evaluaron en igualdad de condiciones 4 métodos: (1) Regresión Lineal MCO, (2) Lagrange Global Equiespaciado (con tope documentado de grado 12 / 13 nodos para curvas largas `n > 14`, evitando desbordamiento de grado 35), (3) Lagrange con Nodos Chebyshev-Lobatto y (4) Lagrange Local Cuadrático por Tramos `P₂`.",
             "Se aplicó Validación Cruzada Leave-One-Out (LOOCV) estrictamente interior para medir MAE, RMSE y error máximo dentro de `[x_min, x_max]`, además de extrapolación controlada a +2 pasos frente a valores reales retenidos.",
             "Se rankearon automáticamente las 16 combinaciones método×régimen y se generó la rúbrica ejecutiva de decisión (`hyb01_method_selection_rubric.csv`).",
         ),
@@ -404,7 +422,8 @@ IDEA_SPECS: Tuple[IdeaSpec, ...] = (
         ),
         geogebra_files=(),
         pitfalls=(
-            "Lagrange global equiespaciado solo gana en tablas exactas suaves de bajo grado (PCA `V(k)`, `RMSE = 0.0036`); sobre datos anuales ruidosos su error explota 108× (`12.32` frente a `0.114` de `P₂` por tramos), confirmando exactamente la Diapositiva 2.",
+            "Geometría real del Régimen 2 (`mean_skills` `2000–2017`, `ols_r2 = 0.8995`): presenta una curvatura suave en arco (sube hasta 2015–2016 y desciende en 2017–2019), no ruido blanco alrededor de una recta; por eso Local `P₂` (`0.1139` LOOCV; `0.1711` extrap.) y Chebyshev-Lobatto (`0.1250`) superan a MCO (`0.2396`), mientras Lagrange global equiespaciado explota `108.2×` (`12.3239` LOOCV; `386.36` extrap.).",
+            "Transparencia del diseño del torneo: en curvas largas (`n > 14`, Regímenes 2 y 3), Lagrange Global se acota explícitamente a `13` nodos equiespaciados (grado 12) para cuantificar el Fenómeno de Runge sin desbordamiento de punto flotante; y usar nodos Chebyshev-Lobatto en el Régimen 4 (`n = 8`) produce un subconjunto propio distinto al equiespaciado, evitando empates artificiales en extrapolación (`0.1741` vs. `0.2423`).",
         ),
     ),
     IdeaSpec(
@@ -419,36 +438,38 @@ IDEA_SPECS: Tuple[IdeaSpec, ...] = (
         purpose=(
             "Conectar la pedagogía de clase con ingeniería reproducible de minería de datos: generar "
             "automáticamente scripts listos para copiar y pegar en GeoGebra Classic para los 5 casos "
-            "canónicos de n pequeño, validar todo cálculo hecho a mano contra NumPy/SciPy (< 1e-10) "
-            "y certificar mediante SHA-256 que los 19 insumos de `data/` permanecieron 100 % intactos."
+            "canónicos de n pequeño, validar todo cálculo hecho a mano contra NumPy/SciPy (< 1e-10), "
+            "certificar con huellas SHA-256 completas de 64 caracteres que los 19 insumos de `data/` "
+            "permanecieron 100 % intactos y ejecutar una auditoría semántica bilingüe (EN + ES) sobre el entregable."
         ),
         data_inputs=(
-            "Tablas canónicas de nodos de `IDEA-RL-01`, `IDEA-RL-02` (10 centroides ISCO), `IDEA-RL-04` (2000–2019 centrado), `IDEA-LG-01` (4 hitos de supervivencia) e `IDEA-LG-02` (PCA `k = 1, 3, 5, 8`)",
-            "19 archivos de solo lectura auditados en `01_raw/`, `02_interim/`, `03_processed/`, `04_transformed/` y `split_map_resume_id.csv`",
+            "Tablas canónicas de nodos de `IDEA-RL-01`, `IDEA-RL-02` (10 centroides ISCO), `IDEA-RL-04` (2000–2019 centrado sobre empleos cerrados), `IDEA-LG-01` (4 hitos de supervivencia) e `IDEA-LG-02` (PCA en vivo `k = 1, 3, 5, 8`)",
+            "19 archivos de solo lectura auditados en `01_raw/`, `02_interim/`, `03_processed/`, `04_transformed/` y `split_map_resume_id.csv` (13 con SHA-256 completo + 6 archivos de 1.4–8.4 GB con SHA-256 muestreado 24 MiB + metadatos, siempre en digest íntegro de 64 caracteres hex)",
         ),
         code_modules=(
             "`scripts/ScriptsCsv/MetodosNumericos/geogebra.py` (`export_hyb02_geogebra_pack`)",
             "`scripts/ScriptsCsv/MetodosNumericos/validation.py` (`snapshot_read_only_inputs`, `verify_read_only_inputs`, `validate_geogebra_scripts`, `audit_wording_compliance`)",
-            "`tests/metodos_numericos/` (suite de 15 pruebas automatizadas)",
+            "`tests/metodos_numericos/` (`test_ols_engine.py`, `test_lagrange_engine.py`, `test_pipeline_integration.py` — suite completa automatizada)",
         ),
         how_it_was_built=(
-            "Se generaron automáticamente 5 archivos `.txt` con comandos de GeoGebra en inglés (compatibles en cualquier idioma: `FitLine`, `CorrelationCoefficient`, `RSquare`, `Polynomial` y expresiones explícitas `L0(x)..L3(x)`) e indicando equivalentes en español en los comentarios.",
-            "Se validó la sintaxis de cada archivo `.txt` mediante expresiones regulares (`validate_geogebra_scripts`).",
-            "Se verificaron los 39 modelos MCO frente a `numpy.polyfit(x, y, 1)` (error relativo máx. `6.98e-14`), las 8 pruebas de invarianza afín (`7.22e-14`) y los diagnósticos de Lagrange frente a `scipy.interpolate` (`5.05e-15`).",
-            "Se tomaron huellas SHA-256 antes y después de la ejecución comprobando cero modificaciones en `data/`, junto con auditoría semántica (`MR-07` y `MR-08`).",
+            "Se generaron automáticamente 5 archivos `.txt` con comandos de GeoGebra en inglés (compatibles en cualquier idioma: `FitLine`, `CorrelationCoefficient`, `RSquare`, `Polynomial` y expresiones explícitas `L0(x)..L3(x)`), incorporando la forma monomial expandida en `LG-01`/`LG-02` y la advertencia `MR-06` en `RL-02`.",
+            "Se validó la sintaxis de cada archivo `.txt` mediante expresiones regulares (`validate_geogebra_scripts`) y se exportó el índice consolidado `geogebra_verification_index.md`.",
+            "Se verificaron los 39 modelos MCO frente a `numpy.polyfit(x, y, 1)` (error relativo máx. `2.29e-12 < 1e-10`), las 8 pruebas de invarianza afín (`7.22e-14`) y los diagnósticos de Lagrange frente a `scipy.interpolate` (`5.05e-15`).",
+            "Se registraron huellas SHA-256 íntegras de 64 caracteres hexadecimales (junto con `size_bytes` y `hash_mode`) antes y después de la ejecución, comprobando `19/19` archivos intactos.",
+            "Se ejecutó la auditoría semántica bilingüe (`MR-07/MR-08` en inglés y español) sobre notebooks, bitácoras y todos los Markdown del entregable (`0` violaciones), validada por la suite automatizada en `tests/metodos_numericos/` (`test_presentation_server_load_fixture`, `test_presentation_practice_loc_fixture`, `test_low_r2_verdict_and_guards`, `test_affine_scaling_invariance`, `test_presentation_cpu_temperature_fixture`, `test_presentation_practice_fixture`, `test_distinct_node_and_monotonic_inverse_guards`, `test_chebyshev_and_piecewise_quadratic`, `test_ols_polyfit_equivalence_and_rejections`, `test_rl04_extrapolation_failure_and_raw_parity`, `test_rl05_outlier_audit_and_affine_invariance`, `test_lg01_runge_explosion_and_chebyshev_mitigation`, `test_lg02_pca_forward_inverse_and_plateau`, `test_hyb01_four_by_four_rubric`, `test_hyb02_geogebra_figures_sha256_and_wording` y verificaciones extendidas de entregable).",
         ),
         formulas_md=(
-            r"$$\text{Error Relativo MCO} = \frac{\max(|a_0 - \hat{a}_0^{\text{np}}|, |a_1 - \hat{a}_1^{\text{np}}|)}{\max(1, |a_0|, |a_1|)} = 6.98\times 10^{-14} < 10^{-10}, \qquad \max_x |P_n(x) - P_n^{\text{scipy}}(x)| = 5.05\times 10^{-15}$$",
+            r"$$\text{Error Relativo MCO} = \frac{\max(|a_0 - \hat{a}_0^{\text{np}}|, |a_1 - \hat{a}_1^{\text{np}}|)}{\max(1, |a_0|, |a_1|)} = 2.29\times 10^{-12} < 10^{-10}, \qquad \max_x |P_n(x) - P_n^{\text{scipy}}(x)| = 5.05\times 10^{-15}$$",
         ),
         formulas_html=(
-            r"\text{ErrRel}_{\text{MCO}} = 6.98\times 10^{-14} < 10^{-10}, \qquad \text{Err}_{\text{Lagrange vs SciPy}} = 5.05\times 10^{-15} < 10^{-10}",
+            r"\text{ErrRel}_{\text{MCO}} = 2.29\times 10^{-12} < 10^{-10}, \qquad \text{Err}_{\text{Lagrange vs SciPy}} = 5.05\times 10^{-15} < 10^{-10}",
         ),
         tables=(
             "ols_summary_all_ideas.csv",
             "sha256_input_integrity.csv",
         ),
         figures=(
-            ("nm12_hyb02_verification_summary_dashboard.png", "Tablero de precisión decimal (-log10 error) confirmando que todas las verificaciones de MCO y Lagrange superan ampliamente el umbral 1e-10."),
+            ("nm12_hyb02_verification_summary_dashboard.png", "Tablero de precisión decimal (-log10 error) confirmando que todas las verificaciones de MCO y Lagrange superan ampliamente el umbral 1e-10 (10 dígitos)."),
         ),
         geogebra_files=(
             "ggb_rl01_career_steps_skills.txt",
@@ -460,6 +481,8 @@ IDEA_SPECS: Tuple[IdeaSpec, ...] = (
         ),
         pitfalls=(
             "Usa preferiblemente los comandos en inglés (`FitLine`, `Polynomial`, `RSquare`, `CorrelationCoefficient`) porque GeoGebra Classic los acepta sin error sin importar si la interfaz está configurada en español o en inglés.",
+            "Transparencia del modo de hash: los 13 insumos `<= 64 MiB` se verifican con SHA-256 completo byte a byte (`full_sha256`), mientras los 6 archivos masivos de `1.4–8.4 GB` usan muestreo determinista de 24 MiB (inicio, centro y final) + tamaño y `mtime_ns` (`sampled_24MiB_plus_meta_sha256`), guardando siempre el digest completo de 64 caracteres hexadecimales.",
+            "Diferencia entre alcance del núcleo (8 ideas / 19 insumos auditados) y el catálogo extendido del Prompt Maestro (14 ideas / 33 artefactos): las 6 ideas restantes (`RL-03, RL-06, LG-03..LG-06`) quedan documentadas como extensiones opcionales fuera del núcleo evaluado.",
         ),
     ),
 )
@@ -471,15 +494,16 @@ TEXT_TRANSLATIONS: Dict[str, str] = {
     "Weak / Rejected Linear Model (R2 < 0.30)": "Modelo Lineal Débil / Rechazado (R² < 0.30)",
     "Valid support (2000-2019, n=20)": "Soporte válido (2000–2019, n=20)",
     "Censored tail included (2000-2023, n=24)": "Con cola censurada (2000–2023, n=24)",
+    "Centered valid (t-2000, n=20)": "Soporte válido centrado (t−2000, n=20)",
     "Equispaced Global Lagrange": "Lagrange Global Equiespaciado",
-    "Chebyshev-Snapped Global Lagrange": "Lagrange Global (Nodos Chebyshev)",
+    "Chebyshev-Snapped Global Lagrange": "Lagrange Global (Chebyshev-Lobatto)",
     "Piecewise Local Quadratic (P2)": "Lagrange Local Cuadrático (P₂)",
     "OLS Linear Regression": "Regresión Lineal MCO",
     "Global Lagrange (Equispaced)": "Lagrange Global (Equiespaciado)",
-    "Chebyshev-Node Lagrange": "Lagrange (Nodos Chebyshev)",
+    "Chebyshev-Node Lagrange": "Lagrange (Chebyshev-Lobatto)",
     "Piecewise Local Lagrange (P2)": "Lagrange Local por Tramos (P₂)",
     "1. Smooth Near-Linear · Career Steps mean_skills(k)": "1. Suave Casi Lineal · Pasos mean_skills(k)",
-    "2. Noisy Macro Series · Annual mean_skills(year)": "2. Serie Macro Ruidosa · Anual mean_skills(año)",
+    "2. Curved Macro Series · Annual mean_skills(year)": "2. Serie Macro Curva · Anual mean_skills(año)",
     "3. Steep Nonlinear Monotone · Survival Curve S(q)": "3. No Lineal Empinada · Supervivencia S(q)",
     "4. Exact Concave Table · PCA CumVar V(k) (Ver. B)": "4. Tabla Cóncava Exacta · PCA V(k) (Ver. B)",
     "Version A (con_outliers)": "Versión A (con outliers)",
@@ -488,20 +512,41 @@ TEXT_TRANSLATIONS: Dict[str, str] = {
     "Version B · IQR Winsorized (03_processed)": "Versión B · Winsorizada IQR (03_processed)",
     "Legacy Clean · test+val (02_interim/empleos_limpio.csv)": "Legado Limpio · test+val (02_interim)",
     "Legacy Row-Dropped · test+val (02_interim/empleos_limpio_sin_outliers .csv)": "Legado Borrado Filas · test+val (02_interim)",
+    "full_sha256": "SHA-256 completo (64 hex)",
+    "sampled_24MiB_plus_meta_sha256": "SHA-256 24 MiB + meta (64 hex)",
+}
+
+# Columnas enteras de identificación/año/índice que NO deben llevar separador de miles
+_NO_COMMA_INT_COLS = {
+    "year",
+    "start_year",
+    "job_order",
+    "job_order_k",
+    "quarter_q",
+    "k_components",
+    "k_eval",
+    "degree",
+    "i",
+    "isco_major",
+    "loocv_rank",
+    "extrap_rank",
+    "k_ceil_recommended",
+    "n_prob_bound_violations",
+    "n_nodes",
 }
 
 
-def _fmt_cell(val: object) -> str:
+def _fmt_cell(val: object, col_name: str = "") -> str:
     if pd.isna(val):
         return "—"
     if isinstance(val, bool) or type(val).__name__ == "bool_":
         return "Sí" if bool(val) else "No"
     if isinstance(val, int) or type(val).__name__.startswith("int"):
-        return f"{int(val):,}"
+        return f"{int(val)}" if col_name in _NO_COMMA_INT_COLS else f"{int(val):,}"
     if isinstance(val, float) or type(val).__name__.startswith("float"):
         fval = float(val)
         if fval.is_integer() and abs(fval) < 1e12:
-            return f"{int(fval):,}"
+            return f"{int(fval)}" if col_name in _NO_COMMA_INT_COLS else f"{int(fval):,}"
         av = abs(fval)
         if av != 0.0 and (av < 1e-4 or av >= 1e7):
             return f"{fval:.3e}"
@@ -517,7 +562,7 @@ def _df_to_markdown(df: pd.DataFrame, max_rows: int = 25) -> str:
     cols = list(sub.columns)
     lines = ["| " + " | ".join(cols) + " |", "| " + " | ".join(["---"] * len(cols)) + " |"]
     for _, row in sub.iterrows():
-        lines.append("| " + " | ".join(_fmt_cell(row[c]).replace("|", "\\|") for c in cols) + " |")
+        lines.append("| " + " | ".join(_fmt_cell(row[c], col_name=c).replace("|", "\\|") for c in cols) + " |")
     if len(df) > max_rows:
         lines.append(f"\n*Se muestran las primeras {max_rows} de {len(df)} filas; consulta el archivo CSV completo en `tables/`.*")
     return "\n".join(lines)
@@ -531,12 +576,14 @@ def _df_to_html_table(df: pd.DataFrame, max_rows: int = 20) -> str:
     for _, row in sub.iterrows():
         tds = []
         for c in cols:
-            txt = _fmt_cell(row[c])
+            txt = _fmt_cell(row[c], col_name=c)
             cls = ""
             if "Rechazado" in txt or txt == "No":
                 cls = ' class="bad-cell"'
             elif "Fuerte" in txt or txt == "Sí":
                 cls = ' class="ok-cell"'
+            elif c in ("sha256_before", "sha256_after"):
+                cls = ' class="mono"'
             tds.append(f"<td{cls}>{html.escape(txt)}</td>")
         body_rows.append("<tr>" + "".join(tds) + "</tr>")
     note = f'<p class="tbl-note">Mostrando {len(sub)} de {len(df)} filas (CSV completo incluido en la subcarpeta).</p>' if len(df) > max_rows else ""
@@ -550,21 +597,19 @@ def _img_to_base64(path: Path) -> str:
 
 def _select_display_columns(table_name: str, df: pd.DataFrame) -> pd.DataFrame:
     col_maps: Dict[str, List[str]] = {
-        "rl01_ols_summary.csv": ["idea_id", "y_var", "n", "a0", "a1", "r", "r2", "s_yx", "quality_verdict", "polyfit_max_abs_diff"],
+        "rl01_ols_summary.csv": ["idea_id", "y_var", "n", "a0", "a1", "wls_a1", "wls_slope_rel_diff_pct", "r2", "s_yx", "quality_verdict", "polyfit_max_abs_diff"],
         "rl02_esco_catalog_ols.csv": ["idea_id", "x_var", "y_var", "n", "a0", "a1", "r", "r2", "s_yx", "quality_verdict"],
         "rl02_isco_major_group_slopes.csv": ["isco_major", "isco_major_label", "n_occupations", "mean_total_rel", "mean_cross_sector", "a1_cross_sector_slope", "r2"],
-        "rl04_ols_regime_comparison.csv": ["y_var", "regime", "n", "a0", "a1", "r", "r2", "s_yx", "quality_verdict"],
-        "rl05_four_way_outlier_comparison.csv": ["variant", "x_var", "y_var", "n", "a0", "a1", "r2", "s_yx"],
+        "rl04_ols_regime_comparison.csv": ["y_var", "regime", "n", "a0", "a1", "r", "r2", "s_yx", "quality_verdict", "polyfit_max_abs_diff"],
+        "rl05_four_way_outlier_comparison.csv": ["variant", "x_var", "y_var", "n", "a0", "a1", "r2", "s_yx", "quality_verdict"],
         "rl05_affine_scale_invariance.csv": ["version", "split", "x_var", "y_var", "r2_raw", "r2_scaled_obs", "a1_scaled_obs", "a1_scaled_theory", "max_invariance_err", "passes_tol"],
         "ols_summary_all_ideas.csv": ["idea_id", "x_var", "y_var", "n", "a0", "a1", "r2", "s_yx", "quality_verdict"],
-        "sha256_input_integrity.csv": ["file_name", "sha256_before", "sha256_after", "intact"],
+        "sha256_input_integrity.csv": ["file_name", "size_bytes", "hash_mode", "sha256_before", "sha256_after", "intact"],
+        "lg_monomial_expansions.csv": ["idea_id", "polynomial", "c3", "c2", "c1", "c0", "kronecker_max_err", "unity_sum_max_err", "scipy_max_abs_diff"],
     }
     if table_name in col_maps:
         keep = [c for c in col_maps[table_name] if c in df.columns]
-        out = df[keep].copy()
-        if table_name == "rl04_ols_regime_comparison.csv":
-            out = out.loc[~out["regime"].str.contains("Centered")].reset_index(drop=True)
-        return out
+        return df[keep].copy()
     return df
 
 
@@ -648,7 +693,7 @@ def _write_idea_markdown(
             "",
             "---",
             "",
-            "**Reproducibilidad:** Ejecuta `python -m scripts.ScriptsCsv.MetodosNumericos.pipeline` desde la raíz de `MineriaProtect` para recalcular todo desde `data/`, `python -m scripts.ScriptsCsv.MetodosNumericos.deliverable_packager` para actualizar esta carpeta, y `python -m unittest discover -s tests/metodos_numericos -v` para correr las 15 pruebas.",
+            "**Reproducibilidad:** Ejecuta `python -m scripts.ScriptsCsv.MetodosNumericos.pipeline` desde la raíz de `MineriaProtect` para recalcular todo desde `data/`, `python -m scripts.ScriptsCsv.MetodosNumericos.deliverable_packager` para actualizar esta carpeta, y `python -m unittest discover -s tests/metodos_numericos -v` para correr las 19 pruebas.",
         ]
     )
 
@@ -984,8 +1029,8 @@ code, .mono {{ font-family: "JetBrains Mono", ui-monospace, monospace; font-size
     </nav>
     <div class="side-foot">
       UNIMINUTO · Ibagué<br>
-      Commit base: <code>aa36d93</code><br>
-      Pruebas: <strong>15/15 OK</strong> · <code>data/</code> 100% SHA-256 intacto
+      Núcleo de 8 Ideas (Auditado 5.0)<br>
+      Pruebas: <strong>19/19 OK</strong> · <code>data/</code> 100% SHA-256 (64 hex)
     </div>
   </aside>
 
@@ -994,14 +1039,14 @@ code, .mono {{ font-family: "JetBrains Mono", ui-monospace, monospace; font-size
       <div class="hero">
         <div class="kicker">Informe Explicativo Autocontenido · Gráficos Interactivos y Evidencia Real</div>
         <h1>Regresión Lineal por Mínimos Cuadrados e Interpolación de Lagrange en JobPath</h1>
-        <p>Implementación empírica completa del <strong>Núcleo de 8 Ideas</strong> aplicando las dos presentaciones de Métodos Numéricos (Prof. Juan Carlos González Sánchez) sobre trayectorias laborales reales (<strong>1,871,014</strong> experiencias limpias · <strong>355,308</strong> personas · <strong>3,039</strong> oficios ESCO v1.2.1 · enriquecimiento <strong>greenShare</strong> · matrices <code>04_transformed</code>).</p>
+        <p>Implementación empírica completa del <strong>Núcleo de 8 Ideas</strong> aplicando las dos presentaciones de Métodos Numéricos (Prof. Juan Carlos González Sánchez) sobre trayectorias laborales reales (<strong>1,871,014</strong> experiencias limpias · <strong>355,308</strong> personas · <strong>3,039</strong> oficios ESCO v1.2.1 · enriquecimiento <strong>greenShare</strong> · matrices <code>04_transformed</code> · PCA 50k en vivo).</p>
       </div>
 
       <div class="kpi-grid">
-        <div class="kpi"><div class="lbl">MCO Pasos de Carrera</div><div class="val indigo-txt">R² = {float(rl01_sk['r2']):.4f}</div><div class="sub">a₁ = +{float(rl01_sk['a1']):.4f} skills/paso · Sy/x = {float(rl01_sk['s_yx']):.4f}</div></div>
-        <div class="kpi"><div class="lbl">Reducción Error Runge</div><div class="val teal-txt">{float(lg01_eq16['max_abs_err'])/float(lg01_ch16['max_abs_err']):.1f}×</div><div class="sub">Grado 16 Equiesp. {float(lg01_eq16['max_abs_err']):.2f} → Chebyshev {float(lg01_ch16['max_abs_err']):.3f}</div></div>
+        <div class="kpi"><div class="lbl">MCO Pasos de Carrera</div><div class="val indigo-txt">R² = {float(rl01_sk['r2']):.4f}</div><div class="sub">a₁ = +{float(rl01_sk['a1']):.4f} skills/paso · WLS +0.2287 · Sy/x = {float(rl01_sk['s_yx']):.4f}</div></div>
+        <div class="kpi"><div class="lbl">Reducción Error Runge</div><div class="val teal-txt">{float(lg01_eq16['max_abs_err'])/float(lg01_ch16['max_abs_err']):.1f}×</div><div class="sub">Grado 16 Equiesp. {float(lg01_eq16['max_abs_err']):.2f} → Chebyshev-Lobatto {float(lg01_ch16['max_abs_err']):.3f} (0 viol.)</div></div>
         <div class="kpi"><div class="lbl">Invarianza de Escala Afín</div><div class="val amber-txt">{max_inv_err:.2e}</div><div class="sub">Error máximo en 8 controles sobre <code>04_transformed</code></div></div>
-        <div class="kpi"><div class="lbl">Integridad de data/</div><div class="val teal-txt">{int(sha_df['intact'].sum())}/{len(sha_df)}</div><div class="sub">100 % intacto por SHA-256 · 15/15 pruebas en verde</div></div>
+        <div class="kpi"><div class="lbl">Integridad de data/</div><div class="val teal-txt">{int(sha_df['intact'].sum())}/{len(sha_df)}</div><div class="sub">100 % intacto (SHA-256 64 hex) · 19/19 pruebas en verde</div></div>
       </div>
 
       <div class="card">
@@ -1142,15 +1187,81 @@ window.addEventListener('load', () => {{
     return html_path
 
 
+_NOTEBOOKLM_FILENAMES: Dict[str, str] = {
+    "IDEA-RL-01": "Caso_01_IDEA_RL_01_Pasos_Carrera_MCO.md",
+    "IDEA-RL-02": "Caso_02_IDEA_RL_02_Catalogo_ESCO_MCO.md",
+    "IDEA-RL-04": "Caso_03_IDEA_RL_04_Deriva_Anual_Extrapolacion.md",
+    "IDEA-RL-05": "Caso_04_IDEA_RL_05_Outliers_E_Invarianza_Escala.md",
+    "IDEA-LG-01": "Caso_05_IDEA_LG_01_Supervivencia_Y_Runge.md",
+    "IDEA-LG-02": "Caso_06_IDEA_LG_02_PCA_Lagrange_Inversa.md",
+    "IDEA-HYB-01": "Caso_07_IDEA_HYB_01_Interpolar_vs_Ajustar.md",
+    "IDEA-HYB-02": "Caso_08_IDEA_HYB_02_Verificacion_GeoGebra_SHA256.md",
+}
+
+
+def _rewrite_relative_links(md_text: str, folder_name: str) -> str:
+    """Reescribe enlaces relativos `./...` para que resuelvan correctamente desde `fuentes_notebooklm/`."""
+    return re.sub(r"(\]\()\.\/", rf"\1../{folder_name}/", md_text)
+
+
+def _rebuild_notebooklm_sources(out_root: Path) -> List[Path]:
+    """Regenera los 8 documentos unificados en `fuentes_notebooklm/` con rutas relativas válidas."""
+    nb_dir = out_root / "fuentes_notebooklm"
+    nb_dir.mkdir(parents=True, exist_ok=True)
+    written: List[Path] = []
+    for idx, spec in enumerate(IDEA_SPECS, start=1):
+        idea_dir = out_root / spec.folder_name
+        slug = spec.idea_id.replace("-", "_")
+        guia_path = idea_dir / f"GUIA_FACIL_{slug}.md"
+        exp_path = idea_dir / f"EXPLICACION_{slug}.md"
+        parts: List[str] = [
+            f"# Fuente Unificada para Estudio y NotebookLM — Caso {idx:02d} ({spec.idea_id})",
+            "",
+            f"> **Carpeta origen:** [`../{spec.folder_name}/`](../{spec.folder_name}/) · **Presentación HTML:** [`presentacion_{slug}.html`](../{spec.folder_name}/presentacion_{slug}.html)",
+            "",
+            "---",
+            "",
+        ]
+        if guia_path.exists():
+            parts.append(_rewrite_relative_links(guia_path.read_text(encoding="utf-8").strip(), spec.folder_name))
+            parts.extend(["", "---", "", "## Anexo Técnico Completo (Fórmulas, Tablas Verificadas y GeoGebra)", ""])
+        if exp_path.exists():
+            parts.append(_rewrite_relative_links(exp_path.read_text(encoding="utf-8").strip(), spec.folder_name))
+        out_name = _NOTEBOOKLM_FILENAMES[spec.idea_id]
+        dest = nb_dir / out_name
+        dest.write_text("\n".join(parts).strip() + "\n", encoding="utf-8")
+        written.append(dest)
+    return written
+
+
+def _rebuild_zip_archive(cfg: NumericalMethodsConfig, out_root: Path) -> Path:
+    """Reconstruye `metodos_numericos_entregable.zip` sincronizado con el contenido actualizado."""
+    zip_path = cfg.root / "metodos_numericos_entregable.zip"
+    with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        for file_path in sorted(out_root.rglob("*")):
+            if file_path.is_file():
+                rel = file_path.relative_to(cfg.root)
+                zf.write(file_path, arcname=str(rel))
+    return zip_path
+
+
+def _format_ggb_count(ggb_files: Tuple[str, ...]) -> str:
+    n_txt = sum(1 for g in ggb_files if g.endswith(".txt"))
+    n_idx = sum(1 for g in ggb_files if g.endswith(".md"))
+    if n_txt and n_idx:
+        return f"{n_txt} `.txt` + {n_idx} índice `.md`"
+    if n_txt:
+        return f"{n_txt} `.txt`"
+    return "—"
+
+
 def build_unified_deliverable(cfg: NumericalMethodsConfig | None = None) -> Path:
-    """Construye la carpeta unificada `metodos_numericos_entregable/` completamente en español."""
+    """Actualiza in-place la carpeta unificada `metodos_numericos_entregable/` preservando guías y presentaciones."""
     cfg = cfg or default_config()
     out_root = cfg.root / "metodos_numericos_entregable"
-    if out_root.exists():
-        shutil.rmtree(out_root)
     out_root.mkdir(parents=True, exist_ok=True)
 
-    # 1. 00_general/
+    # 1. 00_general/ (actualización in-place preservando EVALUACION_UNIFICADA_8_CASOS.md)
     gen_dir = out_root / "00_general"
     gen_dir.mkdir(parents=True, exist_ok=True)
     general_copies = [
@@ -1158,6 +1269,7 @@ def build_unified_deliverable(cfg: NumericalMethodsConfig | None = None) -> Path
         cfg.verification_log_path,
         cfg.tables_dir / "ols_summary_all_ideas.csv",
         cfg.tables_dir / "sha256_input_integrity.csv",
+        cfg.tables_dir / "lg_monomial_expansions.csv",
         cfg.root / "notebooks" / "refactor" / "8.0_regresion_lineal_minimos_cuadrados.ipynb",
         cfg.root / "notebooks" / "refactor" / "8.1_interpolacion_lagrange.ipynb",
         cfg.root / "notebooks" / "refactor" / "8.2_comparativa_regresion_vs_interpolacion.ipynb",
@@ -1166,7 +1278,7 @@ def build_unified_deliverable(cfg: NumericalMethodsConfig | None = None) -> Path
         if src.exists():
             shutil.copy2(src, gen_dir / src.name)
 
-    # 2. 8 subcarpetas separadas con su EXPLICACION_IDEA_*.md en español
+    # 2. 8 subcarpetas separadas con su EXPLICACION_IDEA_*.md (preservando GUIA_FACIL y presentacion_IDEA)
     readme_rows: List[str] = []
     for idx, spec in enumerate(IDEA_SPECS, start=1):
         idea_dir = out_root / spec.folder_name
@@ -1183,29 +1295,47 @@ def build_unified_deliverable(cfg: NumericalMethodsConfig | None = None) -> Path
             shutil.copy2(cfg.geogebra_dir / gname, idea_dir / "geogebra" / gname)
 
         md_path = _write_idea_markdown(spec, idea_dir, cfg.tables_dir, cfg.geogebra_dir)
+        slug = spec.idea_id.replace("-", "_")
+        guia_rel = f"./{spec.folder_name}/GUIA_FACIL_{slug}.md"
+        pres_rel = f"./{spec.folder_name}/presentacion_{slug}.html"
+        ggb_desc = _format_ggb_count(spec.geogebra_files)
         readme_rows.append(
             f"| {idx:02d} | `{spec.idea_id}` | {spec.topic_label_es} | "
             f"[`{spec.folder_name}/`](./{spec.folder_name}/) | "
-            f"[`{md_path.name}`](./{spec.folder_name}/{md_path.name}) | "
-            f"{len(spec.tables)} CSV · {len(spec.figures)} PNG · {len(spec.geogebra_files)} GGB |"
+            f"[Técnico](./{spec.folder_name}/{md_path.name}) · [Guía Fácil]({guia_rel}) · [Slides]({pres_rel}) | "
+            f"{len(spec.tables)} CSV · {len(spec.figures)} PNG · GGB: {ggb_desc} |"
         )
 
-    # 3. README.md en español
+    # 3. Fuentes unificadas para estudio / NotebookLM (con rutas relativas válidas)
+    _rebuild_notebooklm_sources(out_root)
+
+    # 4. README.md completo en español
     readme_lines = [
         "# JobPath Métodos Numéricos — Entregable Unificado (Núcleo de 8 Ideas)",
         "",
-        "Abre [`index.html`](./index.html) directamente en cualquier navegador para ver el **reporte explicativo interactivo en español** (con los 12 gráficos a 150 DPI incrustados, tablas verificadas, 3 calculadoras en vivo y comandos listos para copiar en GeoGebra).",
+        "## Accesos Principales",
+        "",
+        "- **Reporte Explicativo Unificado Interactivo:** [`index.html`](./index.html) *(12 gráficos a 150 DPI incrustados, tablas verificadas, 3 calculadoras en vivo y comandos listos para GeoGebra)*",
+        "- **Índice de 8 Presentaciones Separadas + Guías Fáciles:** [`presentaciones_separadas.html`](./presentaciones_separadas.html)",
+        "- **Evaluación Integral Unificada (8 Casos + Solucionario + Rúbrica 0.0–5.0):** [`00_general/EVALUACION_UNIFICADA_8_CASOS.md`](./00_general/EVALUACION_UNIFICADA_8_CASOS.md)",
+        "- **Evaluación Pedagógica de las 8 Presentaciones HTML (Antes → Después 5.0/5.0):** [`00_general/EVALUACION_DIAPOSITIVAS_HTML.md`](./00_general/EVALUACION_DIAPOSITIVAS_HTML.md)",
+        "- **Fuentes Unificadas de Estudio (`fuentes_notebooklm/`):** 8 documentos consolidados (`Caso_01` a `Caso_08`) con enlaces relativos verificados.",
         "",
         "## Estructura Separada por Idea",
         "",
-        "| # | ID Idea | Temática | Subcarpeta | Markdown Explicativo | Archivos Incluidos |",
+        "| # | ID Idea | Temática | Subcarpeta | Documentación y Presentación | Archivos de Evidencia |",
         "|---|---|---|---|---|---|",
         *readme_rows,
         "",
-        "## Documentación General y Cuadernos Ejecutados (`00_general/`)",
+        "## Documentación General, Auditoría y Cuadernos Ejecutados (`00_general/`)",
         "",
-        "- [`00_general/MASTER_NUMERICAL_METHODS_IMPLEMENTATION_PROMPT.md`](./00_general/MASTER_NUMERICAL_METHODS_IMPLEMENTATION_PROMPT.md) *(Master Prompt en inglés solicitado originalmente)*",
-        "- [`00_general/verification_log.md`](./00_general/verification_log.md)",
+        "- [`00_general/EVALUACION_UNIFICADA_8_CASOS.md`](./00_general/EVALUACION_UNIFICADA_8_CASOS.md) *(Evaluación académica completa, solucionario verificado y rúbrica de los 8 casos)*",
+        "- [`00_general/EVALUACION_DIAPOSITIVAS_HTML.md`](./00_general/EVALUACION_DIAPOSITIVAS_HTML.md) *(Auditoría pedagógica, de explicabilidad y simuladores JS de las 8 presentaciones HTML)*",
+        "- [`00_general/verification_log.md`](./00_general/verification_log.md) *(Bitácora de verificación triple, MR-09, PCA en vivo, SHA-256 64 hex y auditoría bilingüe)*",
+        "- [`00_general/ols_summary_all_ideas.csv`](./00_general/ols_summary_all_ideas.csv) *(Consolidado de 39 modelos MCO)*",
+        "- [`00_general/sha256_input_integrity.csv`](./00_general/sha256_input_integrity.csv) *(19 insumos con digest SHA-256 íntegro de 64 caracteres y `hash_mode`)*",
+        "- [`00_general/lg_monomial_expansions.csv`](./00_general/lg_monomial_expansions.csv) *(Formas monomiales expandidas exactas de `P₃(q)` y `P₃(k)`)*",
+        "- [`00_general/MASTER_NUMERICAL_METHODS_IMPLEMENTATION_PROMPT.md`](./00_general/MASTER_NUMERICAL_METHODS_IMPLEMENTATION_PROMPT.md) *(Especificación maestra original)*",
         "- [`00_general/8.0_regresion_lineal_minimos_cuadrados.ipynb`](./00_general/8.0_regresion_lineal_minimos_cuadrados.ipynb)",
         "- [`00_general/8.1_interpolacion_lagrange.ipynb`](./00_general/8.1_interpolacion_lagrange.ipynb)",
         "- [`00_general/8.2_comparativa_regresion_vs_interpolacion.ipynb`](./00_general/8.2_comparativa_regresion_vs_interpolacion.ipynb)",
@@ -1213,8 +1343,11 @@ def build_unified_deliverable(cfg: NumericalMethodsConfig | None = None) -> Path
     ]
     (out_root / "README.md").write_text("\n".join(readme_lines), encoding="utf-8")
 
-    # 4. HTML explicativo en español
+    # 5. HTML explicativo en español
     _build_master_html(cfg, out_root)
+
+    # 6. Archivo ZIP sincronizado
+    _rebuild_zip_archive(cfg, out_root)
     return out_root
 
 
