@@ -1,33 +1,35 @@
 # IDEA-LG-02 — Varianza Acumulada de PCA: Interpolación Directa e Inversa
 
-> **Temática:** Interpolación de Lagrange · **Prioridad:** P0 · **Presentación base:** `interpolacion_lagrange.html` (Diapositivas 2–10 (Interpolación Tabular Exacta, Unicidad y Nodos Distintos x_i ≠ x_j))
+> **Temática:** Interpolación de Lagrange · **Prioridad:** P0 · **Presentación base:** `interpolacion_lagrange.html` (Diapositivas 2–10 (Interpolación Tabular Exacta, Forma Expandida, Unicidad y Nodos Distintos x_i ≠ x_j))
 
 ---
 
 ## 1. Propósito y Finalidad Analítica
 
-Interpolar la curva de varianza explicada acumulada de PCA (`4.1_PCA_completo`, muestra 50k) desde nodos dispersos y aplicar interpolación inversa de Lagrange k(V*) para estimar la dimensionalidad continua necesaria para alcanzar umbrales objetivo (80 %, 85 %, 90 %, 95 %), verificando en vivo la guarda de nodos distintos (MR-04) ante la meseta de rango 9 de la Versión A.
+Recomputar en vivo la curva de varianza explicada acumulada de PCA (muestra reproducible 50k desde `data/03_processed` en precisión completa `float64`), interpolarla en sentido directo con `P₃(k)` y en sentido inverso `k(V*)` para metas de 80 %–95 %, verificando en vivo la guarda de nodos distintos (MR-04) ante la meseta de rango 9 de la Versión A.
 
 ## 2. Archivos de `data/` Utilizados (Solo Lectura)
 
-- `notebooks/refactor/4.1_PCA_completo.ipynb` (curvas verificadas de varianza acumulada 50k sobre `data/04_transformed/{con_outliers,sin_outliers}/train/X_train.csv`)
-- `data/04_transformed/con_outliers/train/X_train.csv` y `sin_outliers/train/X_train.csv` (auditados vía SHA-256)
+- `data/03_processed/empleos_unificado_limpio.csv` y `empleos_limpio_con_competencias_sin_outliers.csv` (PCA 50k recomputado en vivo en `float64` replicando `4.1_PCA_completo.ipynb`, sin constantes hardcodeadas)
+- `data/04_transformed/con_outliers/train/X_train.csv` y `sin_outliers/train/X_train.csv` (auditados vía SHA-256 completo de 64 caracteres)
 
 ## 3. Formulación Matemática Aplicada
 
 $$\text{Directa: } \hat{V}(k) = \sum_{i} V(k_i) L_i(k) \qquad\text{Inversa (estrictamente monótona): } \hat{k}(V^*) = \sum_{i} k_i L_i^{(V)}(V^*)$$
 
+$$P_{3,\text{Ver.A}}(k) = 0.002746\,k^3 - 0.057466\,k^2 + 0.412549\,k - 0.028723$$
+
 ## 4. Cómo se Hizo (Metodología Paso a Paso)
 
-1. Se cargaron las curvas PCA de 10 componentes para Versión A (`con_outliers`, donde `PC10 = 6.74e-18` por colinealidad exacta `E = C + K + U`) y Versión B (`sin_outliers`, donde el recorte IQR rompe la colinealidad dejando `PC10 = 5.5e-5`).
-2. Se construyó el interpolante directo cúbico `P₃(k)` con nodos dispersos `k = {1, 3, 5, 8}` evaluando su precisión en los componentes retenidos `k = {2, 4, 6, 7}`.
+1. Se recomputaron en vivo (`float64`, `seed = 42`, `n = 50,000`) las curvas PCA de 10 componentes directamente desde `03_processed` para Versión A (`con_outliers`, donde `PC10 = 6.74e-18` por colinealidad exacta `E = C + K + U`, produciendo `V(9) = V(10) = 1.0` en IEEE 754) y Versión B (`sin_outliers`, donde la winsorización IQR rompe la colinealidad dejando `PC10 = 5.53e-5`).
+2. Se construyó el interpolante directo cúbico `P₃(k)` con nodos dispersos `k = {1, 3, 5, 8}`, exportando su forma monomial expandida (`lg_monomial_expansions.csv`) y evaluando su precisión en `k = {2, 4, 6, 7}` (error `0.00017` en `k = 4` Versión A).
 3. Se restringió el dominio al tramo estrictamente creciente `k = 1..6` y se invirtieron los ejes `(V(k), k)` con Lagrange local `P₂` y global `P₅` para hallar `k(0.80), k(0.85), k(0.90), k(0.95)`, comprobando `V(ceil(k)) >= V*` en los 8 casos.
 4. Se invocó deliberadamente `inverse_lagrange_eval` sobre los 10 puntos completos de Versión A demostrando que la regla `MR-04` bloquea el empate `V(9) = V(10) = 1.0` en lugar de dividir por cero.
 
 **Módulos de Python que lo implementan:**
 
-- `scripts/ScriptsCsv/MetodosNumericos/lagrange.py` (`lagrange_eval`, `inverse_lagrange_eval`, `validate_distinct_nodes`)
-- `scripts/ScriptsCsv/MetodosNumericos/experiments_lagrange.py` (`run_lg02_pca_curves`)
+- `scripts/ScriptsCsv/MetodosNumericos/lagrange.py` (`lagrange_eval`, `expand_monomial_coefficients`, `inverse_lagrange_eval`, `validate_distinct_nodes`)
+- `scripts/ScriptsCsv/MetodosNumericos/experiments_lagrange.py` (`_compute_live_pca_50k_curve`, `run_lg02_pca_curves`)
 
 ## 5. Resultados Empíricos Verificados
 
@@ -43,8 +45,8 @@ $$\text{Directa: } \hat{V}(k) = \sum_{i} V(k_i) L_i(k) \qquad\text{Inversa (estr
 | 6 | 0.9943 | 0.9928 | 0.0537 | 0.0392 |
 | 7 | 0.9989 | 0.9983 | 0.0046 | 0.0055 |
 | 8 | 1.0000 | 0.9996 | 0.0011 | 0.0013 |
-| 9 | 1 | 0.9999 | 4.570e-05 | 0.0004 |
-| 10 | 1 | 1 | 0 | 5.500e-05 |
+| 9 | 1 | 0.9999 | 4.571e-05 | 0.0004 |
+| 10 | 1 | 1 | 6.741e-18 | 5.534e-05 |
 
 ### Tabla: `lg02_pca_forward_P3_eval.csv`
 
@@ -72,13 +74,21 @@ $$\text{Directa: } \hat{V}(k) = \sum_{i} V(k_i) L_i(k) \qquad\text{Inversa (estr
 | Versión B (sin outliers IQR) | 0.9000 | 4.0995 | 4.1212 | 5 | 0.9536 | Sí | No |
 | Versión B (sin outliers IQR) | 0.9500 | 4.9227 | 4.9278 | 5 | 0.9536 | Sí | No |
 
+### Tabla: `lg_monomial_expansions.csv`
+
+| idea_id | polynomial | c3 | c2 | c1 | c0 | kronecker_max_err | unity_sum_max_err | scipy_max_abs_diff |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| IDEA-LG-01 | Survival P3(q) at q={4,8,20,40} | -7.910e-05 | 0.0058 | -0.1339 | 1.1079 | 0 | 4.441e-16 | 5.052e-15 |
+| IDEA-LG-02 | PCA Forward P3(k) Version A at k={1,3,5,8} | 0.0027 | -0.0575 | 0.4125 | -0.0287 | 0 | 2.220e-16 | 5.107e-15 |
+| IDEA-LG-02 | PCA Forward P3(k) Version B at k={1,3,5,8} | 0.0030 | -0.0596 | 0.4040 | 0.0494 | 0 | 2.220e-16 | 1.554e-15 |
+
 ## 6. Gráficos Generados (150 DPI)
 
 ### `nm09_lg02_pca_forward_and_inverse_lagrange.png`
 
-![Izquierda: Lagrange directo P₃(k) sobre PCA Versión A y B señalando la meseta de rango 9. Derecha: dimensionalidad efectiva k(V*) por interpolación inversa.](./figures/nm09_lg02_pca_forward_and_inverse_lagrange.png)
+![Izquierda: Lagrange directo P₃(k) sobre PCA 50k recomputado en vivo (Versión A y B) señalando la meseta de rango 9. Derecha: dimensionalidad efectiva k(V*) por interpolación inversa.](./figures/nm09_lg02_pca_forward_and_inverse_lagrange.png)
 
-*Izquierda: Lagrange directo P₃(k) sobre PCA Versión A y B señalando la meseta de rango 9. Derecha: dimensionalidad efectiva k(V*) por interpolación inversa.*
+*Izquierda: Lagrange directo P₃(k) sobre PCA 50k recomputado en vivo (Versión A y B) señalando la meseta de rango 9. Derecha: dimensionalidad efectiva k(V*) por interpolación inversa.*
 
 ## 7. Comandos de Verificación en GeoGebra
 
@@ -89,6 +99,7 @@ $$\text{Directa: } \hat{V}(k) = \sum_{i} V(k_i) L_i(k) \qquad\text{Inversa (estr
 # Paste each command sequentially into GeoGebra Classic Algebra Input (https://www.geogebra.org/classic)
 # Spanish equivalent: q = Polinomio(P). Verify that p(x) and q(x) coincide identically.
 # Expected Python Lagrange: P_3(4) = 0.877777
+# Expanded monomial form: P_3(x) = 0.002746*x^3 - 0.057466*x^2 + 0.412549*x - 0.028723
 P = {(1, 0.329105), (3, 0.765877), (5, 0.940656), (8, 0.999954)}
 L0(x) = ((x - 3)*(x - 5)*(x - 8)) / ((1 - 3)*(1 - 5)*(1 - 8))
 L1(x) = ((x - 1)*(x - 5)*(x - 8)) / ((3 - 1)*(3 - 5)*(3 - 8))
@@ -101,8 +112,9 @@ A_eval = (4, p(4))
 
 ## 8. Limitaciones, Advertencias y Salvaguardas de Dominio
 
-- La interpolación inversa exige ordenadas estrictamente distintas y monótonas: pasar `k = 9, 10` simultáneamente en Versión A produce una singularidad `V(9) - V(10) = 0`, interceptada automáticamente por `validate_distinct_nodes()`.
+- La interpolación inversa exige ordenadas estrictamente distintas y monótonas: pasar `k = 9, 10` simultáneamente en Versión A produce una singularidad `V(9) - V(10) = 0`, interceptada automáticamente por `validate_distinct_nodes()` (`MR-04`).
+- Reproducibilidad completa desde disco: las curvas PCA ya no dependen de tuplas hardcodeadas; se recomputan en precisión `float64` idéntica a `4.1_PCA_completo.ipynb` directamente sobre `data/03_processed`.
 
 ---
 
-**Reproducibilidad:** Ejecuta `python -m scripts.ScriptsCsv.MetodosNumericos.pipeline` desde la raíz de `MineriaProtect` para recalcular todo desde `data/`, `python -m scripts.ScriptsCsv.MetodosNumericos.deliverable_packager` para actualizar esta carpeta, y `python -m unittest discover -s tests/metodos_numericos -v` para correr las 15 pruebas.
+**Reproducibilidad:** Ejecuta `python -m scripts.ScriptsCsv.MetodosNumericos.pipeline` desde la raíz de `MineriaProtect` para recalcular todo desde `data/`, `python -m scripts.ScriptsCsv.MetodosNumericos.deliverable_packager` para actualizar esta carpeta, y `python -m unittest discover -s tests/metodos_numericos -v` para correr las 19 pruebas.

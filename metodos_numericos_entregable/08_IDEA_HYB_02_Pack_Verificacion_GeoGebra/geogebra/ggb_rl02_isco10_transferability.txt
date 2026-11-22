@@ -2,6 +2,7 @@
 # Paste each command sequentially into GeoGebra Classic Algebra Input (https://www.geogebra.org/classic)
 # Spanish equivalents: AjusteLineal(P), CoeficienteCorrelación(P), RCuadrado(P, f)
 # Expected Python OLS: a0 = 3.448113, a1 = 0.432990, r = 0.529160, R2 = 0.280010
+# WARNING (MR-06): R2 = 0.2800 < 0.30 -> Model REJECTED for operational forecasting; Q_pred=(45, f(45)) is an arithmetic formula check only.
 P = {(35.666667, 25.619048), (40.822857, 25.217143), (53.176267, 30.895161), (38.473684, 21.561920), (29.280899, 16.213483), (35.284314, 15.882353), (46.590909, 12.295455), (37.723350, 21.200508), (31.438040, 16.740634), (31.276316, 13.276316)}
 f = FitLine(P)
 r = CorrelationCoefficient(P)

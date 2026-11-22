@@ -1,5 +1,5 @@
 regime_name,ols_r2,best_in_range_method,best_loocv_rmse,best_extrapolation_method,best_extrap_mae,worst_in_range_method,worst_loocv_rmse
 1. Smooth Near-Linear · Career Steps mean_skills(k),0.9954976827945881,OLS Linear Regression,0.0558223129922531,OLS Linear Regression,0.07451989055214092,Global Lagrange (Equispaced),0.29366822713995633
-2. Noisy Macro Series · Annual mean_skills(year),0.8994918079349818,Piecewise Local Lagrange (P2),0.11393936883122811,Chebyshev-Node Lagrange,0.1022604513388039,Global Lagrange (Equispaced),12.323899296948616
-3. Steep Nonlinear Monotone · Survival Curve S(q),0.6934788294573866,Chebyshev-Node Lagrange,0.04902672184891418,Piecewise Local Lagrange (P2),0.005987752559357469,Global Lagrange (Equispaced),0.3776620332502405
-4. Exact Concave Table · PCA CumVar V(k) (Ver. B),0.796355921582923,Global Lagrange (Equispaced),0.003644862955363687,Piecewise Local Lagrange (P2),0.006755999999999596,OLS Linear Regression,0.07646451210598113
+2. Curved Macro Series · Annual mean_skills(year),0.8994918079349818,Piecewise Local Lagrange (P2),0.11393936883122811,Piecewise Local Lagrange (P2),0.1711095932171336,Global Lagrange (Equispaced),12.323899296948616
+3. Steep Nonlinear Monotone · Survival Curve S(q),0.6934788294573866,Piecewise Local Lagrange (P2),0.05242089196390719,Piecewise Local Lagrange (P2),0.005987752559357469,Global Lagrange (Equispaced),0.3776620332502405
+4. Exact Concave Table · PCA CumVar V(k) (Ver. B),0.7963557032594187,Global Lagrange (Equispaced),0.0036444522441845635,Piecewise Local Lagrange (P2),0.006755753212465576,OLS Linear Regression,0.07646446158675113

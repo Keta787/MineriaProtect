@@ -25,7 +25,7 @@ $$\widehat{\texttt{n\_cross\_sector}} = a_0 + a_1 \cdot \texttt{n\_total\_rel}, 
 1. Se cruzaron las 126,051 relaciones oficio-competencia con `skills_en_limpio.csv` (`reuseLevel`) usando indicadores binarios vectorizados (`essential`, `optional`, `competence`, `knowledge`, `cross-sector`, `sector-specific`, `transversal`).
 2. Se agregaron los conteos a nivel de los `n = 3,039` oficios únicos (`conceptUri`) y se incorporó `greenShare` (3,039/3,039 = 100 % de cobertura) más el gran grupo ISCO-08 de 1 dígito.
 3. Se ajustó MCO en 7 pares estructurales contrastando acoples fuertes (`n_essential ~ n_ess_comp`), transferibilidad moderada (`n_cross_sector ~ n_total_rel`) e hipótesis nulas/ortogonales rechazadas (`n_optional ~ n_essential`, `greenShare ~ n_essential`).
-4. Se estratificó la ley de transferibilidad `n_cross_sector ~ n_total_rel` por separado en los 10 grandes grupos ISCO-08 y se exportaron sus 10 centroides para verificación en GeoGebra.
+4. Se estratificó la ley de transferibilidad `n_cross_sector ~ n_total_rel` por separado en los 10 grandes grupos ISCO-08 y se exportaron sus 10 centroides para verificación aritmética en GeoGebra.
 
 **Módulos de Python que lo implementan:**
 
@@ -86,6 +86,7 @@ $$\widehat{\texttt{n\_cross\_sector}} = a_0 + a_1 \cdot \texttt{n\_total\_rel}, 
 # Paste each command sequentially into GeoGebra Classic Algebra Input (https://www.geogebra.org/classic)
 # Spanish equivalents: AjusteLineal(P), CoeficienteCorrelación(P), RCuadrado(P, f)
 # Expected Python OLS: a0 = 3.448113, a1 = 0.432990, r = 0.529160, R2 = 0.280010
+# WARNING (MR-06): R2 = 0.2800 < 0.30 -> Model REJECTED for operational forecasting; Q_pred=(45, f(45)) is an arithmetic formula check only.
 P = {(35.666667, 25.619048), (40.822857, 25.217143), (53.176267, 30.895161), (38.473684, 21.561920), (29.280899, 16.213483), (35.284314, 15.882353), (46.590909, 12.295455), (37.723350, 21.200508), (31.438040, 16.740634), (31.276316, 13.276316)}
 f = FitLine(P)
 r = CorrelationCoefficient(P)
@@ -97,9 +98,10 @@ Q_pred = (45, f(45))
 
 ## 8. Limitaciones, Advertencias y Salvaguardas de Dominio
 
-- Acople parte-todo en `n_essential ~ n_ess_comp`: las competencias prácticas son componente del total esencial ($E = C + K + U$); la pendiente $a_1 = 1.1227 > 1$ refleja cuánto conocimiento teórico acompaña a cada competencia práctica adicional.
-- Ortogonalidad verde (`greenShare ~ n_essential`, $R^2 = 0.0000$): demuestra empíricamente que los oficios verdes no equivalen simplemente a oficios con más competencias totales.
+- Acople parte-todo en `n_essential ~ n_ess_comp` (`R² = 0.8643`) y `n_total_rel ~ n_competence` (`R² = 0.7319`): el predictor `x` es subconjunto aditivo de `y` (`E = C + K + U`); la pendiente `a₁ = 1.1227 > 1` describe el acompañamiento estructural de conocimientos teóricos, nunca una relación causal ni predictiva independiente.
+- Ortogonalidad verde (`greenShare ~ n_essential`, `R² = 0.000045`): demuestra empíricamente que los oficios verdes no equivalen simplemente a oficios con más competencias totales.
+- Modelo de 10 centroides ISCO en GeoGebra (`R² = 0.2800 < 0.30`, rechazado por MR-06): el punto `Q_pred = (45, f(45)) = 22.9327` en `ggb_rl02_isco10_transferability.txt` sirve exclusivamente como verificación aritmética de las fórmulas MCO contra Python, pero NO es una predicción operativa válida debido a la fuerte heterogeneidad sectorial (ISCO-6 Agricultura presenta un residuo de `-11.33` habilidades).
 
 ---
 
-**Reproducibilidad:** Ejecuta `python -m scripts.ScriptsCsv.MetodosNumericos.pipeline` desde la raíz de `MineriaProtect` para recalcular todo desde `data/`, `python -m scripts.ScriptsCsv.MetodosNumericos.deliverable_packager` para actualizar esta carpeta, y `python -m unittest discover -s tests/metodos_numericos -v` para correr las 15 pruebas.
+**Reproducibilidad:** Ejecuta `python -m scripts.ScriptsCsv.MetodosNumericos.pipeline` desde la raíz de `MineriaProtect` para recalcular todo desde `data/`, `python -m scripts.ScriptsCsv.MetodosNumericos.deliverable_packager` para actualizar esta carpeta, y `python -m unittest discover -s tests/metodos_numericos -v` para correr las 19 pruebas.
