@@ -1,0 +1,5 @@
+metodo_linkage,correlacion_cofenetica,k_evaluado,silhouette_score,davies_bouldin_index,calinski_harabasz_index,tamano_min_cluster,tamano_max_cluster,pct_cluster_mas_grande,decision_y_diagnostico_es
+ward,0.4463,4,0.1827,1.9489,370.72,160,1650,55.0,SELECCIONADO (prioridad metodológica: minimiza incremento de varianza intra-clúster ΔESS y produce segmentos balanceados y accionables)
+complete,0.5623,4,0.2249,1.3672,210.72,38,2701,90.03,Descartado por efecto encadenamiento (chaining: el clúster mayor absorbe 90.03% de la muestra y aísla hojas marginales)
+average,0.7348,4,0.4431,0.8927,121.36,2,2925,97.5,Descartado por efecto encadenamiento (chaining: el clúster mayor absorbe 97.50% de la muestra y aísla hojas marginales)
+single,0.501,4,0.5048,0.4334,10.53,1,2996,99.87,Descartado por efecto encadenamiento (chaining: el clúster mayor absorbe 99.87% de la muestra y aísla hojas marginales)

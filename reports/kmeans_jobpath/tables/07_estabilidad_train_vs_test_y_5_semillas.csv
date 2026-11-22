@@ -1,0 +1,6 @@
+semilla,personas_muestra,k_optimo,silhouette_version_b,silhouette_version_a,delta_silhouette_b_menos_a,davies_bouldin_version_b,davies_bouldin_version_a,calinski_harabasz_version_b,calinski_harabasz_version_a,desplazamiento_medio_centroide_z,ari_concordancia_b_vs_a,nmi_concordancia_b_vs_a
+42,10000,4,0.1886,0.1922,-0.0036,1.6629,1.6668,1653.86,1588.2,0.1337,0.8633,0.836
+100,10000,4,0.193,0.1941,-0.0011,1.6452,1.6644,1636.31,1575.99,0.1254,0.8627,0.8366
+2026,10000,4,0.1962,0.1999,-0.0037,1.6392,1.6381,1671.44,1603.73,0.1453,0.8569,0.832
+7,10000,4,0.1975,0.2043,-0.0068,1.6295,1.6295,1653.53,1597.16,0.1376,0.8343,0.8173
+999,10000,4,0.2008,0.206,-0.0052,1.6242,1.6392,1674.64,1611.91,0.1336,0.8614,0.8341

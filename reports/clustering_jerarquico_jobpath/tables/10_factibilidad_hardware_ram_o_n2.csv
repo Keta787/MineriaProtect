@@ -1,0 +1,7 @@
+vista_o_escenario,filas_n,pares_condensados_n_n1_div_2,ram_matriz_condensada_gb_float64,ram_matriz_condensada_gib_binario,pico_ram_estimado_windows_scipy_gb,factible_en_32gb_ram
+V_EXPERIENCE Train (100%),1391018,967464842653,7739.719,7208.175,15479.44,No (MemoryError inmediato; supera RAM física en >240x)
+V_PERSON Total Clasificado (100%),352093,61984564278,495.877,461.821,991.75,No (MemoryError inmediato; supera RAM física en >15x)
+V_PERSON Train (100%),281674,39669980301,317.36,295.564,634.72,No (MemoryError inmediato; supera RAM física en 10x)
+V_PERSON Muestra Anterior (8.1 inicial),3000,4498500,0.036,0.034,1.2,Sí (Muy holgado; < 1 s en SciPy)
+V_PERSON Muestra Optimizada (Seleccionada),25000,312487500,2.5,2.328,8.0,Sí (Óptima y segura en 32 GB RAM; deja >20 GB libres)
+V_PERSON Límite Superior Seguro,30000,449985000,3.6,3.353,11.52,Sí (Viable con margen ajustado si hay otras apps abiertas)

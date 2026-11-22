@@ -1,0 +1,4 @@
+modelo_y_muestra,n_entrenamiento,pct_train_usado,silhouette_score,davies_bouldin_index,calinski_harabasz_index,pct_cluster_0,pct_cluster_1,pct_cluster_2,pct_cluster_3,ari_vs_ward_n25000_en_352093,nmi_vs_ward_n25000_en_352093,ari_vs_kmeans_8_0_en_352093,nmi_vs_kmeans_8_0_en_352093,tiempo_ajuste_seg
+"8.1 · Ward Jerárquico (Muestra n = 3,000 → Proyectado a 352,093)",3000,1.07,0.1827,1.9489,370.72,52.13,11.65,9.47,26.75,0.3582,0.5035,0.4708,0.5462,0.8
+"8.1 · Ward Jerárquico Optimizado (Muestra n = 25,000 → Proyectado a 352,093)",25000,8.88,0.1167,1.9295,3134.5,34.01,11.82,38.85,15.32,1.0,1.0,0.6502,0.7296,146.11
+"8.0 · K-Means++ (100% Train n = 281,674 → Evaluado en 352,093)",281674,100.0,0.1948,1.6298,46780.83,43.9,11.66,27.99,16.44,0.6502,0.7296,1.0,1.0,1.8

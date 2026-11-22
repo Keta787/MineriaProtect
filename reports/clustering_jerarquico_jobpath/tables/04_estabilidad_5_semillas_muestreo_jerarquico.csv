@@ -1,0 +1,6 @@
+semilla,n_personas_muestra,k_optimo,cophenet_version_b,cophenet_version_a,silhouette_version_b,silhouette_version_a,delta_silhouette_b_menos_a,davies_bouldin_version_b,davies_bouldin_version_a,calinski_harabasz_version_b,calinski_harabasz_version_a,altura_corte_ward_b,altura_corte_ward_a,pct_max_cluster_b,pct_max_cluster_a,ari_concordancia_b_vs_a,nmi_concordancia_b_vs_a
+42,3000,4,0.4463,0.3828,0.1827,0.1619,0.0208,1.9489,1.8595,370.72,360.18,55.921,56.111,55.0,45.13,0.214,0.3602
+100,3000,4,0.3936,0.3976,0.1263,0.1275,-0.0012,2.0033,1.9094,379.15,382.88,59.345,60.568,34.37,34.53,0.4593,0.5182
+2026,3000,4,0.4267,0.4506,0.146,0.1812,-0.0352,2.011,1.8314,412.24,405.72,61.219,63.721,35.43,50.6,0.3722,0.4777
+7,3000,4,0.4821,0.4218,0.197,0.166,0.031,1.689,1.895,387.88,391.85,60.48,59.243,65.23,46.5,0.3464,0.4482
+999,3000,4,0.3823,0.369,0.1277,0.1472,-0.0194,2.0426,1.8751,353.89,381.06,57.772,59.785,42.5,37.53,0.4112,0.478

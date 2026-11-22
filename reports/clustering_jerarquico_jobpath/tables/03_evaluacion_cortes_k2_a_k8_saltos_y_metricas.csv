@@ -1,0 +1,8 @@
+k_clusters,altura_fusion_superior_ward,altura_fusion_inferior_ward,salto_vertical_fusion,altura_corte_horizontal,silhouette_score,davies_bouldin_index,calinski_harabasz_index,tamano_min_cluster,pct_min_cluster,tamano_max_cluster,pct_max_cluster,justificacion_corte_es
+2,76.439,71.141,5.297,73.79,0.2204,1.5182,363.74,341,11.37,2659,88.63,Partición binaria macro demasiado gruesa (separa solo 2 grandes bloques sin distinguir rotación vs. complejidad ESCO)
+3,71.141,60.951,10.19,66.046,0.1803,2.249,379.14,341,11.37,1650,55.0,"Partición parsimoniosa válida, pero fusiona a los especialistas estables con el grupo de alta exigencia ESCO"
+4,60.951,50.891,10.06,55.921,0.1827,1.9489,370.72,160,5.33,1650,55.0,"CORTE ÓPTIMO SELECCIONADO (k=4: equilibrio entre salto vertical de fusión=10.06, Silueta=0.1827, Davies-Bouldin=1.9489 y 4 arquetipos accionables con soporte mínimo=5.33%)"
+5,50.891,49.46,1.431,50.176,0.1812,1.8463,350.22,160,5.33,1650,55.0,Descartado por sobre-fragmentación operativa (k=5 divide arquetipos en subgrupos con menor salto vertical=1.43)
+6,49.46,48.624,0.837,49.042,0.1462,1.8035,342.69,160,5.33,1338,44.6,Descartado por sobre-fragmentación operativa (k=6 divide arquetipos en subgrupos con menor salto vertical=0.84)
+7,48.624,44.783,3.84,46.703,0.1521,1.6632,343.46,140,4.67,1338,44.6,Descartado por sobre-fragmentación operativa (k=7 divide arquetipos en subgrupos con menor salto vertical=3.84)
+8,44.783,36.872,7.912,40.827,0.12,1.6812,342.58,140,4.67,810,27.0,Descartado por sobre-fragmentación operativa (k=8 divide arquetipos en subgrupos con menor salto vertical=7.91)

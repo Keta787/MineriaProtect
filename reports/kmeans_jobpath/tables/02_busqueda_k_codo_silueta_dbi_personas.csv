@@ -1,0 +1,8 @@
+k,inercia_wcss,caida_relativa_inercia_pct,silhouette_score,davies_bouldin_index,calinski_harabasz_index,tamano_min_cluster_pct,tamano_max_cluster_pct,decision_y_justificacion_es
+2,2185781.34,0.0,0.166,2.281,45011.74,38.56,61.44,"Caída fuerte de inercia (0.00%), pero agrupa perfiles distintos en solo 2 macro-segmentos"
+3,1921139.73,12.11,0.1958,1.8498,45006.23,12.03,53.79,"Caída fuerte de inercia (12.11%), pero agrupa perfiles distintos en solo 3 macro-segmentos"
+4,1692018.0,11.93,0.1948,1.6298,46780.83,11.65,43.94,"K ÓPTIMO SELECCIONADO (k=4: codo de inercia con caída relativa=11.93%, Silueta=0.1948, Davies-Bouldin=1.6298, concordancia con corte Ward k=4 y 4 segmentos accionables)"
+5,1547830.99,8.52,0.1751,1.6292,44913.59,6.6,34.94,Rendimiento marginal decreciente más allá del codo (caída=8.52%) y fragmentación operativa
+6,1428115.55,7.73,0.1821,1.4943,43665.04,2.92,33.64,Rendimiento marginal decreciente más allá del codo (caída=7.73%) y fragmentación operativa
+7,1322114.13,7.42,0.1856,1.4638,43068.59,2.86,30.71,Rendimiento marginal decreciente más allá del codo (caída=7.42%) y fragmentación operativa
+8,1244354.29,5.88,0.1736,1.4372,41737.18,2.8,22.28,Rendimiento marginal decreciente más allá del codo (caída=5.88%) y fragmentación operativa
