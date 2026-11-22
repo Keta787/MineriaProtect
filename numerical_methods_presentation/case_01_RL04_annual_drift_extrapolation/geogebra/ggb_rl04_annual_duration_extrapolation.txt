@@ -1,0 +1,12 @@
+# JobPath GeoGebra Verification — IDEA-RL-04 (Annual closed-job mean_dur_q ~ year-2000, 2000..2019; extrap t=27 -> year 2027)
+# Paste each command sequentially into GeoGebra Classic Algebra Input (https://www.geogebra.org/classic)
+# Spanish equivalents: AjusteLineal(P), CoeficienteCorrelación(P), RCuadrado(P, f)
+# Expected Python OLS: a0 = 16.441713, a1 = -0.792601, r = -0.986344, R2 = 0.972874
+# Strict MR-09 censoring consistency: mean_dur_q computed ONLY on closed jobs (~es_vigente); Q_pred(27) < 0 proves extrapolation failure.
+P = {(0, 18.344970), (1, 16.566926), (2, 15.008176), (3, 14.047819), (4, 13.164835), (5, 12.089182), (6, 11.260520), (7, 10.342956), (8, 9.456837), (9, 8.464565), (10, 7.781372), (11, 6.665584), (12, 6.090126), (13, 5.590715), (14, 5.163663), (15, 4.721620), (16, 4.290154), (17, 3.776902), (18, 3.142024), (19, 2.271181)}
+f = FitLine(P)
+r = CorrelationCoefficient(P)
+R2 = RSquare(P, f)
+Centroid = (9.500000, 8.912006)
+Q_pred = (27, f(27))
+# Expected Q_pred y-coordinate: -4.958505
