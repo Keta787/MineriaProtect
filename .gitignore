@@ -55,3 +55,14 @@ data/04_transformed/
 data/03_proccessed/
 data/02_interim/
 data/01_raw/
+
+
+# ============================================================
+# VARIABLES DE ENTORNO LOCALES Y SECRETOS (NUNCA VERSIONAR)
+# ============================================================
+.env
+.env.*
+.env.local
+
+# Entorno virtual local de Python
+.venv/
