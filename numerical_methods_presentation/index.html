@@ -73,15 +73,36 @@ button.filter-btn.on{background:var(--indigo);color:#fff;border-color:var(--indi
 .kpi-val{font-size:clamp(21px,2vw,30px);font-weight:800;margin:4px 0;font-variant-numeric:tabular-nums;color:var(--indigo)}
 .kpi-val.teal{color:var(--teal)} .kpi-val.rose{color:var(--rose)} .kpi-val.amber{color:var(--amber)}
 .kpi-sub{font-size:12px;color:var(--muted);line-height:1.35}
-.formula{background:#fff;border:1.5px dashed #bfc5e8;border-radius:13px;padding:10px 14px;overflow-x:auto;font-size:clamp(13.5px,1.15vw,17px);text-align:center}
+.formula{background:#fff;border:1.5px dashed #bfc5e8;border-radius:13px;padding:9px 12px;overflow-x:auto;font-size:clamp(13px,1.1vw,16px);text-align:center}
+.formula.sub{margin-top:6px;background:var(--emerald-soft);border:2px solid #10b981;border-style:solid;padding:7px 10px;font-size:clamp(11.6px,.96vw,13.8px);position:relative}
+.formula.sub .sub-tag{display:inline-block;font-family:Inter,system-ui,sans-serif;font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;background:#059669;color:#fff;padding:1.5px 8px;border-radius:999px;margin-bottom:4px}
+.formula.sub.rose{background:var(--rose-soft);border-color:#f43f5e}
+.formula.sub.rose .sub-tag{background:#e11d48}
+.slide.formula-slide{gap:8px;padding-top:50px;padding-bottom:68px}
+.slide.formula-slide .card{padding:10px 13px}
+.slide.formula-slide h3{margin-bottom:5px;font-size:clamp(13.5px,1.05vw,16px)}
+.slide.formula-slide .sym-grid{gap:6px;margin-top:6px}
+.slide.formula-slide .sym-item{padding:5.5px 8.5px;font-size:12.1px;line-height:1.36}
 .sym-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
-@media (max-width:980px){.sym-grid{grid-template-columns:1fr}}
+.sym-grid.cols3{grid-template-columns:repeat(3,1fr)}
+@media (max-width:980px){.sym-grid,.sym-grid.cols3{grid-template-columns:1fr}}
 .sym-item{background:rgba(255,255,255,.9);border:1.5px solid var(--line);border-radius:10px;padding:7px 10px;font-size:13px;line-height:1.42;cursor:pointer;transition:opacity .22s ease,transform .22s ease,border-color .22s ease,box-shadow .22s ease}
 .sym-item:hover{border-color:#9ca8f2;transform:translateY(-1px)}
 .sym-item.teal:hover{border-color:#5eead4}
-.sym-item b.sym{font-family:"JetBrains Mono",monospace;color:var(--indigo);font-size:13px;background:var(--indigo-soft);padding:1px 6px;border-radius:5px;margin-right:5px}
+.sym-item b.sym{font-family:"JetBrains Mono",monospace;color:var(--indigo);font-size:12.4px;background:var(--indigo-soft);padding:1px 6px;border-radius:5px;margin-right:5px}
 .sym-item.teal b.sym{color:var(--teal);background:var(--teal-soft)}
 .sym-item.amber b.sym{color:var(--amber);background:var(--amber-soft)}
+.calc-box{margin-top:6px;background:#fff;border:1.5px solid #cbd5f7;border-left:4px solid var(--indigo);border-radius:10px;padding:6px 10px;font-size:11.8px;line-height:1.42}
+.calc-box.teal{border-color:#99e6dc;border-left-color:var(--teal)}
+.calc-box .calc-head{font-size:10.8px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--indigo);margin-bottom:3px;display:block}
+.calc-box.teal .calc-head{color:var(--teal)}
+.data-modal{position:fixed;inset:0;background:rgba(15,23,42,.78);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:130;padding:18px}
+.data-modal.open{display:flex}
+.data-modal-box{background:#fff;border-radius:18px;max-width:1060px;width:96vw;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(15,23,42,.35);overflow:hidden}
+.data-modal-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 18px;background:var(--dark);color:#fff}
+.data-modal-head h3{margin:0;font-size:15.5px;color:#fff}
+.data-modal-body{padding:14px 18px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.data-modal-body tfoot td{background:#eef2ff !important;font-weight:800;border-top:2px solid var(--indigo);color:var(--ink)}
 .slide.focus-mode .sym-item.is-dim{opacity:.24;transform:scale(.985);filter:grayscale(.35)}
 .slide.focus-mode .sym-item.is-done{opacity:.72}
 .slide.focus-mode .sym-item.is-active{opacity:1;transform:translateY(-2px) scale(1.015);border-color:var(--indigo);box-shadow:0 8px 20px rgba(79,70,229,.18);background:#fff}
@@ -382,87 +403,105 @@ details.qa-card summary::-webkit-details-marker{display:none}
 </section>
 
 <!-- ================= DIAPOSITIVA 5: CASO 1 FÓRMULAS MCO SÍMBOLO POR SÍMBOLO ================= -->
-<section class="slide" data-title="Caso 1 (MCO) · Fórmulas Símbolo por Símbolo">
-  <div class="kicker">Bloque 1 · Caso 1 (IDEA-RL-04) · Fundamento Matemático</div>
-  <h2>∑ Fórmulas de Mínimos Cuadrados (MCO) explicadas símbolo por símbolo</h2>
+<section class="slide formula-slide" data-title="Caso 1 (MCO) · Fórmulas Símbolo por Símbolo">
+  <div class="kicker">Bloque 1 · Caso 1 (IDEA-RL-04) · Fundamento Matemático con Datos Reales</div>
+  <h2>∑ Fórmulas de Mínimos Cuadrados (MCO) símbolo por símbolo y sustituidas</h2>
   <div class="sym-toolbar">
     <div class="row">
       <button class="step-btn" onclick="stepFocus(this,'next')">▶ Paso a paso</button>
       <button class="step-btn ghost" onclick="stepFocus(this,'prev')">◀ Anterior</button>
       <button class="step-btn ghost" onclick="stepFocus(this,'all')">Mostrar todos</button>
-      <span class="pill step-status">Todos visibles (12 símbolos)</span>
+      <span class="pill step-status">Todos visibles (14 bloques)</span>
+      <button class="step-btn amber" onclick="openDataModal('mco')">📋 Ver tabla de 20 datos usados (CSV)</button>
     </div>
-    <span class="step-hint">Clic en cualquier símbolo para iluminarlo · tecla <code>.</code> avanza</span>
+    <span class="step-hint">Clic en cualquier símbolo o fórmula sustituida · tecla <code>.</code> avanza</span>
   </div>
 
   <div class="grid2">
     <div class="card indigo">
       <h3>1. Ecuación de la recta y cálculo de <code>a₁</code> y <code>a₀</code></h3>
       <div class="formula" data-plain="ŷ(t) = a₀ + a₁·t   |   a₁ = [n·Σ(tᵢyᵢ) − (Σtᵢ)(Σyᵢ)] / [n·Σtᵢ² − (Σtᵢ)²]   |   a₀ = ȳ − a₁·t̄">$$\hat{y}(t) = a_0 + a_1 t, \qquad a_1 = \frac{n\sum t_i y_i - \left(\sum t_i\right)\left(\sum y_i\right)}{n\sum t_i^2 - \left(\sum t_i\right)^2}, \qquad a_0 = \bar{y} - a_1 \bar{t}$$</div>
+      <div class="sym-item formula sub" data-plain="a₁ = [20(1,166.20) − (190)(178.24)] / [20(2,470) − 190²] = −10,541.59 / 13,300 = −0.7926  |  a₀ = 8.9120 − (−0.7926)(9.5) = 16.4417">
+        <span class="sub-tag">↳ Con datos reales sustituidos (n = 20, Σtᵢ = 190, Σyᵢ = 178.24, Σtᵢ² = 2,470, Σtᵢyᵢ = 1,166.20)</span>
+        $$a_1 = \frac{20(1{,}166.20) - (190)(178.24)}{20(2{,}470) - 190^2} = \frac{-10{,}541.59}{13{,}300} = \mathbf{-0.7926}, \quad a_0 = 8.9120 - (-0.7926)(9.5) = \mathbf{16.4417}$$
+      </div>
       <div class="sym-grid">
         <div class="sym-item"><b class="sym">t, tᵢ</b>Año centrado (<code>t = año − 2000</code>, de <code>0</code> a <code>19</code>) para cada observación <code>i</code>.</div>
-        <div class="sym-item"><b class="sym">yᵢ, ŷ(t)</b><code>yᵢ</code> es el dato real observado; <code>ŷ(t)</code> es el valor estimado por la recta MCO.</div>
-        <div class="sym-item"><b class="sym">a₁</b><b>Pendiente:</b> cambio promedio de <code>Y</code> por cada año adicional (ej. <code>−0.7926</code> trim./año).</div>
-        <div class="sym-item"><b class="sym">a₀</b><b>Intercepto:</b> nivel estimado en <code>t = 0</code> (año 2000: <code>16.4417</code> trimestres).</div>
-        <div class="sym-item"><b class="sym">n</b>Número de periodos válidos en el ajuste (<code>n = 20</code> años, <code>2000–2019</code>).</div>
-        <div class="sym-item"><b class="sym">t̄, ȳ</b>Promedios de <code>t</code> e <code>y</code>: forman el <b>centroide <code>(9.5, 8.9120)</code></b> por donde siempre pasa la recta (<code>MR-01</code>).</div>
+        <div class="sym-item"><b class="sym">yᵢ, ŷ(t)</b><code>yᵢ</code> es la duración real cerrada (<code>18.35..2.27</code>); <code>ŷ(t)</code> es el valor estimado.</div>
+        <div class="sym-item"><b class="sym">a₁</b><b>Pendiente:</b> cambio promedio por año adicional (<b><code>−0.7926</code></b> trim./año).</div>
+        <div class="sym-item"><b class="sym">a₀</b><b>Intercepto:</b> nivel estimado en <code>t = 0</code> (año 2000: <b><code>16.4417</code></b> trim.).</div>
+        <div class="sym-item"><b class="sym">n</b>Número de años válidos en el ajuste (<code>n = 20</code>, <code>2000–2019</code>).</div>
+        <div class="sym-item"><b class="sym">t̄, ȳ</b>Promedios <code>190/20 = 9.5</code> y <code>178.24/20 = 8.9120</code>: <b>centroide</b> (<code>MR-01</code>).</div>
       </div>
     </div>
 
     <div class="card teal">
       <h3>2. Residuos, bondad de ajuste <code>R²</code> y error típico <code>S<sub>y/x</sub></code></h3>
       <div class="formula" data-plain="eᵢ = yᵢ − ŷᵢ   |   Sₜ = Σ(yᵢ − ȳ)²   |   Sᵣ = Σeᵢ²   |   R² = (Sₜ − Sᵣ) / Sₜ   |   S_{y/x} = √(Sᵣ / (n − 2))">$$e_i = y_i - \hat{y}_i, \quad S_t = \sum(y_i - \bar{y})^2, \quad S_r = \sum e_i^2, \quad R^2 = \frac{S_t - S_r}{S_t}, \quad S_{y/x} = \sqrt{\frac{S_r}{n - 2}}$$</div>
+      <div class="sym-item teal formula sub" data-plain="R² = (429.4119 − 11.6484) / 429.4119 = 0.9729 (97.29 %)  |  S_{y/x} = √(11.6484 / (20 − 2)) = 0.8044 trim.">
+        <span class="sub-tag">↳ Con datos reales sustituidos (e₂₀₀₀ = +1.90, e₂₀₁₉ = +0.89, Sₜ = 429.41, Sᵣ = 11.65, gl = 18)</span>
+        $$R^2 = \frac{429.4119 - 11.6484}{429.4119} = \mathbf{0.9729\ (97.29\%)}, \qquad S_{y/x} = \sqrt{\frac{11.6484}{20 - 2}} = \mathbf{0.8044\ \text{trim.}}$$
+      </div>
       <div class="sym-grid">
-        <div class="sym-item teal"><b class="sym">eᵢ</b><b>Residuo:</b> distancia vertical entre el dato real y la recta. Siempre cumple <code>∑eᵢ ≈ 0</code> (por eso MCO minimiza <code>∑eᵢ²</code>).</div>
-        <div class="sym-item teal"><b class="sym">Sₜ</b><b>Suma total de cuadrados</b> respecto a la media <code>ȳ</code> (variación total sin recta: <code>429.4119</code>).</div>
-        <div class="sym-item teal"><b class="sym">Sᵣ</b><b>Suma de residuos al cuadrado</b> que MCO minimiza (error sobrante tras ajustar: <code>11.6484</code>).</div>
-        <div class="sym-item teal"><b class="sym">R²</b><b>Coeficiente de determinación:</b> fracción explicada por la recta (<code>(429.41−11.65)/429.41 = 97.29 %</code>). Si <code>&lt; 30 %</code> → rechazo <code>MR-06</code>.</div>
-        <div class="sym-item teal"><b class="sym">S<sub>y/x</sub></b><b>Error estándar de estimación</b> en unidades de <code>Y</code> (<code>√(11.6484/18) = 0.8044</code> trimestres).</div>
-        <div class="sym-item teal"><b class="sym">n − 2</b><b>Grados de libertad</b> (<code>20 − 2 = 18</code>): se restan 2 porque se estimaron <code>a₀</code> y <code>a₁</code> (<code>MR-02</code>).</div>
+        <div class="sym-item teal"><b class="sym">eᵢ</b><b>Residuo:</b> <code>yᵢ − ŷᵢ</code> (ej. <code>18.35 − 16.44 = +1.90</code> en 2000). Siempre cumple <code>∑eᵢ = 0</code>.</div>
+        <div class="sym-item teal"><b class="sym">Sₜ</b><b>Suma total de cuadrados</b> respecto a <code>ȳ = 8.9120</code>: <code>429.4119</code>.</div>
+        <div class="sym-item teal"><b class="sym">Sᵣ</b><b>Suma de residuos al cuadrado</b> que MCO minimiza: <code>11.6484</code>.</div>
+        <div class="sym-item teal"><b class="sym">R²</b><b>Fracción explicada</b> por la recta (<code>97.29 %</code>). Si <code>&lt; 30 %</code> → rechazo <code>MR-06</code>.</div>
+        <div class="sym-item teal"><b class="sym">S<sub>y/x</sub></b><b>Error estándar típico</b> en unidades reales (<code>0.8044</code> trimestres).</div>
+        <div class="sym-item teal"><b class="sym">n − 2</b><b>Grados de libertad</b> (<code>20 − 2 = 18</code>): se estimaron <code>a₀</code> y <code>a₁</code> (<code>MR-02</code>).</div>
       </div>
     </div>
   </div>
-  <p class="footnote"><b>Trampa clásica de sumatorias:</b> jamás confundas <code>∑tᵢ² = 2,470</code> (sumar los cuadrados de cada año centrado) con <code>(∑tᵢ)² = 190² = 36,100</code> (elevar al cuadrado la suma total). En duración cerrada <code>2000–2019</code>, el denominador exacto es <code>20(2,470) − 36,100 = 13,300</code>.</p>
+  <p class="footnote"><b>Trampa clásica de sumatorias:</b> jamás confundas <code>∑tᵢ² = 2,470</code> con <code>(∑tᵢ)² = 190² = 36,100</code>. Pulsa <b>📋 Ver tabla de 20 datos usados (CSV)</b> arriba para inspeccionar los 20 años fila por fila (<code>2000–2019</code>) que generan exactamente estas sumatorias.</p>
 </section>
 
 <!-- ================= DIAPOSITIVA 6: CASO 1 CENTRADO Y CANCELACIÓN ================= -->
-<section class="slide" data-title="Caso 1 (MCO) · Centrado t − 2000 y Cancelación">
+<section class="slide formula-slide" data-title="Caso 1 (MCO) · Centrado t − 2000 y Cancelación">
   <div class="kicker">Bloque 1 · Caso 1 (IDEA-RL-04) · Estabilidad Numérica en Punto Flotante</div>
-  <h2>Centrado <code>t = año − 2000</code>: fórmula símbolo por símbolo y ganancia de <code>4,672×</code></h2>
+  <h2>Centrado <code>t = año − 2000</code>: fórmula sustituida y ganancia de <code>4,672×</code></h2>
   <div class="sym-toolbar">
     <div class="row">
       <button class="step-btn" onclick="stepFocus(this,'next')">▶ Paso a paso</button>
       <button class="step-btn ghost" onclick="stepFocus(this,'prev')">◀ Anterior</button>
       <button class="step-btn ghost" onclick="stepFocus(this,'all')">Mostrar todos</button>
-      <span class="pill step-status">Todos visibles (4 símbolos)</span>
+      <span class="pill step-status">Todos visibles (5 bloques)</span>
+      <button class="step-btn amber" onclick="openDataModal('mco_center')">📋 Ver tabla comparativa x vs t (2000–2027)</button>
     </div>
-    <span class="step-hint">Clic en cualquier símbolo para iluminarlo · tecla <code>.</code> avanza</span>
+    <span class="step-hint">Clic en cualquier símbolo o evaluación para iluminarlo · tecla <code>.</code> avanza</span>
   </div>
 
   <div class="card indigo">
     <h3>∑ Modelo centrado de duración laboral en empleos cerrados (<code>~es_vigente</code>, <code>MR-09</code>)</h3>
     <div class="formula" data-plain="dur_estimada(t) = 16.4417 − 0.7926 · (año − 2000)      |      Cruce por cero: t₀ = 16.4417 / 0.7926 = 20.74  ⇒  año 2020.74">$$\widehat{\text{dur}}(t) = 16.4417 - 0.7926 \cdot (\text{año} - 2000), \qquad t_0 = \frac{16.4417}{0.7926} = 20.74 \implies \text{año } \mathbf{2020.74}$$</div>
+    <div class="sym-item formula sub" data-plain="2000 (t=0): 16.44  |  2019 (t=19): 1.38  |  2021 (t=21): −0.20 (imposible)  |  2027 (t=27): −4.96 trim.">
+      <span class="sub-tag">↳ Sustituyendo años reales en la fórmula (soporte válido 2000–2019 vs. extrapolación MR-05)</span>
+      $$\widehat{\text{dur}}(2000) = 16.44 - 0.7926(0) = \mathbf{16.44}, \quad \widehat{\text{dur}}(2019) = \mathbf{1.38}, \quad \widehat{\text{dur}}(2021) = \mathbf{-0.20\ \text{❌}}, \quad \widehat{\text{dur}}(2027) = \mathbf{-4.96\ \text{trim.\ ❌}}$$
+    </div>
     <div class="sym-grid">
       <div class="sym-item"><b class="sym">dur̂(t)</b>Duración promedio predicha (en <b>trimestres</b>) para un empleo cerrado iniciado en el año consultado.</div>
-      <div class="sym-item"><b class="sym">t = año − 2000</b>Tiempo centrado: <code>t = 0</code> es el año <code>2000</code>, <code>t = 19</code> es <code>2019</code> y <code>t = 27</code> es <code>2027</code>.</div>
-      <div class="sym-item"><b class="sym">16.4417 (a₀)</b>Duración esperada en el año <code>2000</code> (<code>~4.11</code> años). <i>Sin centrar daba <code>+1,601.64</code> trimestres en el año 0 d. C. (absurdo).</i></div>
-      <div class="sym-item"><b class="sym">−0.7926 (a₁)</b>Caída promedio por cada año posterior (<code>−0.79</code> trim./año). Por <code>t₀ = 20.74</code>, desde <code>2021</code> ya es negativa (<code>−0.20</code>).</div>
+      <div class="sym-item"><b class="sym">t = año − 2000</b>Tiempo centrado: <code>t = 0</code> es <code>2000</code>, <code>t = 19</code> es <code>2019</code> y <code>t = 27</code> es <code>2027</code>.</div>
+      <div class="sym-item"><b class="sym">16.4417 (a₀)</b>Duración esperada en el año <code>2000</code> (<code>~4.11</code> años). <i>Sin centrar daba <code>+1,601.64</code> en el año 0 d. C.</i></div>
+      <div class="sym-item"><b class="sym">−0.7926 (a₁)</b>Caída promedio por año (<code>−0.79</code> trim./año). Desde <code>2021</code> cruza el cero y se vuelve negativa.</div>
     </div>
   </div>
 
   <div class="grid2">
     <div class="card rose">
       <h3>❌ Sin centrar (<code>x = 2000..2019</code>): Cancelación numérica</h3>
-      <p class="small">Al elevar al cuadrado años grandes (<code>2010²</code>), <code>∑x = 40,190</code> y <code>∑x² = 80,762,470</code>. El denominador <code>n∑x² − (∑x)²</code> resta dos números gigantes casi iguales:</p>
-      <div class="formula" style="margin-top:6px;font-size:13.5px" data-plain="20(80,762,470) − (40,190)² = 1,615,249,400 − 1,615,236,100 = 13,300">$$20(80{,}762{,}470) - (40{,}190)^2 = 1{,}615{,}249{,}400 - 1{,}615{,}236{,}100 = 13{,}300$$</div>
-      <p class="small" style="margin-top:6px">Ambos números coinciden en sus <b>5 primeros dígitos</b>: al restarlos en <code>float64</code> se pierden decimales (<b>cancelación catastrófica</b>), dejando una discrepancia frente a <code>numpy.polyfit</code> de <b><code>1.66 × 10⁻¹¹</code></b>.</p>
+      <div class="formula sub rose" style="margin-top:0" data-plain="a₁ = [20(357,646.46) − (40,190)(178.24)] / [20(80,762,470) − 40,190²] = −10,541.59 / 13,300 = −0.7926">
+        <span class="sub-tag">↳ Sustitución sin centrar (∑x = 40,190 · ∑x² = 80,762,470 · ∑xy = 357,646.46)</span>
+        $$a_1 = \frac{20(357{,}646.46) - (40{,}190)(178.24)}{1{,}615{,}249{,}400 - 1{,}615{,}236{,}100} = \frac{-10{,}541.59}{13{,}300} = -0.7926$$
+      </div>
+      <p class="small" style="margin-top:5px">Resta 2 miles de millones idénticos en sus <b>5 primeros dígitos</b> (<b>cancelación catastrófica</b>): <code>a₀ = 8.9120 − (−0.7926)(2009.5) = +1,601.64</code> y error vs. <code>polyfit</code> de <b><code>1.66 × 10⁻¹¹</code></b>.</p>
     </div>
 
     <div class="card emerald">
       <h3>✔ Centrando (<code>t = 0..19</code>): <code>4,672×</code> más precisión</h3>
-      <p class="small">Trasladar el origen al año 2000 hace que <code>∑t = 190</code> y <code>∑t² = 2,470</code>. El denominador da exactamente el mismo valor sin restar miles de millones:</p>
-      <div class="formula" style="margin-top:6px;font-size:13.5px" data-plain="20(2,470) − 190² = 49,400 − 36,100 = 13,300">$$20(2{,}470) - 190^2 = 49{,}400 - 36{,}100 = 13{,}300$$</div>
-      <p class="small" style="margin-top:6px"><b>Invarianza clave:</b> <code>a₁ = −0.7926</code>, <code>R² = 0.9729</code> y <code>S<sub>y/x</sub> = 0.8044</code> quedan <b>100 % idénticos</b> (centrar NO sube <code>R²</code>!), pero el error frente a <code>numpy.polyfit</code> baja a <b><code>3.55 × 10⁻¹⁵</code></b> (<b><code>4,672×</code></b> mejor).</p>
+      <div class="formula sub" style="margin-top:0" data-plain="a₁ = [20(1,166.20) − (190)(178.24)] / [20(2,470) − 190²] = −10,541.59 / 13,300 = −0.7926">
+        <span class="sub-tag">↳ Sustitución centrada (∑t = 190 · ∑t² = 2,470 · ∑ty = 1,166.20)</span>
+        $$a_1 = \frac{20(1{,}166.20) - (190)(178.24)}{49{,}400 - 36{,}100} = \frac{-10{,}541.59}{13{,}300} = -0.7926$$
+      </div>
+      <p class="small" style="margin-top:5px"><b>Invarianza clave:</b> <code>a₁ = −0.7926</code>, <code>R² = 0.9729</code> y <code>S<sub>y/x</sub> = 0.8044</code> quedan <b>100 % idénticos</b>, <code>a₀ = 16.4417</code> y error vs. <code>polyfit</code> baja a <b><code>3.55 × 10⁻¹⁵</code></b> (<b><code>4,672×</code></b> mejor).</p>
     </div>
   </div>
 </section>
@@ -602,99 +641,123 @@ details.qa-card summary::-webkit-details-marker{display:none}
 </section>
 
 <!-- ================= DIAPOSITIVA 10: CASO 2 FÓRMULAS LAGRANGE SÍMBOLO POR SÍMBOLO ================= -->
-<section class="slide" data-title="Caso 2 (Lagrange) · Fórmulas Símbolo por Símbolo">
-  <div class="kicker teal">Bloque 2 · Caso 2 (IDEA-LG-01) · Fundamento Matemático</div>
-  <h2>∑ Fórmulas de Lagrange explicadas símbolo por símbolo (+ ejemplo en <code>q = 12</code>)</h2>
+<section class="slide formula-slide" data-title="Caso 2 (Lagrange) · Fórmulas Símbolo por Símbolo">
+  <div class="kicker teal">Bloque 2 · Caso 2 (IDEA-LG-01) · Fundamento Matemático con Datos Reales</div>
+  <h2>∑ Fórmulas de Lagrange símbolo por símbolo y sustituidas en <code>q = 12</code></h2>
   <div class="sym-toolbar">
     <div class="row">
       <button class="step-btn teal" onclick="stepFocus(this,'next')">▶ Paso a paso</button>
       <button class="step-btn ghost" onclick="stepFocus(this,'prev')">◀ Anterior</button>
       <button class="step-btn ghost" onclick="stepFocus(this,'all')">Mostrar todos</button>
-      <span class="pill teal step-status">Todos visibles (9 bloques)</span>
+      <span class="pill teal step-status">Todos visibles (11 bloques)</span>
+      <button class="step-btn amber" onclick="openDataModal('lagrange')">📋 Ver tabla de nodos y pesos usados (CSV)</button>
     </div>
-    <span class="step-hint">Clic en cualquier símbolo o paso para iluminarlo · tecla <code>.</code> avanza</span>
+    <span class="step-hint">Clic en cualquier símbolo o fórmula sustituida · tecla <code>.</code> avanza</span>
   </div>
 
   <div class="card teal">
-    <h3>Polinomio interpolante <code>Pₙ(q)</code>, polinomios base <code>Lᵢ(q)</code> y forma monómica equivalente</h3>
+    <h3>Polinomio interpolante <code>Pₙ(q)</code>, bases <code>Lᵢ(q)</code> y forma monómica (4 hitos de <code>1,643,772</code> empleos cerrados)</h3>
     <div class="grid2">
-      <div class="formula" data-plain="Pₙ(q) = Σ_{i=0}^{n} S(qᵢ) · Lᵢ(q),     Lᵢ(q) = Π_{j≠i} (q − qⱼ) / (qᵢ − qⱼ)">$$P_n(q) = \sum_{i=0}^{n} S(q_i)\,L_i(q), \qquad L_i(q) = \prod_{\substack{j=0\\ j\ne i}}^{n} \frac{q - q_j}{q_i - q_j}$$</div>
-      <div class="formula" data-plain="Forma monómica equivalente:  P₃(q) = −7.91×10⁻⁵·q³ + 0.005845·q² − 0.133867·q + 1.107889">$$P_3(q) = -7.91 \times 10^{-5}\,q^3 + 0.005845\,q^2 - 0.133867\,q + 1.107889$$</div>
+      <div>
+        <div class="formula" data-plain="Pₙ(q) = Σ_{i=0}^{n} S(qᵢ) · Lᵢ(q),     Lᵢ(q) = Π_{j≠i} (q − qⱼ) / (qᵢ − qⱼ)">$$P_n(q) = \sum_{i=0}^{n} S(q_i)\,L_i(q), \qquad L_i(q) = \prod_{\substack{j=0\\ j\ne i}}^{n} \frac{q - q_j}{q_i - q_j}$$</div>
+        <div class="sym-item teal formula sub" data-plain="P₃(q) = 0.6609·L₀(q) + 0.3705·L₁(q) + 0.1358·L₂(q) + 0.0430·L₃(q)">
+          <span class="sub-tag">↳ Con los 4 hitos reales: (4, 0.6609), (8, 0.3705), (20, 0.1358), (40, 0.0430)</span>
+          $$P_3(q) = 0.6609\,L_0(q) + 0.3705\,L_1(q) + 0.1358\,L_2(q) + 0.0430\,L_3(q)$$
+        </div>
+      </div>
+      <div>
+        <div class="formula" data-plain="Forma monómica equivalente:  P₃(q) = −7.91×10⁻⁵·q³ + 0.005845·q² − 0.133867·q + 1.107889">$$P_3(q) = -7.91 \times 10^{-5}\,q^3 + 0.005845\,q^2 - 0.133867\,q + 1.107889$$</div>
+        <div class="sym-item teal formula sub" data-plain="P₃(12) = −7.91e-5(12³) + 0.005845(12²) − 0.133867(12) + 1.107889 = 0.2065 (20.65 %)">
+          <span class="sub-tag">↳ Evaluando la forma monómica con q = 12 (3 años)</span>
+          $$P_3(12) = -7.91{\times}10^{-5}(12^3) + 0.005845(12^2) - 0.133867(12) + 1.107889 = \mathbf{0.2065\ (20.65\%)}$$
+        </div>
+      </div>
     </div>
-    <div class="sym-grid">
-      <div class="sym-item teal"><b class="sym">q</b>Trimestre que queremos consultar (<code>q = 12</code> corresponde a <code>3</code> años).</div>
-      <div class="sym-item teal"><b class="sym">n</b>Grado del polinomio = número de nodos menos 1 (<code>4</code> hitos ⇒ grado cúbico <code>n = 3</code>).</div>
-      <div class="sym-item teal"><b class="sym">qᵢ, S(qᵢ)</b>Coordenada del nodo conocido <code>i</code> (<code>4, 8, 20, 40</code>) y su probabilidad real exacta <code>S(qᵢ)</code>.</div>
-      <div class="sym-item teal"><b class="sym">Lᵢ(q)</b><b>Polinomio base (peso con signo):</b> el numerador <code>(q − qⱼ)</code> lo vuelve <code>0</code> en los otros nodos; el denominador <code>(qᵢ − qⱼ)</code> lo normaliza a <code>1</code> en <code>qᵢ</code> (por eso <code>qᵢ ≠ qⱼ</code>, regla <b><code>MR-04</code></b>).</div>
-      <div class="sym-item teal"><b class="sym">MR-03</b><b>Delta de Kronecker:</b> <code>Lᵢ(qᵢ)=1</code> y <code>Lᵢ(qⱼ)=0</code> (err <code>0.0</code>). <b>Partición de la unidad:</b> <code>∑Lᵢ(q)=1</code> siempre (err <code>4.44e-16</code>).</div>
-      <div class="sym-item teal"><b class="sym">P₃(q) mon.</b><b>Forma monómica expandida:</b> mismo polinomio escrito en potencias de <code>q</code> (verificado frente a <code>scipy.interpolate.lagrange</code>, diff <code>5.05e-15</code>).</div>
+    <div class="sym-grid cols3">
+      <div class="sym-item teal"><b class="sym">q</b>Trimestre consultado (<code>q = 12</code> = <code>3</code> años).</div>
+      <div class="sym-item teal"><b class="sym">n</b>Grado = nodos − 1 (<code>4</code> hitos ⇒ cúbico <code>n = 3</code>).</div>
+      <div class="sym-item teal"><b class="sym">qᵢ, S(qᵢ)</b>Nodos <code>{4, 8, 20, 40}</code> y su real <code>S(qᵢ)</code>.</div>
+      <div class="sym-item teal"><b class="sym">Lᵢ(q)</b>Numerador <code>(q−qⱼ)</code> apaga otros nodos; <code>(qᵢ−qⱼ)</code> normaliza a <code>1</code> (<code>MR-04</code>).</div>
+      <div class="sym-item teal"><b class="sym">MR-03</b>Kronecker <code>Lᵢ(qᵢ)=1</code> (err <code>0.0</code>) y <code>∑Lᵢ=1</code> (err <code>4.44e-16</code>).</div>
+      <div class="sym-item teal"><b class="sym">SciPy</b>Forma monómica coincide con <code>scipy.lagrange</code> (<code>5.05e-15</code>).</div>
     </div>
   </div>
 
   <div class="card">
-    <h3>🧮 Comprobación aritmética paso a paso en 3 años (<code>q = 12</code>, punto interior no usado para entrenar)</h3>
+    <h3>🧮 Sustitución aritmética completa en <code>q = 12</code> (3 años · punto interior)</h3>
     <div class="grid3">
-      <div class="sym-item">
-        <b>Paso 1 · 4 pesos base <code>Lᵢ(12)</code>:</b><br>
-        <code>L₀(12) = −7/18 = −0.3889</code><br>
-        <code>L₁(12) = +7/6  = +1.1667</code><br>
-        <code>L₂(12) = +7/30 = +0.2333</code><br>
-        <code>L₃(12) = −1/90 = −0.0111</code>
+      <div class="sym-item" style="font-size:11.6px;line-height:1.4">
+        <b>Paso 1 · Sustitución en <code>Lᵢ(12) = Π(12−qⱼ)/(qᵢ−qⱼ)</code>:</b><br>
+        <code>L₀(12) = [(12−8)(12−20)(12−40)] / [(4−8)(4−20)(4−40)] = <b>−0.3889</b></code><br>
+        <code>L₁(12) = [(12−4)(12−20)(12−40)] / [(8−4)(8−20)(8−40)] = <b>+1.1667</b></code><br>
+        <code>L₂(12) = [(12−4)(12−8)(12−40)] / [(20−4)(20−8)(20−40)] = <b>+0.2333</b></code><br>
+        <code>L₃(12) = [(12−4)(12−8)(12−20)] / [(40−4)(40−8)(40−20)] = <b>−0.0111</b></code>
       </div>
-      <div class="sym-item teal">
-        <b>Paso 2 · Partición de la unidad:</b><br>
-        <code>−0.3889 + 1.1667 + 0.2333 − 0.0111</code><br>
-        <code>= <b>1.0000</b> ✔</code> (<code>MR-03</code> verificado)<br>
-        <i>¡En <code>q = 4</code>, <code>L₀ = 1</code> y los demás son <code>0</code>!</i>
+      <div class="sym-item teal" style="font-size:11.6px;line-height:1.4">
+        <b>Paso 2 · Partición de la unidad (<code>MR-03</code>):</b><br>
+        <code>−0.3889 + 1.1667 + 0.2333 − 0.0111 = <b>1.0000 ✔</b></code><br>
+        <b>Términos monómicos en <code>q = 12</code>:</b><br>
+        <code>−0.1367 + 0.8417 − 1.6064 + 1.1079 = <b>0.2065 ✔</b></code>
       </div>
-      <div class="sym-item amber">
-        <b>Paso 3 · Combinación <code>P₃(12)</code>:</b><br>
-        <code>∑ S(qᵢ)·Lᵢ(12) = <b>0.2065 (20.65 %)</b></code><br>
-        Real empírico: <code>S(12) = 25.19 %</code><br>
-        Error absoluto: <b><code>0.0455</code></b> (<code>4.55 pp</code>).
+      <div class="sym-item amber" style="font-size:11.6px;line-height:1.4">
+        <b>Paso 3 · Sustitución en <code>P₃(12) = Σ S(qᵢ)·Lᵢ(12)</code>:</b><br>
+        <code>(0.6609)(−0.3889) + (0.3705)(+1.1667) + (0.1358)(+0.2333) + (0.0430)(−0.0111)</code><br>
+        <code>= −0.2570 + 0.4323 + 0.0317 − 0.0005 = <b>0.2065 (20.65 %)</b></code><br>
+        Real <code>S(12) = 25.19 %</code> → error: <code>|0.2519 − 0.2065| = <b>0.0455 (4.55 pp)</b></code>.
       </div>
     </div>
   </div>
 </section>
 
 <!-- ================= DIAPOSITIVA 11: CASO 2 CHEBYSHEV-LOBATTO Y ERRORES ================= -->
-<section class="slide" data-title="Caso 2 (Lagrange) · Chebyshev-Lobatto y Métricas">
-  <div class="kicker teal">Bloque 2 · Caso 2 (IDEA-LG-01) · Mitigación de Runge y Evaluación</div>
-  <h2>∑ Fórmulas de Chebyshev-Lobatto, <code>E∞</code> y <code>RMSE</code> símbolo por símbolo</h2>
+<section class="slide formula-slide" data-title="Caso 2 (Lagrange) · Chebyshev-Lobatto y Métricas">
+  <div class="kicker teal">Bloque 2 · Caso 2 (IDEA-LG-01) · Mitigación de Runge y Evaluación con Datos Reales</div>
+  <h2>∑ Fórmulas de Chebyshev-Lobatto, <code>E∞</code> y <code>RMSE</code> símbolo por símbolo y sustituidas</h2>
   <div class="sym-toolbar">
     <div class="row">
       <button class="step-btn teal" onclick="stepFocus(this,'next')">▶ Paso a paso</button>
       <button class="step-btn ghost" onclick="stepFocus(this,'prev')">◀ Anterior</button>
       <button class="step-btn ghost" onclick="stepFocus(this,'all')">Mostrar todos</button>
-      <span class="pill teal step-status">Todos visibles (10 símbolos)</span>
+      <span class="pill teal step-status">Todos visibles (12 bloques)</span>
+      <button class="step-btn amber" onclick="openDataModal('cheb')">📋 Ver tabla k=0..16 y los 40 errores (CSV)</button>
     </div>
-    <span class="step-hint">Clic en cualquier símbolo para iluminarlo · tecla <code>.</code> avanza</span>
+    <span class="step-hint">Clic en cualquier símbolo o fórmula sustituida · tecla <code>.</code> avanza</span>
   </div>
 
   <div class="grid2">
     <div class="card indigo">
       <h3>1. Fórmula de nodos de Chebyshev-Lobatto (2.ª especie)</h3>
       <div class="formula" data-plain="qₖᴸᵒᵇ = round( (a+b)/2 + ((b−a)/2)·cos(kπ / n) ),   k = 0, 1, ..., n">$$q_k^{\text{Lob}} = \operatorname{round}\!\left(\frac{a+b}{2} + \frac{b-a}{2}\cos\!\left(\frac{k\pi}{n}\right)\right), \quad k = 0, 1, \dots, n$$</div>
+      <div class="sym-item formula sub" data-plain="qₖ = round(20.5 + 19.5·cos(kπ/16))  ⇒  k=0→40, k=1→40 (dup), k=8→20, k=16→1  ⇒  15 nodos únicos">
+        <span class="sub-tag">↳ Con datos reales de grado n = 16 (a = 1, b = 40 ⇒ centro 20.5, radio 19.5)</span>
+        $$q_k^{\text{Lob}} = \operatorname{round}\!\left(\frac{1+40}{2} + \frac{40-1}{2}\cos\!\left(\frac{k\pi}{16}\right)\right) = \operatorname{round}\!\left(20.5 + 19.5\cos\!\left(\frac{k\pi}{16}\right)\right)$$
+        <div class="small" style="margin-top:3px"><code>k=0→<b>40</b></code> · <code>k=1→39.63→<b>40</b> (dup MR-04)</code> · <code>k=8→<b>20</b></code> · <code>k=16→<b>1</b></code> ⇒ <b>15 nodos:</b> <code>[1,2,4,7,10,13,17,20,24,28,31,34,37,39,40]</code></div>
+      </div>
       <div class="sym-grid">
         <div class="sym-item"><b class="sym">a, b</b>Extremos del intervalo observado: <code>a = 1</code> trimestre y <code>b = 40</code> trimestres (10 años).</div>
         <div class="sym-item"><b class="sym">(a+b)/2</b>Centro exacto del intervalo: <code>(1 + 40)/2 = 20.5</code> trimestres.</div>
         <div class="sym-item"><b class="sym">(b−a)/2</b>Semiancho (radio) del intervalo: <code>(40 − 1)/2 = 19.5</code> trimestres.</div>
-        <div class="sym-item"><b class="sym">cos(kπ/n)</b>Proyección coseno: acumula nodos cerca de los bordes e <b>incluye exactamente <code>k=0 (q=40)</code> y <code>k=n (q=1)</code></b>.</div>
-        <div class="sym-item"><b class="sym">round(·)</b>Redondeo a trimestres enteros reales; si dos nodos caen en el mismo entero, <b><code>MR-04</code></b> los deduplica (<code>15 nodos*</code> en grado 16).</div>
-        <div class="sym-item"><b class="sym">Ventaja</b>Al anclar <code>q=1</code> y <code>q=40</code>, elimina toda extrapolación de borde y logra <b><code>0</code> violaciones <code>[0,1]</code></b> en todos los grados.</div>
+        <div class="sym-item"><b class="sym">cos(kπ/n)</b>Acumula nodos en los bordes e <b>incluye <code>k=0 (q=40)</code> y <code>k=n (q=1)</code></b>.</div>
+        <div class="sym-item"><b class="sym">round(·)</b>Redondeo a enteros; <b><code>MR-04</code></b> deduplica pares repetidos (<code>15 nodos*</code> en grado 16).</div>
+        <div class="sym-item"><b class="sym">Ventaja</b>Al anclar <code>q=1</code> y <code>q=40</code>, elimina extrapolación de borde y logra <b><code>0</code> violaciones <code>[0,1]</code></b>.</div>
       </div>
     </div>
 
     <div class="card teal">
       <h3>2. Métricas de error <code>E∞</code> y <code>RMSE</code> en todo <code>[1, 40]</code></h3>
       <div class="formula" data-plain="E∞ = max_{q∈[1,40]} |S(q) − P(q)|      |      RMSE = √( (1/m) · Σ_{q=1}^{m} (S(q) − P(q))² )">$$E_\infty = \max_{q \in [1, 40]} \left|S(q) - P(q)\right|, \qquad \text{RMSE} = \sqrt{\frac{1}{m}\sum_{q=1}^{m}\big(S(q) - P(q)\big)^2}$$</div>
-      <div class="sym-grid">
-        <div class="sym-item teal"><b class="sym">E∞</b><b>Error máximo absoluto (norma infinito):</b> mide el <b>peor fallo puntual</b> de la curva interpolada en todo <code>[1, 40]</code>. Detecta explosiones de Runge.</div>
-        <div class="sym-item teal"><b class="sym">RMSE</b><b>Raíz del error cuadrático medio:</b> error promedio típico sobre toda la curva (penaliza errores grandes).</div>
-        <div class="sym-item teal"><b class="sym">m</b>Cantidad de trimestres evaluados en la malla completa (<code>m = 40</code> puntos de <code>q = 1</code> a <code>q = 40</code>).</div>
-        <div class="sym-item teal"><b class="sym">PCHIP</b>Alternativa productiva: <i>interpolación cúbica por tramos que conserva la forma monótona decreciente</i> (sin rebotes como <code>P₃(28)</code>).</div>
+      <div class="sym-item teal formula sub" data-plain="Equiespaciado (q=39): E∞ = |0.0435 − (−2.4827)| = 2.5262, RMSE = √(10.4859/40) = 0.5120 | Chebyshev-Lobatto (q=3): E∞ = |0.6880 − 0.8180| = 0.1301, RMSE = √(0.0428/40) = 0.0327">
+        <span class="sub-tag">↳ Con datos reales de grado 16 sobre m = 40 trimestres (Equiespaciado vs. Chebyshev-Lobatto)</span>
+        $$E_\infty^{\text{Eq}} = \big|0.0435 - (-2.4827)\big| = \mathbf{2.5262}\;\;(q{=}39), \qquad \text{RMSE}^{\text{Eq}} = \sqrt{\frac{10.4859}{40}} = \mathbf{0.5120}$$
+        $$E_\infty^{\text{Lob}} = \big|0.6880 - 0.8180\big| = \mathbf{0.1301}\;\;(q{=}3,\;19.4\times\text{ menor}), \quad \text{RMSE}^{\text{Lob}} = \sqrt{\frac{0.0428}{40}} = \mathbf{0.0327}$$
       </div>
-      <p class="footnote"><b>Por qué NO Chebyshev de 1.ª especie:</b> sus nodos eran estrictamente interiores (<code>[2..39]</code>); al evaluar en <code>q = 1</code> extrapolaban hacia la izquierda dando probabilidades imposibles (<code>111 %</code> y <code>123 %</code>). Chebyshev-Lobatto resolvió el problema por completo.</p>
+      <div class="sym-grid">
+        <div class="sym-item teal"><b class="sym">E∞</b><b>Error máximo absoluto (norma infinito):</b> mide el <b>peor fallo puntual</b> en <code>[1, 40]</code>. Detecta Runge.</div>
+        <div class="sym-item teal"><b class="sym">RMSE</b><b>Raíz del error cuadrático medio:</b> error promedio típico sobre los <code>40</code> trimestres.</div>
+        <div class="sym-item teal"><b class="sym">m</b>Total de trimestres evaluados en la malla completa (<code>m = 40</code>, de <code>q = 1</code> a <code>q = 40</code>).</div>
+        <div class="sym-item teal"><b class="sym">PCHIP</b>Alternativa productiva: <i>cúbica por tramos monótona decreciente</i> (evita rebotes como <code>P₃(28)</code>).</div>
+      </div>
+      <p class="footnote"><b>Por qué NO Chebyshev de 1.ª especie:</b> sus nodos eran estrictamente interiores (<code>[2..39]</code>); al evaluar en <code>q = 1</code> extrapolaban hacia la izquierda dando <code>111 %</code> y <code>123 %</code>. Chebyshev-Lobatto eliminó todas las violaciones.</p>
     </div>
   </div>
 </section>
@@ -944,6 +1007,15 @@ details.qa-card summary::-webkit-details-marker{display:none}
   <img id="lbImg" alt="Gráfica ampliada">
   <div class="lb-cap" id="lbCap"></div>
 </div>
+<div class="data-modal" id="dataModal" onclick="if(event.target===this) closeDataModal()">
+  <div class="data-modal-box">
+    <div class="data-modal-head">
+      <h3 id="dmTitle">Datos reales usados en la fórmula</h3>
+      <button class="ghost" style="padding:4px 10px;font-size:12px" onclick="closeDataModal()">✕ Cerrar (Esc)</button>
+    </div>
+    <div class="data-modal-body" id="dmBody"></div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -965,18 +1037,18 @@ const MR_RULES = [
 
 // Datos reales exactos de rl04_annual_macro_series.csv (2000..2023)
 const RL04_OBS = {
-  2000:{n:31880, dur:18.3450, sk:22.2744}, 2001:{n:30386, dur:16.5669, sk:22.4937},
-  2002:{n:31374, dur:15.0082, sk:22.7668}, 2003:{n:35136, dur:14.0478, sk:22.7834},
-  2004:{n:41799, dur:13.1648, sk:22.6873}, 2005:{n:50988, dur:12.0892, sk:22.6747},
-  2006:{n:63814, dur:11.2605, sk:22.6089}, 2007:{n:77251, dur:10.3430, sk:22.6807},
-  2008:{n:88927, dur:9.4568,  sk:22.8363}, 2009:{n:91758, dur:8.4646,  sk:23.3596},
-  2010:{n:112621,dur:7.7814,  sk:23.3851}, 2011:{n:131312,dur:6.6656,  sk:23.4728},
-  2012:{n:133578,dur:6.0901,  sk:23.8721}, 2013:{n:125822,dur:5.5907,  sk:24.0054},
-  2014:{n:121633,dur:5.1637,  sk:24.1066}, 2015:{n:112332,dur:4.7216,  sk:24.2701},
-  2016:{n:96083, dur:4.2902,  sk:24.2702}, 2017:{n:74454, dur:3.7769,  sk:24.0725},
-  2018:{n:47467, dur:3.1420,  sk:23.7861}, 2019:{n:11382, dur:2.2712,  sk:23.3166},
-  2020:{n:59,    dur:2.3333,  sk:23.9661}, 2021:{n:3,     dur:2.0000,  sk:23.3333},
-  2022:{n:3,     dur:3.0000,  sk:15.6667}, 2023:{n:1,     dur:2.0000,  sk:14.0000}
+  2000:{n:31880, dur:18.34497026, sk:22.2744}, 2001:{n:30386, dur:16.56692592, sk:22.4937},
+  2002:{n:31374, dur:15.00817618, sk:22.7668}, 2003:{n:35136, dur:14.04781919, sk:22.7834},
+  2004:{n:41799, dur:13.16483516, sk:22.6873}, 2005:{n:50988, dur:12.08918206, sk:22.6747},
+  2006:{n:63814, dur:11.26051990, sk:22.6089}, 2007:{n:77251, dur:10.34295635, sk:22.6807},
+  2008:{n:88927, dur:9.45683677,  sk:22.8363}, 2009:{n:91758, dur:8.46456504,  sk:23.3596},
+  2010:{n:112621,dur:7.78137196,  sk:23.3851}, 2011:{n:131312,dur:6.66558353,  sk:23.4728},
+  2012:{n:133578,dur:6.09012622,  sk:23.8721}, 2013:{n:125822,dur:5.59071515,  sk:24.0054},
+  2014:{n:121633,dur:5.16366281,  sk:24.1066}, 2015:{n:112332,dur:4.72162045,  sk:24.2701},
+  2016:{n:96083, dur:4.29015368,  sk:24.2702}, 2017:{n:74454, dur:3.77690184,  sk:24.0725},
+  2018:{n:47467, dur:3.14202414,  sk:23.7861}, 2019:{n:11382, dur:2.27118063,  sk:23.3166},
+  2020:{n:59,    dur:2.33333333,  sk:23.9661}, 2021:{n:3,     dur:2.00000000,  sk:23.3333},
+  2022:{n:3,     dur:3.00000000,  sk:15.6667}, 2023:{n:1,     dur:2.00000000,  sk:14.0000}
 };
 
 // Datos reales exactos de lg01_survival_curve_S_q.csv (q=1..40) + q=48 de lg01_milestone_P3_weights_and_eval.csv
@@ -1361,6 +1433,137 @@ function next(){ goTo(cur + 1); }
 function prev(){ goTo(cur - 1); }
 function toggleFS(){ document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(()=>{}); }
 function closeLightbox(){ document.getElementById('lightbox').classList.remove('open'); }
+function closeDataModal(){ document.getElementById('dataModal').classList.remove('open'); }
+
+function lagrangeEvalNodes(xs, ys, q){
+  let s = 0;
+  for(let i = 0; i < xs.length; i++){
+    let L = 1;
+    for(let j = 0; j < xs.length; j++){ if(i !== j) L *= (q - xs[j]) / (xs[i] - xs[j]); }
+    s += ys[i] * L;
+  }
+  return s;
+}
+
+function openDataModal(key){
+  const titleEl = document.getElementById('dmTitle');
+  const bodyEl = document.getElementById('dmBody');
+  const a0 = 16.44171259037386, a1 = -0.7926006555639094, ybar = 8.912006367515734;
+
+  if(key === 'mco'){
+    titleEl.textContent = 'Caso 1 (MCO) · Los 20 años exactos usados en a₁, a₀, R² y S_{y/x} (rl04_annual_macro_series.csv)';
+    let st=0, sy=0, st2=0, sty=0, se=0, sr=0, sst=0, rowsHtml='';
+    for(let yr=2000; yr<=2019; yr++){
+      const t = yr - 2000, y = RL04_OBS[yr].dur, yh = a0 + a1*t, e = y - yh, e2 = e*e, dt2 = (y - ybar)*(y - ybar);
+      st+=t; sy+=y; st2+=t*t; sty+=t*y; se+=e; sr+=e2; sst+=dt2;
+      rowsHtml += `<tr><td><b>${yr}</b></td><td class="num">${t}</td><td class="num">${y.toFixed(4)}</td><td class="num">${t*t}</td><td class="num">${(t*y).toFixed(4)}</td><td class="num">${yh.toFixed(4)}</td><td class="num">${(e>=0?'+':'')+e.toFixed(4)}</td><td class="num">${e2.toFixed(4)}</td><td class="num">${dt2.toFixed(4)}</td></tr>`;
+    }
+    bodyEl.innerHTML = `
+      <p class="small muted">Fuente real: <code>rl04_annual_macro_series.csv</code> (<code>~es_vigente</code>, <code>MR-09</code>, <code>n = 20</code>, <code>t̄ = 9.5</code>, <code>ȳ = 8.9120</code>). Cada columna muestra el aporte exacto que entra a las sumatorias de la Diapositiva 5.</p>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Año</th><th class="num">t = año−2000</th><th class="num">y (dur_q real)</th><th class="num">t²</th><th class="num">t·y</th><th class="num">ŷ(t)</th><th class="num">eᵢ = y−ŷ</th><th class="num">eᵢ²</th><th class="num">(y−ȳ)²</th></tr></thead>
+        <tbody>${rowsHtml}</tbody>
+        <tfoot><tr><td>TOTAL (Σ)</td><td class="num">${st}</td><td class="num">${sy.toFixed(4)}</td><td class="num">${st2.toLocaleString('en-US')}</td><td class="num">${sty.toFixed(4)}</td><td class="num">${sy.toFixed(4)}</td><td class="num">${Math.abs(se)<1e-6?'0.0000':se.toFixed(4)}</td><td class="num">Sᵣ = ${sr.toFixed(4)}</td><td class="num">Sₜ = ${sst.toFixed(4)}</td></tr></tfoot>
+      </table></div>
+      <div class="footnote"><b>Comprobación directa:</b> <code>a₁ = [20(${sty.toFixed(4)}) − (${st})(${sy.toFixed(4)})] / [20(${st2}) − ${st}²] = −10,541.5887 / 13,300 = <b>−0.7926</b></code> · <code>a₀ = 8.9120 − (−0.7926)(9.5) = <b>16.4417</b></code> · <code>R² = (${sst.toFixed(4)} − ${sr.toFixed(4)}) / ${sst.toFixed(4)} = <b>0.9729</b></code> · <code>S_{y/x} = √(${sr.toFixed(4)}/18) = <b>0.8044</b></code>.</div>`;
+  } else if(key === 'mco_center'){
+    titleEl.textContent = 'Caso 1 (MCO) · Comparación x = año vs. t = año − 2000 y extrapolación 2020–2027';
+    let sx=0, sx2=0, sxy=0, st=0, st2=0, sty=0, sy=0, r1='', r2='';
+    for(let yr=2000; yr<=2019; yr++){
+      const x = yr, t = yr - 2000, y = RL04_OBS[yr].dur;
+      sx+=x; sx2+=x*x; sxy+=x*y; st+=t; st2+=t*t; sty+=t*y; sy+=y;
+      r1 += `<tr><td><b>${yr}</b></td><td class="num">${x}</td><td class="num">${(x*x).toLocaleString('en-US')}</td><td class="num">${(x*y).toFixed(2)}</td><td class="num">${t}</td><td class="num">${t*t}</td><td class="num">${(t*y).toFixed(4)}</td><td class="num">${y.toFixed(4)}</td></tr>`;
+    }
+    for(let yr=2020; yr<=2027; yr++){
+      const t = yr - 2000, pred = a0 + a1*t, obs = RL04_OBS[yr];
+      r2 += `<tr><td><b>${yr}</b></td><td class="num">${t}</td><td class="num ${pred<0?'bad':'warn'}">${pred.toFixed(4)}</td><td class="num">${obs ? obs.dur.toFixed(4) : '— (futuro)'}</td><td class="num">${obs ? obs.n : 0}</td><td class="${pred<0?'bad':'warn'}">${pred<0?'❌ Negativa imposible (MR-05)':'⚠ Último año > 0 (cruce 2020.74)'}</td></tr>`;
+    }
+    bodyEl.innerHTML = `
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Año</th><th class="num">x (sin centrar)</th><th class="num">x²</th><th class="num">x·y</th><th class="num">t = x−2000</th><th class="num">t²</th><th class="num">t·y</th><th class="num">y (dur_q real)</th></tr></thead>
+        <tbody>${r1}</tbody>
+        <tfoot><tr><td>TOTAL (Σ)</td><td class="num">${sx.toLocaleString('en-US')}</td><td class="num">${sx2.toLocaleString('en-US')}</td><td class="num">${sxy.toFixed(2)}</td><td class="num">${st}</td><td class="num">${st2.toLocaleString('en-US')}</td><td class="num">${sty.toFixed(4)}</td><td class="num">${sy.toFixed(4)}</td></tr></tfoot>
+      </table></div>
+      <h4 style="margin-top:4px;font-size:13.5px">Auditoría de extrapolación 2020–2027 (<code>dur̂(t) = 16.4417 − 0.7926·t</code> · <code>MR-05</code>)</h4>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Año</th><th class="num">t</th><th class="num">dur̂(t) predicha</th><th class="num">Real CSV</th><th class="num">Inicios</th><th>Estado físico</th></tr></thead>
+        <tbody>${r2}</tbody>
+      </table></div>`;
+  } else if(key === 'lagrange'){
+    titleEl.textContent = 'Caso 2 (Lagrange) · Los 4 nodos exactos, pesos Lᵢ(12) y tabla completa de evaluación';
+    const qEval = 12;
+    let rNodes='', sumL=0, sumP=0;
+    NODES_LG01.forEach((nd, i) => {
+      let num=1, den=1, numExpr=[], denExpr=[];
+      NODES_LG01.forEach((o, j) => {
+        if(i !== j){ num *= (qEval - o.q); den *= (nd.q - o.q); numExpr.push(`(12−${o.q})`); denExpr.push(`(${nd.q}−${o.q})`); }
+      });
+      const L = num / den, prod = nd.y * L;
+      sumL += L; sumP += prod;
+      rNodes += `<tr><td><b>i = ${i}</b></td><td>${nd.lbl}</td><td class="num">${nd.q}</td><td class="num">${nd.y.toFixed(6)}</td><td class="mono" style="font-size:11.5px">${numExpr.join('')} / ${denExpr.join('')} = ${num} / ${den}</td><td class="num">${(L>=0?'+':'')+L.toFixed(4)}</td><td class="num">${(prod>=0?'+':'')+prod.toFixed(4)}</td></tr>`;
+    });
+    const testQs = [2, 6, 12, 16, 28, 36, 48];
+    let rEval='';
+    testQs.forEach(q => {
+      const Ls = NODES_LG01.map((nd, i) => {
+        let L = 1; NODES_LG01.forEach((o, j) => { if(i!==j) L *= (q-o.q)/(nd.q-o.q); }); return L;
+      });
+      const pred = Ls.reduce((a,L,i)=>a+L*NODES_LG01[i].y, 0);
+      const real = LG01_REAL_S[q], err = Math.abs(real - pred), ext = (q < 4 || q > 40);
+      rEval += `<tr><td><b>q = ${q}</b> (${(q/4).toFixed(1)} a)</td><td class="${ext?'bad':'ok'}">${ext?'Sí (MR-05)':'No'}</td><td class="num">${Ls[0].toFixed(4)}</td><td class="num">${Ls[1].toFixed(4)}</td><td class="num">${Ls[2].toFixed(4)}</td><td class="num">${Ls[3].toFixed(4)}</td><td class="num ${pred<0?'bad':''}"><b>${(pred*100).toFixed(2)} %</b></td><td class="num">${(real*100).toFixed(2)} %</td><td class="num">${err.toFixed(4)}</td></tr>`;
+    });
+    bodyEl.innerHTML = `
+      <p class="small muted">Fuente real: <code>lg01_survival_curve_S_q.csv</code> y <code>lg01_milestone_P3_weights_and_eval.csv</code> (<code>1,643,772</code> empleos cerrados, <code>~es_vigente</code>).</p>
+      <h4 style="font-size:13.5px">1. Los 4 nodos de entrada y sustitución exacta en <code>q = 12</code> (3 años)</h4>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Índice</th><th>Hito</th><th class="num">qᵢ</th><th class="num">S(qᵢ) real</th><th>Fracción exacta Lᵢ(12)</th><th class="num">Lᵢ(12)</th><th class="num">S(qᵢ)·Lᵢ(12)</th></tr></thead>
+        <tbody>${rNodes}</tbody>
+        <tfoot><tr><td colspan="5">TOTAL (Partición de la unidad MR-03 y predicción P₃(12))</td><td class="num">${sumL.toFixed(4)} ✔</td><td class="num">${sumP.toFixed(4)} (20.65 %)</td></tr></tfoot>
+      </table></div>
+      <h4 style="font-size:13.5px">2. Tabla completa de evaluación en los 7 puntos auditados (<code>lg01_milestone_P3_weights_and_eval.csv</code>)</h4>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Trimestre</th><th>¿Extrap.?</th><th class="num">L₀ (q=4)</th><th class="num">L₁ (q=8)</th><th class="num">L₂ (q=20)</th><th class="num">L₃ (q=40)</th><th class="num">P₃(q)</th><th class="num">S(q) real</th><th class="num">|Error|</th></tr></thead>
+        <tbody>${rEval}</tbody>
+      </table></div>`;
+  } else if(key === 'cheb'){
+    titleEl.textContent = 'Caso 2 (Runge) · Tabla de nodos Chebyshev-Lobatto (k=0..16) y los 40 errores de grado 16';
+    const seen = new Set();
+    const pyRound = x => { const f = Math.floor(x); return Math.abs((x - f) - 0.5) < 1e-12 ? (f % 2 === 0 ? f : f + 1) : Math.round(x); };
+    let rCheb = '';
+    for(let k=0; k<=16; k++){
+      const c = Math.cos(k * Math.PI / 16), raw = 20.5 + 19.5 * c, rd = pyRound(raw);
+      const dup = seen.has(rd); seen.add(rd);
+      rCheb += `<tr><td><b>k = ${k}</b></td><td class="num">${c.toFixed(5)}</td><td class="num">${raw.toFixed(3)}</td><td class="num"><b>${rd}</b></td><td class="${dup?'warn':'ok'}">${dup?'⚠ Duplicado deduplicado (MR-04)':'✔ Nodo único'}</td><td class="num">${(LG01_REAL_S[rd]*100).toFixed(2)} %</td></tr>`;
+    }
+    const eqNodes = [1, 3, 6, 8, 11, 13, 16, 18, 21, 23, 25, 28, 30, 33, 35, 38, 40];
+    const eqYs = eqNodes.map(q => LG01_REAL_S[q]);
+    const chNodes = [...seen].sort((a,b)=>a-b);
+    const chYs = chNodes.map(q => LG01_REAL_S[q]);
+    let rErr = '', sseEq = 0, sseCh = 0, maxEq = 0, maxCh = 0;
+    for(let q=1; q<=40; q++){
+      const s = LG01_REAL_S[q], pEq = lagrangeEvalNodes(eqNodes, eqYs, q), pCh = lagrangeEvalNodes(chNodes, chYs, q);
+      const eEq = Math.abs(s - pEq), eCh = Math.abs(s - pCh);
+      sseEq += eEq*eEq; sseCh += eCh*eCh;
+      if(eEq > maxEq) maxEq = eEq;
+      if(eCh > maxCh) maxCh = eCh;
+      const hiEq = (q === 39), hiCh = (q === 3);
+      rErr += `<tr${hiEq?' style="background:#fff1f2"':(hiCh?' style="background:#ecfdf5"':'')}><td><b>q = ${q}</b>${hiEq?' 🔥 peor Eq':(hiCh?' ★ peor Lob':'')}</td><td class="num">${s.toFixed(4)}</td><td class="num ${pEq<0||pEq>1?'bad':''}">${pEq.toFixed(4)}</td><td class="num ${hiEq?'bad':''}">${eEq.toFixed(4)}</td><td class="num">${pCh.toFixed(4)}</td><td class="num ${hiCh?'ok':''}">${eCh.toFixed(4)}</td></tr>`;
+    }
+    bodyEl.innerHTML = `
+      <h4 style="font-size:13.5px">1. Generación exacta de nodos Chebyshev-Lobatto (<code>n = 16</code>, <code>a = 1</code>, <code>b = 40</code> ⇒ 15 únicos vía <code>MR-04</code>)</h4>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>k</th><th class="num">cos(kπ/16)</th><th class="num">20.5 + 19.5·cos(kπ/16)</th><th class="num">round(·)</th><th>Estado (MR-04)</th><th class="num">S(qₖ) real</th></tr></thead>
+        <tbody>${rCheb}</tbody>
+      </table></div>
+      <h4 style="font-size:13.5px">2. Los <code>m = 40</code> trimestres usados en <code>E∞</code> y <code>RMSE</code> (Grado 16: Equiespaciado vs. Chebyshev-Lobatto)</h4>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Trimestre</th><th class="num">S(q) real</th><th class="num">P₁₆ Equiesp.</th><th class="num">|e| Equiesp.</th><th class="num">P_Lob (15*)</th><th class="num">|e| Lobatto</th></tr></thead>
+        <tbody>${rErr}</tbody>
+        <tfoot><tr><td>RESUMEN (m = 40)</td><td class="num">—</td><td class="num bad">Σe² = ${sseEq.toFixed(4)}</td><td class="num bad">E∞ = ${maxEq.toFixed(4)} · RMSE = ${Math.sqrt(sseEq/40).toFixed(4)}</td><td class="num ok">Σe² = ${sseCh.toFixed(4)}</td><td class="num ok">E∞ = ${maxCh.toFixed(4)} · RMSE = ${Math.sqrt(sseCh/40).toFixed(4)}</td></tr></tfoot>
+      </table></div>`;
+  }
+  document.getElementById('dataModal').classList.add('open');
+}
 
 document.addEventListener('keydown', e => {
   const tag = (e.target.tagName || '').toLowerCase();
@@ -1380,6 +1583,7 @@ document.addEventListener('keydown', e => {
   }
   else if(e.key === 'Escape'){
     closeLightbox();
+    closeDataModal();
     if(slides[cur]) setSlideFocus(slides[cur], null);
   }
 });
