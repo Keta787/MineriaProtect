@@ -1,0 +1,4 @@
+modelo_id,modelo,algoritmo,metrica_optima,peso_bloque_optimo,k_optimo,pesos_optimos,etapa_ganadora,pr_auc_cv_media,pr_auc_cv_std,roc_auc_cv_media,roc_auc_cv_std,f1_cv_050,brier_cv,puntajes_unicos_oof
+KNN-D,KNN-D · Bloque denso auditado (11 cols),kd_tree,manhattan,0.0,101,uniform,Rejilla base,0.4478,0.0067,0.64932,0.00497,0.2324,0.1975,89
+KNN-G,KNN-G · Denso + 10 grupos ISCO ponderados (21 cols),brute,manhattan,8.0,101,uniform,Extensión de borde (peso superior),0.47296,0.00662,0.67044,0.00469,0.3212,0.1937,92
+KNN-W,"KNN-W · Denso + 2,967 ocupaciones ESCO ponderadas (2,978 cols)",brute,euclidean,8.0,101,uniform,Extensión de borde (peso superior),0.50076,0.00559,0.6943,0.00549,0.3895,0.1889,92

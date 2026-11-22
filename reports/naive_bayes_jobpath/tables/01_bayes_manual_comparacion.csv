@@ -1,0 +1,6 @@
+fila_train_idx,patron_binario,y_real,verosimilitud_P(x|y=0),verosimilitud_P(x|y=1),P_manual_bernoulli(y=1|x),P_sklearn_BernoulliNB(y=1|x),diff_abs_manual_vs_sklearn,P_solo_presencias_sin_ausencias(y=1|x)
+0,"es_vigente=0, tiene_skills=1, tiene_knowledge=1",0,0.843981,0.860455,0.3041952,0.3041952,5e-16,0.30251
+28,"es_vigente=0, tiene_skills=1, tiene_knowledge=0",0,0.099021,0.090103,0.28067495,0.28067495,5.55e-17,0.300121
+29,"es_vigente=1, tiene_skills=1, tiene_knowledge=0",1,0.005984,0.004686,0.25139805,0.25139805,1.67e-16,0.271148
+31,"es_vigente=1, tiene_skills=1, tiene_knowledge=1",0,0.051004,0.044754,0.2733974,0.2733974,1.11e-16,0.273397
+269014,"es_vigente=0, tiene_skills=0, tiene_knowledge=1",0,9e-06,2e-06,0.09251853,0.09251853,2.48e-11,0.302509

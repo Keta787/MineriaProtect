@@ -1,0 +1,5 @@
+celda_concordancia,soporte_test,tasa_obs_reincide_pct,empleos_previos_mediana,duracion_mediana_trim,anio_inicio_mediana,skills_esenciales_mediana,pct_empleo_vigente,gran_grupo_isco_modal,nivel_educativo_modal
+Ambos predicen 1 (Acuerdo positivo),158941,44.93,3.0,5.0,2011,22.0,3.1,5 · Trabajadores de los servicios y vendedores,Secondary school
+Solo KNN predice 1 (Desacuerdo KNN+ / NB-H-),27527,28.41,3.0,7.0,2009,16.0,13.56,3 · Técnicos y profesionales de nivel medio,Secondary school
+Solo NB-H predice 1 (Desacuerdo KNN- / NB-H+),21095,21.09,1.0,6.0,2011,22.0,1.41,5 · Trabajadores de los servicios y vendedores,Bachelor
+Ambos predicen 0 (Acuerdo negativo),140157,14.66,2.0,7.0,2010,18.0,7.06,2 · Profesionales científicos e intelectuales,Secondary school

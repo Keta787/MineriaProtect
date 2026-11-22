@@ -1,0 +1,4 @@
+modelo_id,algoritmo,n_columnas,pendiente_log_log_b,intercepto_log10,r2_ajuste_log_log,s_por_1k_en_n_min,s_por_1k_en_n_max,factor_crecimiento_tiempo,rss_pico_mb,interpretacion_escala
+KNN-D,kd_tree,11,0.2258,-2.2677,0.8158,0.0403,0.1049,2.6,1763.2,Sublineal (búsqueda exacta en árbol)
+KNN-G,brute,21,0.6371,-4.1021,0.9799,0.032,0.3362,10.51,1720.4,Sublineal aparente por overhead inicial (fuerza bruta densa)
+KNN-W,brute,2978,0.993,-4.7092,0.9992,0.1923,7.4672,38.83,1754.1,Cuasilineal O(N) (fuerza bruta / alta dimensión)

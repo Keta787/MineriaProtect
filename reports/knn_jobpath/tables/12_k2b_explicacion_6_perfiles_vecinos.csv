@@ -1,0 +1,31 @@
+perfil_id,rango_vecino,distancia,misma_ocupacion_esco,mismo_grupo_isco,gran_grupo_isco_vecino,ocupacion_esco_vecino,job_order_vecino,duracion_trim_vecino,anio_inicio_vecino,nivel_educativo_vecino,reincide_vecino
+K2-01 (P2-01),1,0.0,Sí,Sí,5 · Trabajadores de los servicios y vendedores,5244.1 · call centre agent,1,5.0,2017,Secondary school,0
+K2-01 (P2-01),2,0.0,Sí,Sí,5 · Trabajadores de los servicios y vendedores,5244.1 · call centre agent,1,5.0,2017,Secondary school,0
+K2-01 (P2-01),3,0.0,Sí,Sí,5 · Trabajadores de los servicios y vendedores,5244.1 · call centre agent,1,5.0,2017,Secondary school,0
+K2-01 (P2-01),4,0.0,Sí,Sí,5 · Trabajadores de los servicios y vendedores,5244.1 · call centre agent,1,5.0,2017,Secondary school,0
+K2-01 (P2-01),5,0.0,Sí,Sí,5 · Trabajadores de los servicios y vendedores,5244.1 · call centre agent,1,5.0,2017,Secondary school,0
+K2-02 (P2-02),1,0.73385,Sí,Sí,2 · Profesionales científicos e intelectuales,2433.6.4 · technical sales representative in machinery and industrial equipment,8,57.0,2012,Bachelor,1
+K2-02 (P2-02),2,0.76188,Sí,Sí,2 · Profesionales científicos e intelectuales,2433.6.4 · technical sales representative in machinery and industrial equipment,10,49.0,2014,Bachelor,0
+K2-02 (P2-02),3,0.81774,Sí,Sí,2 · Profesionales científicos e intelectuales,2433.6.4 · technical sales representative in machinery and industrial equipment,7,57.0,2012,Bachelor,0
+K2-02 (P2-02),4,1.02916,Sí,Sí,2 · Profesionales científicos e intelectuales,2433.6.4 · technical sales representative in machinery and industrial equipment,6,57.0,2012,Bachelor,0
+K2-02 (P2-02),5,1.1207,Sí,Sí,2 · Profesionales científicos e intelectuales,2433.6.4 · technical sales representative in machinery and industrial equipment,8,45.0,2015,Secondary school,0
+K2-03 (P2-03),1,0.0,Sí,Sí,2 · Profesionales científicos e intelectuales,2221.2 · nurse responsible for general care,3,2.0,2011,Bachelor,0
+K2-03 (P2-03),2,0.0,Sí,Sí,2 · Profesionales científicos e intelectuales,2221.2 · nurse responsible for general care,3,2.0,2011,Bachelor,1
+K2-03 (P2-03),3,0.0,Sí,Sí,2 · Profesionales científicos e intelectuales,2221.2 · nurse responsible for general care,3,2.0,2011,Bachelor,1
+K2-03 (P2-03),4,0.0,Sí,Sí,2 · Profesionales científicos e intelectuales,2221.2 · nurse responsible for general care,3,2.0,2011,Bachelor,1
+K2-03 (P2-03),5,0.0,Sí,Sí,2 · Profesionales científicos e intelectuales,2221.2 · nurse responsible for general care,3,2.0,2011,Bachelor,1
+K2-04 (P2-04),1,0.0,Sí,Sí,5 · Trabajadores de los servicios y vendedores,5311.1.2 · babysitter,3,5.0,2009,No reportado,1
+K2-04 (P2-04),2,0.0,Sí,Sí,5 · Trabajadores de los servicios y vendedores,5311.1.2 · babysitter,3,5.0,2009,No reportado,0
+K2-04 (P2-04),3,0.0,Sí,Sí,5 · Trabajadores de los servicios y vendedores,5311.1.2 · babysitter,3,5.0,2009,No reportado,1
+K2-04 (P2-04),4,0.17876,Sí,Sí,5 · Trabajadores de los servicios y vendedores,5311.1.2 · babysitter,3,5.0,2010,No reportado,1
+K2-04 (P2-04),5,0.24462,Sí,Sí,5 · Trabajadores de los servicios y vendedores,5311.1.2 · babysitter,3,9.0,2008,No reportado,0
+K2-05 (P2-05),1,0.04469,Sí,Sí,5 · Trabajadores de los servicios y vendedores,5312.1 · early years teaching assistant,6,2.0,2018,Bachelor,1
+K2-05 (P2-05),2,0.04469,Sí,Sí,5 · Trabajadores de los servicios y vendedores,5312.1 · early years teaching assistant,6,2.0,2018,Bachelor,1
+K2-05 (P2-05),3,0.04469,Sí,Sí,5 · Trabajadores de los servicios y vendedores,5312.1 · early years teaching assistant,6,2.0,2018,Bachelor,1
+K2-05 (P2-05),4,0.04469,Sí,Sí,5 · Trabajadores de los servicios y vendedores,5312.1 · early years teaching assistant,6,2.0,2018,Bachelor,0
+K2-05 (P2-05),5,0.04469,Sí,Sí,5 · Trabajadores de los servicios y vendedores,5312.1 · early years teaching assistant,6,2.0,2018,Bachelor,1
+K2-06 (P2-06),1,0.0,Sí,Sí,0 · Ocupaciones militares,0310.3 · infantry soldier,1,5.0,1989,Secondary school,0
+K2-06 (P2-06),2,0.0,Sí,Sí,0 · Ocupaciones militares,0310.3 · infantry soldier,1,5.0,1989,Secondary school,0
+K2-06 (P2-06),3,0.0,Sí,Sí,0 · Ocupaciones militares,0310.3 · infantry soldier,1,5.0,1989,Secondary school,0
+K2-06 (P2-06),4,0.17876,Sí,Sí,0 · Ocupaciones militares,0310.3 · infantry soldier,1,5.0,1988,Secondary school,0
+K2-06 (P2-06),5,0.17876,Sí,Sí,0 · Ocupaciones militares,0310.3 · infantry soldier,1,5.0,1988,Secondary school,0

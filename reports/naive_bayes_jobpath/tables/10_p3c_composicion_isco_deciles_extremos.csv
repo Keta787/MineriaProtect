@@ -1,0 +1,11 @@
+isco_major,gran_grupo_isco,participacion_train_total_pct,participacion_en_D01_bajo_riesgo_pct,participacion_en_D10_alto_riesgo_pct,diferencia_D10_menos_D01_pp,sobremuestreo_D10_vs_total
+0,0 · Ocupaciones militares,0.24,1.76,0.0,-1.76,0.0
+1,1 · Directores y gerentes,5.82,10.55,0.95,-9.59,0.16
+2,2 · Profesionales científicos e intelectuales,17.52,23.22,36.99,13.77,2.11
+3,3 · Técnicos y profesionales de nivel medio,19.6,18.38,47.58,29.21,2.43
+4,4 · Personal de apoyo administrativo,8.03,6.47,0.0,-6.47,0.0
+5,5 · Trabajadores de los servicios y vendedores,21.76,12.01,9.94,-2.07,0.46
+6,6 · Agricultores y trabajadores agropecuarios,0.37,0.55,0.0,-0.55,0.0
+7,"7 · Oficiales, operarios y artesanos",7.22,11.2,1.99,-9.21,0.28
+8,8 · Operadores de instalaciones y máquinas,5.8,11.25,1.95,-9.3,0.34
+9,9 · Ocupaciones elementales,13.65,4.61,0.59,-4.02,0.04

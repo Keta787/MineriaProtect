@@ -1,0 +1,16 @@
+familia,modelo,punto_operacion,n_variables_X,test_pr_auc,test_roc_auc,test_f1_clase_1,delta_f1_vs_ref2_04612,pct_del_techo_roc_auc_07133,test_recall_clase_1,test_precision_clase_1,test_accuracy,test_brier,tiempo_fit_s,memoria_mb
+Referencia,Ref 1 · Baseline Mayoritario (0),Predice siempre 0 (no reincide),0,0.2997,0.5,0.0,-0.4612,0.0,0.0,0.0,0.7003,0.2997,,
+Referencia,Ref 2 · Trivial Todo-Positivo (1),Predice siempre 1 (reincide),0,0.2997,0.5,0.4612,0.0,0.0,1.0,0.2997,0.2997,0.7003,,
+Referencia,Ref 3 · Techo 6.0 (Logística OHE),"Combina simultáneamente oficio OHE, educación, competencias y trayectoria",2981,0.5109,0.7133,0.5321,0.0709,100.0,0.6147,0.4691,0.676,0.2108,,
+Árbol de Decisión (7.0),Árbol 1 · ISCO [Exactitud (None)],Punto 1 · Orientado a Exactitud (class_weight=None),10,,0.5459,0.0,-0.4612,21.52,0.0,0.0,0.7003,,,
+Árbol de Decisión (7.0),Árbol 1 · ISCO [Recall (balanced)],Punto 2 · Orientado a Recall / Sensibilidad (class_weight='balanced'),10,,0.5459,0.462,0.0008,21.52,0.7961,0.3254,0.4443,,,
+Árbol de Decisión (7.0),Árbol 2 · Education level [Exactitud (None)],Punto 1 · Orientado a Exactitud (class_weight=None),2,,0.5208,0.0,-0.4612,9.75,0.0,0.0,0.7003,,,
+Árbol de Decisión (7.0),Árbol 2 · Education level [Recall (balanced)],Punto 2 · Orientado a Recall / Sensibilidad (class_weight='balanced'),2,,0.5208,0.4564,-0.0048,9.75,0.8738,0.3088,0.376,,,
+Árbol de Decisión (7.0),Árbol 3 · Skills [Exactitud (None)],Punto 1 · Orientado a Exactitud (class_weight=None),7,,0.6145,0.1769,-0.2843,53.68,0.106,0.5363,0.7046,,,
+Árbol de Decisión (7.0),Árbol 3 · Skills [Recall (balanced)],Punto 2 · Orientado a Recall / Sensibilidad (class_weight='balanced'),7,,0.6157,0.455,-0.0062,54.24,0.5421,0.392,0.6107,,,
+Naive Bayes (7.1),NB-G (Umbral OOF óptimo (tau*)),tau = 0.2950,14,0.3778,0.5921,0.4687,0.0075,43.18,0.8551,0.3228,0.419,0.2086,0.219,74.29
+Naive Bayes (7.1),NB-G (Umbral por defecto (0.50)),tau = 0.5000,14,0.3778,0.5921,0.0,-0.4612,43.18,0.0,0.0,0.7003,0.2086,0.219,74.29
+Naive Bayes (7.1),NB-B (Umbral OOF óptimo (tau*)),tau = 0.2700,2971,0.4829,0.7024,0.5323,0.0711,94.89,0.7285,0.4193,0.6162,0.1877,0.1,36.74
+Naive Bayes (7.1),NB-B (Umbral por defecto (0.50)),tau = 0.5000,2971,0.4829,0.7024,0.3042,-0.157,94.89,0.2068,0.5752,0.7165,0.1877,0.1,36.74
+Naive Bayes (7.1),NB-H (Umbral OOF óptimo (tau*)),tau = 0.2650,2981,0.4962,0.7058,0.5337,0.0725,96.48,0.7279,0.4214,0.6188,0.1871,0.634,118.19
+Naive Bayes (7.1),NB-H (Umbral por defecto (0.50)),tau = 0.5000,2981,0.4962,0.7058,0.3617,-0.0995,96.48,0.2652,0.5682,0.7194,0.1871,0.634,118.19

@@ -1,0 +1,11 @@
+isco_major,gran_grupo_isco,soporte_filas_train,personas_train,positivos_train,tasa_observada_train_pct,ic95_wilson_train_pct,ic95_inf_train_pct,ic95_sup_train_pct,diff_vs_media_train_pp,prob_media_oof_nb_h_train_pct,soporte_filas_test,tasa_confirmada_test_pct,ic95_wilson_test_pct,diff_vs_media_test_pp,prob_media_nb_h_test_pct
+5,5 · Trabajadores de los servicios y vendedores,302706,142409,102441,33.84,"[33.67, 34.01]",33.67,34.01,3.83,33.67,75803,33.87,"[33.53, 34.20]",3.89,33.9
+3,3 · Técnicos y profesionales de nivel medio,272574,141941,91918,33.72,"[33.54, 33.90]",33.54,33.9,3.71,33.83,68181,33.37,"[33.01, 33.72]",3.39,34.08
+9,9 · Ocupaciones elementales,189819,101030,62688,33.03,"[32.81, 33.24]",32.81,33.24,3.01,32.44,47849,33.05,"[32.63, 33.47]",3.08,32.48
+2,2 · Profesionales científicos e intelectuales,243705,110488,73055,29.98,"[29.80, 30.16]",29.8,30.16,-0.04,31.04,61082,30.13,"[29.77, 30.50]",0.16,31.64
+8,8 · Operadores de instalaciones y máquinas,80665,50927,19893,24.66,"[24.37, 24.96]",24.37,24.96,-5.35,23.92,20103,24.71,"[24.12, 25.31]",-5.27,23.98
+7,"7 · Oficiales, operarios y artesanos",100371,58550,23191,23.11,"[22.85, 23.37]",22.85,23.37,-6.91,22.14,25002,23.08,"[22.56, 23.61]",-6.89,22.25
+4,4 · Personal de apoyo administrativo,111705,70795,25086,22.46,"[22.21, 22.70]",22.21,22.7,-7.55,21.55,27784,22.55,"[22.06, 23.04]",-7.42,20.93
+1,1 · Directores y gerentes,81000,50460,17874,22.07,"[21.78, 22.35]",21.78,22.35,-7.95,21.61,19873,21.37,"[20.81, 21.95]",-8.6,21.97
+6,6 · Agricultores y trabajadores agropecuarios,5080,4288,1073,21.12,"[20.02, 22.27]",20.02,22.27,-8.89,21.84,1241,21.92,"[19.70, 24.30]",-8.06,22.98
+0,0 · Ocupaciones militares,3393,3159,252,7.43,"[6.59, 8.36]",6.59,8.36,-22.58,7.0,802,7.61,"[5.97, 9.65]",-22.37,6.43

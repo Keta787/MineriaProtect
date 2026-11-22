@@ -1,0 +1,4 @@
+modelo_id,modelo,algoritmo,metrica,k_optimo,pesos_optimos,peso_bloque,n_jobs,n_train_completo,n_queries_benchmark,tiempo_fit_completo_s,tiempo_predict_benchmark_s,s_por_1000_filas_test,proyeccion_test_completo_min,proyeccion_test_completo_horas,limite_horas,excede_limite_4h,memoria_matriz_train_mb,rss_pico_mb
+KNN-D,KNN-D · Bloque denso auditado (11 cols),kd_tree,manhattan,101,uniform,0.0,8,1391018,5000,5.576,0.848,0.17,0.98,0.016,4.0,False,58.37,1759.3
+KNN-G,KNN-G · Denso + 10 grupos ISCO ponderados (21 cols),brute,manhattan,101,uniform,8.0,8,1391018,5000,0.06,20.016,4.003,23.2,0.387,4.0,False,111.43,1719.7
+KNN-W,"KNN-W · Denso + 2,967 ocupaciones ESCO ponderadas (2,978 cols)",brute,euclidean,101,uniform,8.0,8,1391018,5000,0.069,130.0,26.0,150.68,2.511,4.0,False,121.54,1849.7

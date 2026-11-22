@@ -1,0 +1,7 @@
+modelo_id,punto_operacion,umbral_tau,TN_verdaderos_negativos,FP_falsos_positivos,FN_falsos_negativos,TP_verdaderos_positivos,pct_predichos_positivos
+NB-G,Umbral OOF óptimo (tau*),0.295,56560,186935,15104,89121,79.39
+NB-G,Umbral por defecto (0.50),0.5,243495,0,104225,0,0.0
+NB-B,Umbral OOF óptimo (tau*),0.27,138350,105145,28300,75925,52.07
+NB-B,Umbral por defecto (0.50),0.5,227577,15918,82671,21554,10.78
+NB-H,Umbral OOF óptimo (tau*),0.265,139320,104175,28364,75861,51.78
+NB-H,Umbral por defecto (0.50),0.5,222490,21005,76581,27644,13.99

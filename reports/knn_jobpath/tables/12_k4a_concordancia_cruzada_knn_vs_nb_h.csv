@@ -1,0 +1,5 @@
+celda_concordancia,filas_test,pct_del_test,tasa_obs_reincidencia_test_pct,prob_media_knn_pct,prob_media_nb_h_pct
+Ambos predicen 1 (Acuerdo positivo),158941,45.71,44.93,45.62,44.9
+Solo KNN predice 1 (Desacuerdo KNN+ / NB-H-),27527,7.92,28.41,30.8,21.34
+Solo NB-H predice 1 (Desacuerdo KNN- / NB-H+),21095,6.07,21.09,20.01,33.58
+Ambos predicen 0 (Acuerdo negativo),140157,40.31,14.66,14.22,14.54

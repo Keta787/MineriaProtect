@@ -1,0 +1,5 @@
+cantidad_verificada,calculo_manual,scikit_learn,diferencia_absoluta_max,coincide_exactamente
+Distancias euclidianas a los 5 vecinos (máx |diff|),"[0.177990, ..., 0.334723]","[0.177990, ..., 0.334723]",0.000e+00,True
+Índices de vecinos más cercanos,"[792062, 1244985, 563203, 295240, 783959]","[792062, 1244985, 563203, 295240, 783959]",0,True
+P(reincide=1 | x) · pesos uniformes (fracción de vecinos),0.400000 (2/5),0.400000,0.000e+00,True
+P(reincide=1 | x) · pesos por distancia inversa (1/d),0.338422,0.338422,5.551e-17,True

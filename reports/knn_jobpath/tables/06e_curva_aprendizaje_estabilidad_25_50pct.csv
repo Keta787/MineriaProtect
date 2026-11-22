@@ -1,0 +1,28 @@
+modelo_id,esquema_validacion,fraccion_personas_pct,personas_train,filas_train,rango_en_10pct,config_etiqueta,k_vecinos,pesos,metrica,peso_bloque,pr_auc_cv_media,pr_auc_cv_std,pr_auc_ic95_persona,pr_auc_ic95_inf,pr_auc_ic95_sup,roc_auc_cv_media,roc_auc_ic95_persona,brier_cv
+KNN-D,StratifiedGroupKFold (5 pliegues),10.0,28167,138783,1,"k=101, uniform, manhattan",101,uniform,manhattan,0.0,0.4478,0.0067,5-fold CV (ver std),,,0.64932,5-fold CV,0.1975
+KNN-D,StratifiedGroupKFold (5 pliegues),10.0,28167,138783,2,"k=201, uniform, manhattan",201,uniform,manhattan,0.0,0.44675,0.00591,5-fold CV (ver std),,,0.64936,5-fold CV,0.1977
+KNN-D,StratifiedGroupKFold (5 pliegues),10.0,28167,138783,3,"k=401, uniform, manhattan",401,uniform,manhattan,0.0,0.4451,0.00481,5-fold CV (ver std),,,0.64848,5-fold CV,0.1981
+KNN-D,StratifiedGroupKFold (5 pliegues),25.0,70418,348241,1,"k=101, uniform, manhattan",101,uniform,manhattan,0.0,0.45324,0.00318,5-fold CV (ver std),,,0.65618,5-fold CV,0.1961
+KNN-D,StratifiedGroupKFold (5 pliegues),25.0,70418,348241,2,"k=201, uniform, manhattan",201,uniform,manhattan,0.0,0.45412,0.00358,5-fold CV (ver std),,,0.65638,5-fold CV,0.1961
+KNN-D,StratifiedGroupKFold (5 pliegues),25.0,70418,348241,3,"k=401, uniform, manhattan",401,uniform,manhattan,0.0,0.45139,0.0034,5-fold CV (ver std),,,0.65462,5-fold CV,0.1966
+KNN-D,StratifiedGroupKFold (5 pliegues),50.0,140837,695615,1,"k=101, uniform, manhattan",101,uniform,manhattan,0.0,0.45799,0.00276,5-fold CV (ver std),,,0.66187,5-fold CV,0.1944
+KNN-D,StratifiedGroupKFold (5 pliegues),50.0,140837,695615,2,"k=201, uniform, manhattan",201,uniform,manhattan,0.0,0.45923,0.00345,5-fold CV (ver std),,,0.66201,5-fold CV,0.1943
+KNN-D,StratifiedGroupKFold (5 pliegues),50.0,140837,695615,3,"k=401, uniform, manhattan",401,uniform,manhattan,0.0,0.45694,0.00373,5-fold CV (ver std),,,0.66006,5-fold CV,0.1948
+KNN-G,StratifiedGroupKFold (5 pliegues),10.0,28167,138783,1,"k=101, uniform, manhattan, w=8",101,uniform,manhattan,8.0,0.47296,0.00662,5-fold CV (ver std),,,0.67044,5-fold CV,0.1937
+KNN-G,StratifiedGroupKFold (5 pliegues),10.0,28167,138783,2,"k=101, uniform, manhattan, w=4",101,uniform,manhattan,4.0,0.47295,0.00655,5-fold CV (ver std),,,0.67038,5-fold CV,0.1938
+KNN-G,StratifiedGroupKFold (5 pliegues),10.0,28167,138783,3,"k=101, uniform, manhattan, w=2",101,uniform,manhattan,2.0,0.4729,0.00665,5-fold CV (ver std),,,0.67036,5-fold CV,0.1938
+KNN-G,StratifiedGroupKFold (5 pliegues),25.0,70418,348241,1,"k=101, uniform, manhattan, w=8",101,uniform,manhattan,8.0,0.4812,0.00082,5-fold CV (ver std),,,0.67934,5-fold CV,0.1916
+KNN-G,StratifiedGroupKFold (5 pliegues),25.0,70418,348241,2,"k=101, uniform, manhattan, w=4",101,uniform,manhattan,4.0,0.4812,0.00079,5-fold CV (ver std),,,0.67935,5-fold CV,0.1916
+KNN-G,StratifiedGroupKFold (5 pliegues),25.0,70418,348241,3,"k=101, uniform, manhattan, w=2",101,uniform,manhattan,2.0,0.48114,0.00084,5-fold CV (ver std),,,0.67929,5-fold CV,0.1916
+KNN-G,StratifiedGroupKFold (5 pliegues),50.0,140837,695615,1,"k=101, uniform, manhattan, w=8",101,uniform,manhattan,8.0,0.48417,0.00272,5-fold CV (ver std),,,0.68445,5-fold CV,0.19
+KNN-G,StratifiedGroupKFold (5 pliegues),50.0,140837,695615,2,"k=101, uniform, manhattan, w=4",101,uniform,manhattan,4.0,0.48413,0.00276,5-fold CV (ver std),,,0.68443,5-fold CV,0.19
+KNN-G,StratifiedGroupKFold (5 pliegues),50.0,140837,695615,3,"k=101, uniform, manhattan, w=2",101,uniform,manhattan,2.0,0.48417,0.00279,5-fold CV (ver std),,,0.6844,5-fold CV,0.19
+KNN-W,"Pliegue único fijo disjunto (27,756 filas · mismo protocolo 10/25/50 %)",10.0,22473,111027,1,"k=101, uniform, euclidean, w=8",101,uniform,euclidean,8.0,0.50158,,"[0.48493, 0.51969]",0.48493,0.51969,0.69552,"[0.68605, 0.70624]",0.1887
+KNN-W,"Pliegue único fijo disjunto (27,756 filas · mismo protocolo 10/25/50 %)",10.0,22473,111027,2,"k=101, uniform, euclidean, w=4",101,uniform,euclidean,4.0,0.50079,,"[0.48422, 0.51912]",0.48422,0.51912,0.69433,"[0.68473, 0.70502]",0.189
+KNN-W,"Pliegue único fijo disjunto (27,756 filas · mismo protocolo 10/25/50 %)",10.0,22473,111027,3,"k=201, uniform, euclidean, w=8",201,uniform,euclidean,8.0,0.50023,,"[0.48314, 0.51879]",0.48314,0.51879,0.6917,"[0.68230, 0.70224]",0.1897
+KNN-W,"Pliegue único fijo disjunto (27,756 filas · mismo protocolo 10/25/50 %)",25.0,64724,320485,1,"k=101, uniform, euclidean, w=8",101,uniform,euclidean,8.0,0.51634,,"[0.49805, 0.53630]",0.49805,0.5363,0.71109,"[0.70066, 0.72132]",0.185
+KNN-W,"Pliegue único fijo disjunto (27,756 filas · mismo protocolo 10/25/50 %)",25.0,64724,320485,2,"k=101, uniform, euclidean, w=4",101,uniform,euclidean,4.0,0.51571,,"[0.49757, 0.53572]",0.49757,0.53572,0.71009,"[0.70011, 0.72047]",0.1853
+KNN-W,"Pliegue único fijo disjunto (27,756 filas · mismo protocolo 10/25/50 %)",25.0,64724,320485,3,"k=201, uniform, euclidean, w=8",201,uniform,euclidean,8.0,0.51467,,"[0.49749, 0.53377]",0.49749,0.53377,0.70632,"[0.69675, 0.71722]",0.1861
+KNN-W,"Pliegue único fijo disjunto (27,756 filas · mismo protocolo 10/25/50 %)",50.0,135143,667859,1,"k=101, uniform, euclidean, w=8",101,uniform,euclidean,8.0,0.52201,,"[0.50418, 0.54027]",0.50418,0.54027,0.71812,"[0.70822, 0.72831]",0.1835
+KNN-W,"Pliegue único fijo disjunto (27,756 filas · mismo protocolo 10/25/50 %)",50.0,135143,667859,2,"k=101, uniform, euclidean, w=4",101,uniform,euclidean,4.0,0.52145,,"[0.50387, 0.53958]",0.50387,0.53958,0.71769,"[0.70812, 0.72768]",0.1836
+KNN-W,"Pliegue único fijo disjunto (27,756 filas · mismo protocolo 10/25/50 %)",50.0,135143,667859,3,"k=201, uniform, euclidean, w=8",201,uniform,euclidean,8.0,0.52308,,"[0.50460, 0.54180]",0.5046,0.5418,0.71561,"[0.70527, 0.72587]",0.1839

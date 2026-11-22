@@ -1,0 +1,7 @@
+modelo_id,comparacion,delta_pr_auc,delta_roc_auc,delta_f1_clase_1,delta_recall_clase_1,delta_precision_clase_1,delta_brier,delta_accuracy
+NB-G,"Test B (sin reajuste, pesos de A) menos Test A",-0.0014,0.0002,-0.0003,-0.0014,-0.0001,0.0001,0.0001
+NB-G,Test B (ajustado en Train B con hiperparámetros fijos de A) menos Test A,0.0027,0.003,-0.0028,0.0626,-0.0106,0.0001,-0.0498
+NB-B,"Test B (sin reajuste, pesos de A) menos Test A",0.0,-0.0,-0.0,-0.0,0.0,0.0,0.0
+NB-B,Test B (ajustado en Train B con hiperparámetros fijos de A) menos Test A,0.0,-0.0,-0.0,-0.0,0.0,0.0,0.0
+NB-H,"Test B (sin reajuste, pesos de A) menos Test A",0.0017,0.0007,0.0004,-0.0013,0.0008,-0.0004,0.0012
+NB-H,Test B (ajustado en Train B con hiperparámetros fijos de A) menos Test A,0.0022,0.0009,-0.0005,0.0232,-0.0081,-0.0001,-0.013

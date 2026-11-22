@@ -1,0 +1,4 @@
+modelo,n_variables_X,ponderacion_clases,pr_auc_test,pr_auc_ic95,roc_auc_test,roc_auc_ic95,f1_umbral_propio,f1_igual_alerta_NB_H,brier_solo_sin_ponderar
+KNN-D · Bloque denso auditado (11 cols),11,Sin ponderar (empírico),0.4652,"[0.4609, 0.4693]",0.6677,"[0.6651, 0.6705]",0.501,0.5002,0.1936
+NB-G · GaussianNB (7.1 · 14 cols densas),14,Sin ponderar (empírico),0.3778,"[0.3736, 0.3821]",0.5921,"[0.5892, 0.5945]",0.4687,,0.2086
+HistGradientBoosting (6.0 · 14 cols densas),14,Balanceada (class_weight='balanced'),0.4951,"[0.4904, 0.4995]",0.6936,"[0.6909, 0.6963]",0.5151,0.5204,

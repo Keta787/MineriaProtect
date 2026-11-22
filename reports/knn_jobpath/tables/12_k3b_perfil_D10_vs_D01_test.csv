@@ -1,0 +1,8 @@
+indicador_unidades_originales,D01_KNN,D10_KNN,diff_D10_menos_D01_KNN,D01_NB_H,D10_NB_H
+Soporte de filas (test),"34,772","34,772",0,"34,772","34,772"
+Tasa observada de reincidencia (%),9.14,63.58,54.43,10.05,58.89
+Empleos previos acumulados (media / mediana),2.40 / 2.0,4.85 / 4.0,2.44,2.44 / 2.0,3.80 / 3.0
+Duración del empleo en trimestres (media / mediana),18.08 / 9.0,7.19 / 4.0,-10.89,30.52 / 13.0,6.11 / 5.0
+Año de inicio (media / mediana),2006.8 / 2010,2009.9 / 2011,3.02,2004.5 / 2008,2010.3 / 2012
+Competencias esenciales ESCO (media / mediana),21.20 / 18.0,29.04 / 24.0,7.84,19.37 / 17.0,31.90 / 27.0
+Proporción de empleos vigentes (%),6.93,3.08,-3.85,16.93,0.82

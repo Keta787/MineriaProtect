@@ -1,0 +1,11 @@
+experimento_independencia,variable_retirada,correlacion_del_par,NB_H_pr_auc_cv,NB_H_delta_pr_auc,NB_H_brier_cv,NB_H_delta_brier,NB_G_pr_auc_cv,NB_G_delta_pr_auc,NB_G_brier_cv,NB_G_delta_brier
+0. Referencia sin retirar pares correlacionados,Ninguna,—,0.4981,0.0,0.1872,0.0,0.3775,0.0,0.2087,0.0
+"Par 1: (n_skills_essential_rob, n_skills_essential_bin) -> retirar bin",n_skills_essential_bin,rho = 0.968 (discretización redundante del mismo conteo),0.4994,0.0013,0.1868,-0.0004,0.3758,-0.0017,0.209,0.0002
+"Par 1b: (n_skills_essential_rob, n_skills_essential_bin) -> retirar rob",n_skills_essential_rob,rho = 0.968 (conservar solo tramo cuantil),0.5,0.0019,0.1868,-0.0004,0.382,0.0045,0.2089,0.0001
+"Par 2: (dur_q_rob, dur_q_bin) -> retirar bin",dur_q_bin,rho = 0.962 (discretización redundante de dur_q),0.4972,-0.0009,0.1873,0.0001,0.3751,-0.0024,0.2088,0.0001
+"Par 2b: (dur_q_rob, dur_q_bin) -> retirar rob",dur_q_rob,rho = 0.962 (conservar solo tramo cuantil),0.4977,-0.0004,0.187,-0.0002,0.375,-0.0025,0.2091,0.0004
+"Par 3: (start_ord_rob, end_ord_rob) -> retirar end_ord_rob",end_ord_rob,r = 0.785 (fechas de inicio y fin acopladas),0.4981,0.0,0.1871,-0.0,0.3775,-0.0,0.2087,0.0
+"Par 4: (end_ord_rob, es_vigente) -> retirar es_vigente",es_vigente,rho = 0.655 (censura en 2026-Q1 cuando es_vigente=1),0.4985,0.0004,0.187,-0.0001,0.3775,0.0,0.2087,0.0
+"Par 5: (n_skills_essential_rob, n_skills_knowledge_rob) -> retirar knowledge",n_skills_knowledge_rob,r = 0.784 (conocimientos contenidos en esenciales),0.4992,0.001,0.1871,-0.0001,0.3772,-0.0003,0.2088,0.0
+Conjunto depurado: retirar ambos bins duplicados (dur_q_bin + n_skills_essential_bin),"dur_q_bin, n_skills_essential_bin",Elimina simultáneamente el doble conteo de las dos variables discretizadas,0.4986,0.0004,0.187,-0.0002,0.3747,-0.0028,0.2091,0.0004
+Conjunto depurado completo: retirar bins + end_ord_rob + n_skills_knowledge_rob,"dur_q_bin, n_skills_essential_bin, end_ord_rob, n_skills_knowledge_rob",Elimina los 4 focos principales de colinealidad remanente en el bloque denso,0.4995,0.0014,0.1868,-0.0004,0.3744,-0.0032,0.2091,0.0004

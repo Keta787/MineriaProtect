@@ -1,0 +1,7 @@
+modelo_id,punto_operacion,umbral_tau,TN_verdaderos_negativos,FP_falsos_positivos,FN_falsos_negativos,TP_verdaderos_positivos,pct_predichos_positivos
+KNN-D,Umbral OOF óptimo (tau*),0.27,125555,117940,29980,74245,55.27
+KNN-D,Umbral por defecto (0.50),0.5,227824,15671,83506,20719,10.47
+KNN-G,Umbral OOF óptimo (tau*),0.27,135806,107689,30040,74185,52.3
+KNN-G,Umbral por defecto (0.50),0.5,223752,19743,76978,27247,13.51
+KNN-W,Umbral OOF óptimo (tau*),0.28,151824,91671,30467,73758,47.58
+KNN-W,Umbral por defecto (0.50),0.5,221231,22264,71596,32629,15.79

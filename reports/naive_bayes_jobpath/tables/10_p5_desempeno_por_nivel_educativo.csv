@@ -1,0 +1,6 @@
+university_level,tratamiento_categoria,soporte_train,pct_del_train,tasa_observada_train_pct,ic95_wilson_train_pct,prob_media_oof_nb_h_train_pct,contrib_log_odds_univ_ord_mm,pr_auc_oof_train,roc_auc_oof_train,f1_oof_train,soporte_test,tasa_confirmada_test_pct,prob_media_nb_h_test_pct,pr_auc_test,roc_auc_test,f1_test
+No reportado,Categoría propia sin imputar (ausencia informativa),160664,11.55,30.8,"[30.58, 31.03]",29.19,0.0028,0.4844,0.6987,0.5377,40270,30.54,29.27,0.4801,0.6971,0.5353
+Secondary school,Nivel educativo reportado,548687,39.44,31.09,"[30.97, 31.21]",29.66,0.0014,0.4959,0.7043,0.544,136581,31.2,29.86,0.4956,0.7045,0.5466
+Bachelor,Nivel educativo reportado,473842,34.06,30.75,"[30.62, 30.88]",31.36,0.0,0.5267,0.7146,0.5444,118038,30.64,31.58,0.5227,0.7128,0.5416
+Master,Nivel educativo reportado,201851,14.51,24.93,"[24.74, 25.12]",27.87,-0.0014,0.455,0.6972,0.4751,51275,24.99,28.29,0.4505,0.6961,0.472
+PhD,Nivel educativo reportado,5974,0.43,22.83,"[21.79, 23.91]",21.54,-0.0028,0.3206,0.6064,0.3214,1556,21.66,22.69,0.3078,0.6394,0.3847

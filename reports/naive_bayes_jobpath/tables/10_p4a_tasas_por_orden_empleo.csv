@@ -1,0 +1,7 @@
+tramo_job_order,soporte_train,tasa_observada_train_pct,ic95_wilson_train_pct,prob_media_NB_G_train_pct,prob_media_NB_B_train_pct,prob_media_NB_H_train_pct,soporte_test,tasa_confirmada_test_pct,prob_media_NB_H_test_pct
+1 (1er empleo),263187,21.58,"[21.43, 21.74]",29.49,30.14,27.75,65882,21.52,27.82
+2 (2do empleo),248254,26.32,"[26.14, 26.49]",29.78,29.79,28.4,62082,26.39,28.64
+3 (3er empleo),219727,29.15,"[28.96, 29.34]",29.99,29.66,28.99,55007,29.23,29.23
+4–5 empleos,323258,32.22,"[32.06, 32.38]",30.26,29.71,29.98,81038,31.98,30.31
+6–8 empleos,233882,36.0,"[35.80, 36.19]",30.66,30.23,31.97,58496,35.99,32.23
+9+ empleos,102710,41.8,"[41.50, 42.11]",31.29,31.48,35.93,25215,42.08,36.12

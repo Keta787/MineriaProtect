@@ -1,0 +1,5 @@
+modelo_id,muestra,regimen_id,regimen_datos,n_train_efectivo,umbral_oof_tau,pr_auc_test,delta_pr_auc_vs_A_escalado,ic95_pareado_delta_pr,veredicto_pareado,roc_auc_test,f1_test_tau_oof,brier_test
+KNN-D,"Test completo (347,720 filas)",R2_A_escalado,Versión A escalada auditada (referencia),1391018,0.26,0.4652,0.0,Referencia,Referencia,0.6677,0.5015,0.1936
+KNN-D,"Test completo (347,720 filas)",R3_A_wins_tukey,Versión A winsorizada Tukey (6 continuas en train),1391018,0.24,0.4628,-0.00243,"[-0.00376, -0.00107]",B supera a A (IC 95 % excluye 0),0.6681,0.5004,0.1938
+KNN-D,"Test completo (347,720 filas)",R4_A_solo_inliers,Versión A entrenada EXCLUSIVAMENTE sin outliers Tukey,1042397,0.25,0.4496,-0.01561,"[-0.01780, -0.01350]",B supera a A (IC 95 % excluye 0),0.6535,0.4903,0.1961
+KNN-D,"Test completo (347,720 filas)",R5_B_iqr,Versión B (sin_outliers IQR en 4 cols) + escalada,1391018,0.25,0.4634,-0.00187,"[-0.00312, -0.00063]",B supera a A (IC 95 % excluye 0),0.6692,0.5022,0.1936

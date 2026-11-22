@@ -1,0 +1,9 @@
+metrica,tratamiento_datos,k_vecinos,dist_mediana_dk_inliers,dist_mediana_dk_extremos_tukey,razon_distancia_extremos_sobre_inliers,solapamiento_vecinos_vs_A_escalado_total_pct,solapamiento_vecinos_en_extremos_pct
+euclidean,1. A crudo (sin reescalar),101,0.5361,1.0998,2.052,51.62,54.28
+euclidean,2. A escalado auditado (Standard + bin 0/1),101,0.7083,1.2992,1.834,100.0,100.0
+euclidean,3. A winsorizado Tukey (6 continuas · train),101,0.8705,1.2216,1.403,79.77,61.36
+euclidean,4. Versión B (IQR 4 cols) + escalado auditado,101,0.7862,1.3334,1.696,86.24,81.58
+manhattan,1. A crudo (sin reescalar),101,0.9983,2.0519,2.055,62.17,64.9
+manhattan,2. A escalado auditado (Standard + bin 0/1),101,1.244,2.3904,1.922,100.0,100.0
+manhattan,3. A winsorizado Tukey (6 continuas · train),101,1.5219,2.0284,1.333,81.87,64.06
+manhattan,4. Versión B (IQR 4 cols) + escalado auditado,101,1.3781,2.4425,1.772,88.73,84.61

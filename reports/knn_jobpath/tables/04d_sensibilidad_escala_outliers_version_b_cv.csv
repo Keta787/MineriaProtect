@@ -1,0 +1,11 @@
+rol_metrica,metrica,regimen_id,regimen_datos,k_vecinos,pesos,umbral_oof_tau,pr_auc_cv_media,pr_auc_cv_std,roc_auc_cv_media,roc_auc_cv_std,f1_oof_tau,brier_cv
+Métrica ganadora KNN-D,manhattan,R1_A_crudo,"1. Versión A cruda (sin reescalar, con outliers)",101,uniform,0.26,0.4496,0.00473,0.65141,0.0043,0.4941,0.1973
+Métrica ganadora KNN-D,manhattan,R2_A_escalado,2. Versión A escalada auditada (referencia 7.2),101,uniform,0.26,0.44754,0.00605,0.64912,0.00448,0.4906,0.1976
+Métrica ganadora KNN-D,manhattan,R3_A_wins_tukey,3. Versión A winsorizada Tukey (6 continuas en train) + escalada,101,uniform,0.24,0.44372,0.00708,0.65003,0.0045,0.4913,0.1977
+Métrica ganadora KNN-D,manhattan,R4_A_solo_inliers,4. Versión A entrenada EXCLUSIVAMENTE sin filas con outliers Tukey,101,uniform,0.25,0.43476,0.00794,0.63909,0.00441,0.4857,0.1992
+Métrica ganadora KNN-D,manhattan,R5_B_iqr,5. Versión B (sin_outliers IQR en 4 cols) + escalada auditada,101,uniform,0.25,0.44463,0.00707,0.65012,0.00483,0.4914,0.1977
+Contraste L1/L2,euclidean,R1_A_crudo,"1. Versión A cruda (sin reescalar, con outliers)",101,uniform,0.26,0.44179,0.00511,0.64634,0.00384,0.4898,0.1983
+Contraste L1/L2,euclidean,R2_A_escalado,2. Versión A escalada auditada (referencia 7.2),101,uniform,0.25,0.43773,0.00566,0.64238,0.00433,0.4883,0.1989
+Contraste L1/L2,euclidean,R3_A_wins_tukey,3. Versión A winsorizada Tukey (6 continuas en train) + escalada,101,uniform,0.24,0.43431,0.0075,0.64368,0.00488,0.4891,0.199
+Contraste L1/L2,euclidean,R4_A_solo_inliers,4. Versión A entrenada EXCLUSIVAMENTE sin filas con outliers Tukey,101,uniform,0.23,0.42054,0.00832,0.62518,0.00525,0.4767,0.2015
+Contraste L1/L2,euclidean,R5_B_iqr,5. Versión B (sin_outliers IQR en 4 cols) + escalada auditada,101,uniform,0.26,0.43497,0.00787,0.64395,0.0051,0.4898,0.1989

@@ -1,0 +1,4 @@
+modelo_id,modelo,hiperparametros_base,n_columnas,memoria_matriz_train_mb,pr_auc_cv_media,pr_auc_cv_std,roc_auc_cv_media,roc_auc_cv_std,f1_clase_1_cv_media,recall_clase_1_cv_media,precision_clase_1_cv_media,balanced_acc_cv_media,brier_cv_media,accuracy_cv_media,tiempo_fit_fold_s,tiempo_predict_fold_s
+NB-G,NB-G · GaussianNB (14 cols densas),"var_smoothing=1e-9, priors=empírico",14,74.29,0.369,0.0026,0.5874,0.0018,0.4633,0.9767,0.3037,0.5082,0.6261,0.3209,0.2132,0.0671
+NB-B,"NB-B · BernoulliNB (4 binarias + 2,967 dummies)","alpha=1.0, binarize=0.0, priors=empírico",2971,36.74,0.4851,0.0018,0.7017,0.0014,0.3022,0.2042,0.5814,0.5705,0.1878,0.717,0.1127,0.0602
+NB-H,"NB-H · HybridNaiveBayes (10 num/ord + 2,971 binarias)","var_smoothing=1e-9, alpha=1.0, priors=empírico",2981,118.19,0.4511,0.0036,0.6738,0.0018,0.4662,0.4615,0.4711,0.6196,0.2129,0.6829,0.5337,0.2446
