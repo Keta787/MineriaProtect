@@ -1,0 +1,1907 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JobPath (MineriaProtect) · Trayecto de Decisiones, Metodologías y Conclusiones (Naive Bayes & K-Means)</title>
+<link rel="stylesheet" href="./numerical_methods_presentation/assets/katex/katex.min.css">
+<script defer src="./numerical_methods_presentation/assets/katex/katex.min.js"></script>
+<script defer src="./numerical_methods_presentation/assets/katex/contrib/auto-render.min.js"></script>
+<style>
+:root{
+  --bg:#f3f6fc; --card:#ffffff; --ink:#151e3a; --muted:#4e5a78; --line:#d8e0f0;
+  --indigo:#4f46e5; --indigo-soft:#eef0ff; --teal:#0d9488; --teal-soft:#e6f7f5;
+  --amber:#d97706; --amber-soft:#fff7e6; --rose:#e11d48; --rose-soft:#fff0f3;
+  --emerald:#059669; --emerald-soft:#ecfdf5; --dark:#131b34;
+  --shadow:0 8px 24px rgba(21,30,58,.07);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;width:100%;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+
+/* BARRA DE PROGRESO Y TOPBAR */
+.progress{position:fixed;left:0;top:0;height:4px;background:linear-gradient(90deg,var(--indigo),var(--teal),var(--emerald));z-index:90;transition:width .25s ease}
+.topbar{position:fixed;top:4px;left:0;right:0;height:46px;padding:0 clamp(18px,2.4vw,38px);background:rgba(243,246,252,.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:8px;z-index:80}
+.topbar-group{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.chap-btn,.top-link{font-family:inherit;font-size:12px;font-weight:700;text-decoration:none;padding:5px 12px;border-radius:999px;background:#fff;color:var(--ink);border:1px solid var(--line);cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.chap-btn:hover,.top-link:hover{border-color:var(--indigo);color:var(--indigo)}
+.chap-btn.on{background:var(--indigo);color:#fff;border-color:var(--indigo)}
+.chap-btn.teal.on{background:var(--teal);border-color:var(--teal)}
+.chap-btn.emerald.on{background:var(--emerald);border-color:var(--emerald)}
+.top-link.num-link{background:var(--amber-soft);color:#92400e;border-color:#fcd34d;font-weight:800}
+.top-link.num-link:hover{background:var(--amber);color:#fff;border-color:var(--amber)}
+
+/* LIENZO DE DIAPOSITIVAS: OCUPA EL 100% DEL ALTO DISPONIBLE SIN DEJAR HUECOS ABAJO */
+.deck{position:fixed;top:50px;bottom:46px;left:0;right:0;overflow:hidden}
+.slide{position:absolute;inset:0;padding:14px clamp(18px,2.4vw,38px) 16px;
+  display:flex;flex-direction:column;justify-content:flex-start;gap:11px;
+  opacity:0;pointer-events:none;transform:translateX(24px);transition:opacity .25s ease,transform .25s ease;
+  overflow-y:auto;overflow-x:hidden}
+.slide.active{opacity:1;pointer-events:auto;transform:none}
+.slide.before{transform:translateX(-24px)}
+.slide-head{flex-shrink:0}
+
+/* TIPOGRAFÍA MÁS GRANDE, CLARA Y FÁCIL DE LEER */
+.kicker{font-size:11.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--indigo)}
+.kicker.teal{color:var(--teal)} .kicker.amber{color:var(--amber)} .kicker.emerald{color:var(--emerald)}
+h1{font-size:clamp(25px,2.55vw,37px);line-height:1.12;font-weight:800;letter-spacing:-.02em;margin-top:3px}
+h2{font-size:clamp(19px,1.82vw,26px);font-weight:800;letter-spacing:-.015em;line-height:1.18;margin-top:2px}
+h3{font-size:clamp(14.5px,1.12vw,16.8px);font-weight:800;line-height:1.25;margin-bottom:5px;color:var(--ink)}
+p,li{font-size:clamp(13px,.96vw,14.5px);line-height:1.46}
+ul{padding-left:18px}
+ul li + li{margin-top:4px}
+.muted{color:var(--muted)}
+.small{font-size:clamp(12.2px,.88vw,13.3px);line-height:1.42}
+
+/* GRILLAS QUE ESTIRAN LAS COLUMNAS HASTA ABAJO Y NUNCA DESBORDAN A LO ANCHO (min-width:0) */
+.grid2{display:grid;grid-template-columns:1.08fr .92fr;gap:14px;align-items:stretch;flex:1}
+.grid2.equal{grid-template-columns:1fr 1fr}
+.grid2.wide-left{grid-template-columns:1.16fr .84fr}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;align-items:stretch}
+.grid3.fill{flex:1}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;align-items:stretch}
+.grid2 > *, .grid3 > *, .grid4 > *{min-width:0}
+
+/* TARJETAS SÓLIDAS Y EQUILIBRADAS */
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 16px;box-shadow:var(--shadow);display:flex;flex-direction:column;justify-content:flex-start;gap:8px}
+.card.fill{flex:1}
+.card.indigo{background:var(--indigo-soft);border-color:#d4daff}
+.card.teal{background:var(--teal-soft);border-color:#b8ebe4}
+.card.amber{background:var(--amber-soft);border-color:#fde0b2}
+.card.rose{background:var(--rose-soft);border-color:#fecdd8}
+.card.emerald{background:var(--emerald-soft);border-color:#a7f3d0}
+
+.stack{display:flex;flex-direction:column;gap:11px;min-width:0}
+.stack.fill{flex:1;justify-content:space-between}
+.row{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:11.6px;font-weight:700;background:var(--indigo-soft);color:var(--indigo)}
+.pill.teal{background:var(--teal-soft);color:var(--teal)}
+.pill.amber{background:var(--amber-soft);color:#b45309}
+.pill.rose{background:var(--rose-soft);color:var(--rose)}
+.pill.emerald{background:var(--emerald-soft);color:var(--emerald)}
+.pill.dark{background:var(--dark);color:#fff}
+
+button,.btn{font:inherit;font-size:12.4px;font-weight:700;border:none;border-radius:9px;padding:6px 12px;cursor:pointer;background:var(--indigo);color:#fff;transition:all .14s;text-decoration:none;display:inline-flex;align-items:center;gap:5px}
+button:hover,.btn:hover{transform:translateY(-1px);box-shadow:0 4px 10px rgba(21,30,58,.14)}
+button.teal,.btn.teal{background:var(--teal)}
+button.amber,.btn.amber{background:var(--amber)}
+button.emerald,.btn.emerald{background:var(--emerald)}
+button.rose,.btn.rose{background:var(--rose)}
+button.ghost,.btn.ghost{background:#fff;color:var(--ink);border:1.5px solid var(--line)}
+button.tab-btn{background:#fff;color:var(--muted);border:1.5px solid var(--line);font-size:12px;padding:5px 11px;border-radius:8px}
+button.tab-btn.on{background:var(--indigo);color:#fff;border-color:var(--indigo)}
+button.tab-btn.teal.on{background:var(--teal);color:#fff;border-color:var(--teal)}
+button.tab-btn.emerald.on{background:var(--emerald);color:#fff;border-color:var(--emerald)}
+
+/* PORTADA Y KPIs CON FUENTE GRANDE */
+.cover{background:radial-gradient(900px 440px at 92% 10%,#e0e7ff 0%,transparent 60%),radial-gradient(780px 420px at 5% 95%,#ccfbf1 0%,transparent 55%),var(--bg)}
+.kpi-card{background:#fff;border:1px solid var(--line);border-radius:13px;padding:12px 15px;box-shadow:var(--shadow);display:flex;flex-direction:column;justify-content:center}
+.kpi-lbl{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.kpi-val{font-size:clamp(20px,1.85vw,27px);font-weight:800;margin:3px 0;font-variant-numeric:tabular-nums;color:var(--indigo)}
+.kpi-val.teal{color:var(--teal)} .kpi-val.amber{color:var(--amber)} .kpi-val.emerald{color:var(--emerald)} .kpi-val.rose{color:var(--rose)}
+.kpi-sub{font-size:12.2px;color:var(--muted);line-height:1.38}
+
+/* ANALOGÍA Y SIMULADORES */
+.analogy-box{background:linear-gradient(135deg,#fffbeb 0%,#fef3c7 100%);border:1.5px solid #fcd34d;border-left:5px solid var(--amber);border-radius:12px;padding:9px 14px;font-size:13px;line-height:1.42;flex-shrink:0}
+.analogy-box strong.tag{color:#b45309;text-transform:uppercase;font-size:11.4px;letter-spacing:.04em;margin-right:6px}
+
+.sim-box{background:linear-gradient(135deg,#f8faff 0%,#eef5ff 100%);border:1.5px solid #c9d5ff;border-radius:14px;padding:12px 15px;display:flex;flex-direction:column;gap:8px}
+.sim-box.teal{background:linear-gradient(135deg,#f2fbf9 0%,#e6f7f5 100%);border-color:#99e6dc}
+.sim-box.emerald{background:linear-gradient(135deg,#f0fdf4 0%,#dcfce7 100%);border-color:#86efac}
+
+/* PANEL DE GRÁFICA QUE CRECE PARA LLENAR LA COLUMNA DERECHA */
+.fig-panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 15px;box-shadow:var(--shadow);display:flex;flex-direction:column;justify-content:space-between;gap:9px;flex:1}
+.fig-stage{flex:1;display:flex;align-items:center;justify-content:center;background:#f8fafc;border:1px dashed var(--line);border-radius:10px;padding:8px;min-height:220px}
+.fig-stage img{max-width:100%;max-height:310px;width:auto;height:auto;object-fit:contain;border-radius:6px;cursor:zoom-in;transition:transform .15s;display:block;margin:0 auto}
+.fig-stage img:hover{transform:scale(1.015)}
+.fig-cap{font-size:12.2px;color:var(--muted);line-height:1.4;text-align:center}
+
+/* TABLAS CON FUENTE LEGIBLE Y ENCABEZADOS QUE AJUSTAN LÍNEA SIN DESBORDAR */
+.tbl-wrap{overflow-x:auto;border-radius:11px;border:1px solid var(--line);background:#fff;width:100%}
+table{width:100%;border-collapse:collapse;font-size:clamp(12px,.86vw,13.2px);font-variant-numeric:tabular-nums}
+th,td{padding:6.5px 9px;text-align:left;border-bottom:1px solid var(--line);line-height:1.36;vertical-align:middle}
+th{background:var(--dark);color:#fff;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.03em;white-space:normal;line-height:1.25}
+tr:nth-child(even) td{background:#fafbff}
+tr:last-child td{border-bottom:none}
+tr.highlight td{background:#ecfdf5 !important;font-weight:700}
+tr.highlight-indigo td{background:#eef0ff !important;font-weight:700}
+tr.warn-row td{background:#fff0f3 !important}
+
+/* GLOSARIO Y TARJETAS DE CUADERNOS */
+.gloss-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;flex:1}
+.gloss-item{background:#f8fafc;border:1px solid var(--line);border-left:4px solid var(--indigo);border-radius:9px;padding:8px 11px;font-size:12.4px;line-height:1.4;display:flex;flex-direction:column;justify-content:center}
+.gloss-item.teal{border-left-color:var(--teal)}
+.gloss-item.emerald{border-left-color:var(--emerald)}
+.gloss-item.amber{border-left-color:var(--amber)}
+
+.nb-card{background:#fff;border:1px solid var(--line);border-radius:11px;padding:11px 13px;font-size:12.5px;line-height:1.42;cursor:pointer;transition:all .14s;flex:1;display:flex;flex-direction:column;justify-content:center;gap:5px}
+.nb-card:hover{border-color:var(--indigo);transform:translateY(-1px);box-shadow:0 5px 12px rgba(21,30,58,.08)}
+
+.formula{background:#fff;border:1.5px dashed #bfc5e8;border-radius:11px;padding:8px 12px;overflow-x:auto;font-size:clamp(12.6px,1.02vw,15px);text-align:center}
+.bar-track{width:100%;height:9px;background:#e2e8f0;border-radius:999px;overflow:hidden;margin-top:4px}
+.bar-fill{height:100%;background:var(--indigo);border-radius:999px;transition:width .25s ease}
+.bar-fill.teal{background:var(--teal)} .bar-fill.emerald{background:var(--emerald)}
+
+code{font-family:"JetBrains Mono",Consolas,monospace;font-size:.9em;background:#eef1f8;padding:1.5px 5px;border-radius:4px;color:#1e293b}
+th code{background:rgba(255,255,255,.18);color:#fff}
+
+/* FOOTER FIJO INFERIOR */
+.footer{position:fixed;bottom:0;left:0;right:0;height:46px;background:rgba(255,255,255,.96);backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:0 clamp(18px,2.4vw,38px);display:flex;align-items:center;justify-content:space-between;z-index:80}
+.dots{display:flex;gap:6px;align-items:center}
+.dot{width:9px;height:9px;border-radius:999px;background:#cbd5e1;border:none;cursor:pointer;padding:0;transition:all .2s}
+.dot.on{width:25px;background:var(--indigo)}
+.dot.teal.on{background:var(--teal)}
+.dot.emerald.on{background:var(--emerald)}
+
+/* LIGHTBOX Y MODALES */
+.lightbox{position:fixed;inset:0;background:rgba(15,23,42,.88);display:none;align-items:center;justify-content:center;z-index:120;padding:24px;cursor:zoom-out;flex-direction:column;gap:10px}
+.lightbox.open{display:flex}
+.lightbox img{max-width:94vw;max-height:84vh;border-radius:12px;background:#fff;padding:8px;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+.lightbox-cap{color:#f8fafc;font-size:13.5px;max-width:860px;text-align:center}
+.modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.82);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:130;padding:18px}
+.modal-overlay.open{display:flex}
+.modal-box{background:#fff;border-radius:16px;width:min(1260px,96vw);height:min(850px,90vh);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.45)}
+.modal-head{padding:11px 18px;background:var(--dark);color:#fff;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.modal-body{flex:1;background:#f4f6fc;overflow-y:auto}
+.modal-body iframe{width:100%;height:100%;border:none}
+
+@media (max-width:1024px){
+  .grid2,.grid2.equal,.grid2.wide-left,.grid3,.grid4,.gloss-grid{grid-template-columns:1fr}
+  .topbar-group:first-child{display:none}
+}
+</style>
+</head>
+<body>
+<div class="progress" id="progressBar"></div>
+
+<!-- BARRA SUPERIOR -->
+<nav class="topbar" aria-label="Navegación por bloques">
+  <div class="topbar-group">
+    <button class="chap-btn on" id="chap1" onclick="go(0)">1 · Contexto (S1–S2)</button>
+    <button class="chap-btn teal" id="chap2" onclick="go(2)">2 · Metodologías Aplicadas (S3–S7)</button>
+    <button class="chap-btn emerald" id="chap3" onclick="go(7)">3 · Conclusiones: Naive Bayes y K-Means (S8–S10)</button>
+  </div>
+  <div class="topbar-group">
+    <button class="top-link" onclick="openBitacoraModal()">📋 Ver Bitácora D01–D14</button>
+    <button class="top-link" onclick="openNumModal()">👁️ Vista Modal Métodos Numéricos</button>
+    <a class="top-link num-link" href="./numerical_methods_presentation/index.html">📐 Ir a Métodos Numéricos (index.html) ↗</a>
+  </div>
+</nav>
+
+<main class="deck" id="deck">
+
+<!-- =================================================================== -->
+<!-- DIAPOSITIVA 1: PORTADA EJECUTIVA Y MAPA DE LOS 11 CUADERNOS         -->
+<!-- =================================================================== -->
+<section class="slide cover active" data-chap="1">
+  <div class="slide-head">
+    <div class="row">
+      <span class="pill dark">PROYECTO MINERIAPROTECT · JOBPATH</span>
+      <span class="pill">BLOQUE 1 DE 3 · CONTEXTO PARA PÚBLICO GENERAL</span>
+      <span class="pill teal">11 CUADERNOS CRISP-DM / KDD VERIFICADOS</span>
+      <span class="pill emerald">GANADORES: NAIVE BAYES (7.1) + K-MEANS (8.0)</span>
+    </div>
+    <h1>De 1.87 Millones de Empleos a Decisiones Claras: El Viaje Analítico de JobPath</h1>
+    <p class="muted" style="margin-top:4px">
+      <strong>¿Qué es JobPath para alguien sin contexto previo?</strong> Es un observatorio laboral que sigue la historia de trabajo de <strong>352,093 personas reales</strong> (dataset europeo <em>JobHop v2</em>) y conecta cada empleo con los <strong>3,039 oficios estandarizados del catálogo oficial ESCO v1.2.1 / ISCO-08</strong> para descubrir cómo evolucionan las carreras y por qué una persona vuelve a ejercer un mismo oficio (<code>reincide</code>).
+    </p>
+  </div>
+
+  <div class="grid4">
+    <div class="kpi-card">
+      <div class="kpi-lbl">1. Embudo Real de Datos</div>
+      <div class="kpi-val">1.87M → 1.74M</div>
+      <div class="kpi-sub"><strong>1,871,014</strong> empleos brutos (<code>355,308</code> personas) depurados a <strong>1,738,738</strong> empleos válidos con oficio ESCO en <strong>352,093</strong> personas (<code>92.93 %</code>).</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-lbl">2. Estándar Europeo ESCO</div>
+      <div class="kpi-val teal">3,039 Oficios</div>
+      <div class="kpi-sub">Organizados en <strong>10 Grandes Grupos ISCO-08</strong> y <code>2,968</code> oficios activos en Train (<code>MR-08</code>: competencias del oficio ESCO, no del individuo).</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-lbl">3. Fenómeno Estudiado (Target)</div>
+      <div class="kpi-val amber">30.01 % Reincide</div>
+      <div class="kpi-sub">3 de cada 10 empleos (<code>417,471</code> en Train 80 % y <code>104,225</code> en Test 20 %) corresponden a un trabajador que regresa a un oficio ya ejercido.</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-lbl">4. Modelos Elegidos (Conclusión)</div>
+      <div class="kpi-val emerald">Naive Bayes + K-Means</div>
+      <div class="kpi-sub"><strong>NB-H (7.1):</strong> <code>ROC-AUC 0.7058</code>, <code>F1 0.5337</code> en <code>0.241 s</code>. <strong>K-Means (8.0):</strong> $k^*=4$ arquetipos sobre el <code>100 %</code> del censo (error <code>0.000000</code>).</div>
+    </div>
+  </div>
+
+  <!-- MAPA COMPLETO DE LOS 11 NOTEBOOKS QUE SE ESTIRA PARA LLENAR EL ESPACIO INFERIOR -->
+  <div class="card fill">
+    <div class="row" style="justify-content:space-between">
+      <h3>Mapa Completo de los 11 Cuadernos en <code>notebooks/refactor/</code> (Haz clic en cualquier tarjeta para ir a su diapositiva)</h3>
+      <span class="small muted">Navegación: teclas <code>← →</code> · <code>F</code> pantalla completa · Clic en cualquier gráfica para ampliar</span>
+    </div>
+    <div class="grid3 fill">
+      <div class="stack fill">
+        <div class="nb-card" onclick="go(1)" style="border-left:4px solid var(--indigo)">
+          <div class="row"><span class="pill">1 · CONTEXTO (Diap. 2)</span><strong>Unidad 1 · Negocio</strong></div>
+          <div><strong>• <code>1.0_comprension_negocio.md</code>:</strong> Acta analítica CRISP-DM Fase 1. Define la pregunta de trayectorias laborales, selecciona <em>JobHop v2 + ESCO v1.2.1</em> y descarta justificadamente <em>OLE Colombia</em>.</div>
+        </div>
+        <div class="nb-card" onclick="go(2)" style="border-left:4px solid var(--teal)">
+          <div class="row"><span class="pill teal">2 · PREPARACIÓN (Diap. 3)</span><strong>Limpieza y Split</strong></div>
+          <div><strong>• <code>2.0_preprocesamiento_jobpath.ipynb</code>:</strong> Embudo <code>1.87M → 1.74M</code>, educación <code>MNAR</code>, filtro ESCO y creación de <strong>Versión A (con outliers)</strong> vs. <strong>Versión B (sin outliers IQR)</strong>.<br>
+          <strong>• <code>3.0_transformacion.ipynb</code>:</strong> Split 80/20 por persona (<code>resume_id</code>, <code>0</code> compartidas), <code>RobustScaler</code> y <code>2,967</code> dummies en <code>uint8</code>.</div>
+        </div>
+      </div>
+
+      <div class="stack fill">
+        <div class="nb-card" onclick="go(3)" style="border-left:4px solid var(--teal)">
+          <div class="row"><span class="pill teal">2 · ESTRUCTURA Y EDA (Diap. 4 y 5)</span><strong>PCA y Exploración</strong></div>
+          <div><strong>• <code>4.0_PCA.ipynb</code> y <code>4.1_PCA_completo.ipynb</code>:</strong> Identidad aditiva $E = C + K + U$ (rango efectivo 9 de 10) y ahorro de 1 componente en Versión B (<code>3 comp. = 80.59 %</code>).<br>
+          <strong>• <code>5.0_EDA_jobpath.ipynb</code>:</strong> Bloqueo anti-fuga (<code>D13</code>: exclusión de <code>veces_ese_oficio</code>), matrices de transición y tasas por grupo ISCO-08.</div>
+        </div>
+        <div class="nb-card" onclick="go(5)" style="border-left:4px solid var(--teal)">
+          <div class="row"><span class="pill teal">2 · TORNEOS DE MODELOS (Diap. 6 y 7)</span><strong>Supervisado y Clustering</strong></div>
+          <div><strong>• <code>6.0_modelado_fase4</code> · <code>7.0_arbol_decision</code> · <code>7.2_knn</code>:</strong> Baselines, techo Logístico (<code>0.7133</code>), 3 Árboles (prof. $\le 4$) y KNN (<code>8.1 h</code> en fuerza bruta).<br>
+          <strong>• <code>8.1_clustering_jerarquico.ipynb</code>:</strong> Descarte de <code>single/average/complete</code> por encadenamiento (<code>90 %–99.87 %</code>) y corte de Ward en $k^*=4$.</div>
+        </div>
+      </div>
+
+      <div class="stack fill">
+        <div class="nb-card" onclick="go(7)" style="border-left:4px solid var(--emerald)">
+          <div class="row"><span class="pill emerald">3 · CONCLUSIONES (Diap. 8 y 9)</span><strong>Modelos Ganadores</strong></div>
+          <div><strong>• Ganador Supervisado (<code>7.1_naive_bayes.ipynb</code>):</strong> <code>NB-H</code> logra el <code>96.48 %</code> del techo lineal (<code>ROC-AUC 0.7058</code>, <code>F1 0.5337</code>, <code>Recall 72.79 %</code>) en <code>0.241 s</code> con explicación aditiva <code>LLR</code>.<br>
+          <strong>• Ganador No Supervisado (<code>8.0_kmeans_clustering.ipynb</code>):</strong> Segmenta el <code>100 %</code> del censo (<code>352,093</code> personas) en 4 arquetipos con error de centroides <code>0.000000</code>.</div>
+        </div>
+        <div class="nb-card" onclick="go(9)" style="border-left:4px solid var(--amber);background:var(--amber-soft)">
+          <div class="row"><span class="pill amber">3 · ANEXO INDEXADO (Diap. 10)</span><strong>Evaluación Independiente</strong></div>
+          <div><strong>• <code>numerical_methods_presentation/index.html</code>:</strong> Presentación indexada de <strong>Métodos Numéricos (MCO vs. Lagrange)</strong> con 8 casos, GeoGebra y auditoría SHA-256 (<code>19/19</code>).</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =================================================================== -->
+<!-- DIAPOSITIVA 2: COMPRENSIÓN DEL NEGOCIO (1.0_comprension_negocio.md) -->
+<!-- =================================================================== -->
+<section class="slide" data-chap="1">
+  <div class="slide-head">
+    <div class="row">
+      <span class="kicker">BLOQUE 1 · CONTEXTO Y ORIGEN DEL PROYECTO</span>
+      <span class="pill">Cuaderno: 1.0_comprension_negocio.md</span>
+      <span class="pill teal">CRISP-DM Fase 1 · Selección de Fuentes KDD-1</span>
+    </div>
+    <h2>Comprensión del Negocio: El Problema de las Trayectorias y la Elección de Fuentes</h2>
+  </div>
+
+  <div class="analogy-box">
+    <strong class="tag">💡 Analogía Cotidiana «El GPS de la Vida Laboral»:</strong>
+    Imagina intentar seguir la carrera de miles de graduados cuando cada empresa llama distinto al mismo puesto (<em>"dependiente"</em>, <em>"vendedor de mostrador"</em>, <em>"asesor comercial"</em>). Sin un diccionario oficial que traduzca cada cargo a un código único y diga qué habilidades exige (<strong>ESCO v1.2.1</strong>), sería imposible saber quién cambió de profesión y quién lleva años regresando exactamente al mismo oficio.
+  </div>
+
+  <div class="grid3 fill">
+    <!-- COLUMNA 1: FUENTES SELECCIONADAS Y DESCARTADAS -->
+    <div class="card">
+      <h3>1. Selección de Fuentes de Datos (KDD-1)</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Fuente</th>
+              <th>Rol y Volumen Verificado</th>
+              <th>Decisión</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="highlight-indigo">
+              <td><strong>JobHop v2</strong><br><span class="small muted">Dato crudo oficial</span></td>
+              <td>Historiales secuenciales por persona (<code>resume_id</code>) con fechas trimestrales. Unión <code>train+test+val</code>: <strong><code>1,871,014</code> empleos y <code>355,308</code> personas</strong>.</td>
+              <td><span class="pill emerald">✅ Elegida (D01)</span></td>
+            </tr>
+            <tr class="highlight-indigo">
+              <td><strong>ESCO v1.2.1</strong><br><span class="small muted">Comisión Europea</span></td>
+              <td>Taxonomía oficial de <strong><code>3,039</code> oficios</strong>, <strong><code>10</code> grupos ISCO-08</strong> y conteos de competencias prácticas y conocimientos.</td>
+              <td><span class="pill emerald">✅ Elegida (D01)</span></td>
+            </tr>
+            <tr class="warn-row">
+              <td><strong>OLE Colombia</strong><br><span class="small muted">Observatorio local</span></td>
+              <td>Publica reportes agregados de graduados pero <strong>no historiales secuenciales por persona</strong> con fechas de inicio y fin.</td>
+              <td><span class="pill rose">❌ Descartada</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card indigo" style="margin-top:auto">
+        <strong>Nota de Transparencia Geográfica:</strong>
+        <p class="small">Los datos corresponden al mercado laboral europeo (Bélgica, JobHop v2). Los patrones y el pipeline constituyen un método analítico transferible para observatorios universitarios.</p>
+      </div>
+    </div>
+
+    <!-- COLUMNA 2: LAS DOS TAREAS DE MINERÍA -->
+    <div class="card indigo">
+      <h3>2. Las Dos Preguntas Analíticas del Proyecto</h3>
+      <div class="card fill">
+        <div class="row"><span class="pill">A · Tarea Supervisada (Cuadernos 6.0, 7.0, 7.1, 7.2)</span></div>
+        <p>
+          <strong>¿Qué factores explican y anticipan que una persona repita un oficio (<code>reincide = 1</code>)?</strong>
+        </p>
+        <p class="small">
+          Definimos formalmente el evento objetivo como <code>reincide = (veces_ese_oficio &gt; 1)</code> sobre la llave <code>(resume_id, occupation_code)</code>. En el universo clasificado ocurre en el <strong><code>30.01 %</code> de Train (<code>417,471</code> casos)</strong> y el <strong><code>29.97 %</code> de Test (<code>104,225</code> casos)</strong> a través de <code>2,968</code> oficios activos.
+        </p>
+      </div>
+      <div class="card fill">
+        <div class="row"><span class="pill teal">B · Tarea No Supervisada (Cuadernos 8.0 y 8.1)</span></div>
+        <p>
+          <strong>¿Qué arquetipos naturales de carreras y de empleos existen sin mirar la etiqueta?</strong>
+        </p>
+        <p class="small">
+          Construimos dos vistas 100 % libres de fuga: <strong>Vista Personas (<code>V_PERSON</code>, 9 variables sobre <code>352,093</code> trabajadores)</strong> y <strong>Vista Experiencias (<code>V_EXPERIENCE</code>, 7 variables sobre <code>1,738,738</code> empleos)</strong>, reservando <code>reincide</code> exclusivamente para validación externa <em>post-hoc</em>.
+        </p>
+      </div>
+    </div>
+
+    <!-- COLUMNA 3: CRITERIOS DE ÉXITO Y SALVAGUARDAS -->
+    <div class="card emerald">
+      <h3>3. Criterios de Éxito y Salvaguardas Metodológicas</h3>
+      <ul style="flex:1;display:flex;flex-direction:column;justify-content:space-around">
+        <li><strong>Trazabilidad criptográfica (<code>SHA-256</code>):</strong> Cada archivo de entrada (<code>01_raw</code> a <code>04_transformed</code>) se verifica con huella SHA-256 antes y después de correr los cuadernos sin alterar jamás el dato crudo.</li>
+        <li><strong>Salvaguarda <code>MR-07</code> (Asociación $\neq$ Causalidad):</strong> Los modelos identifican perfiles estadísticos y probabilidades de transición grupales, nunca determinismo individual sobre una persona.</li>
+        <li><strong>Salvaguarda <code>MR-08</code> (Atribución al Catálogo ESCO):</strong> Los conteos de competencias (<code>n_skills_essential</code>, <code>competence</code>, <code>knowledge</code>) miden <em>lo que exige el oficio según el estándar europeo ESCO</em>, no un examen aplicado al individuo.</li>
+        <li><strong>Salvaguarda <code>MR-09</code> (Control de Censura Derecha):</strong> Los empleos aún abiertos (<code>Present</code>, <code>5.08 %</code>) se identifican con la bandera <code>es_vigente</code> para no confundir un contrato en curso con uno de corta duración.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- =================================================================== -->
+<!-- DIAPOSITIVA 3: PREPROCESAMIENTO (2.0) Y TRANSFORMACIÓN (3.0)        -->
+<!-- =================================================================== -->
+<section class="slide" data-chap="2">
+  <div class="slide-head">
+    <div class="row">
+      <span class="kicker teal">BLOQUE 2 · METODOLOGÍAS APLICADAS · PREPARACIÓN DE DATOS</span>
+      <span class="pill teal">Cuadernos: 2.0_preprocesamiento_jobpath.ipynb + 3.0_transformacion.ipynb</span>
+      <span class="pill">Decisiones Verificadas D01 a D11</span>
+    </div>
+    <h2>Preprocesamiento y Transformación: Embudo, Educación MNAR, Versiones A/B y Split por Persona</h2>
+  </div>
+
+  <div class="grid2">
+    <!-- IZQUIERDA: SIMULADOR DE LAS 4 DECISIONES + TABLA COMPLETA -->
+    <div class="stack fill">
+      <div class="sim-box teal" style="flex:1;justify-content:space-between">
+        <div class="row" style="justify-content:space-between">
+          <strong>🎛️ Explorador de Decisiones de Limpieza y Transformación (Haz clic en cada etapa):</strong>
+          <span class="pill teal" id="prepBadge">Etapa 1 · Embudo D01–D03</span>
+        </div>
+        <div class="row">
+          <button class="tab-btn teal on" id="btnPrep0" onclick="selPrep(0)">1. Embudo y Pluriempleo (D01–D03)</button>
+          <button class="tab-btn teal" id="btnPrep1" onclick="selPrep(1)">2. Educación MNAR y ESCO (D04–D05)</button>
+          <button class="tab-btn teal" id="btnPrep2" onclick="selPrep(2)">3. Outliers Versión A vs. B (D06)</button>
+          <button class="tab-btn teal" id="btnPrep3" onclick="selPrep(3)">4. Split Persona y Escalado (D07–D11)</button>
+        </div>
+        <div class="card fill" id="prepDetail" style="justify-content:center"></div>
+      </div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Métrica Auditada del Pipeline (2.0 y 3.0)</th>
+              <th>Universo Bruto (2.0)</th>
+              <th>Clasificado ESCO (3.0)</th>
+              <th>Train 80 % (Por Persona)</th>
+              <th>Test 20 % (Por Persona)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Experiencias laborales (filas)</strong></td>
+              <td><code>1,871,014</code> (100 %)</td>
+              <td><code>1,738,738</code> (<code>92.93 %</code>)</td>
+              <td><strong><code>1,391,018</code></strong></td>
+              <td><strong><code>347,720</code></strong></td>
+            </tr>
+            <tr>
+              <td><strong>Personas únicas (<code>resume_id</code>)</strong></td>
+              <td><code>355,308</code> (100 %)</td>
+              <td><code>352,093</code> (<code>99.10 %</code>)</td>
+              <td><strong><code>281,674</code></strong></td>
+              <td><strong><code>70,419</code></strong> (<code>0</code> compartidas)</td>
+            </tr>
+            <tr>
+              <td><strong>Educación no reportada (<code>MNAR = 1</code>)</strong></td>
+              <td><code>205,238</code> (<code>10.97 %</code>)</td>
+              <td><code>200,934</code> (<code>11.56 %</code>)</td>
+              <td><code>160,664</code> (<code>11.55 %</code>)</td>
+              <td><code>40,270</code> (<code>11.58 %</code>)</td>
+            </tr>
+            <tr class="highlight">
+              <td><strong>Casos Positivos (<code>reincide = 1</code>)</strong></td>
+              <td>—</td>
+              <td><code>521,696</code> (<code>30.00 %</code>)</td>
+              <td><strong><code>417,471</code> (<code>30.01 %</code>)</strong></td>
+              <td><strong><code>104,225</code> (<code>29.97 %</code>)</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- DERECHA: VISOR DE GRÁFICA + REGLA ANTI-TRAMPA -->
+    <div class="stack fill">
+      <div class="fig-panel">
+        <div class="row" style="justify-content:space-between">
+          <strong>📊 Evidencia Visual de <code>2.0</code> y <code>3.0</code> (Clic en imagen para zoom):</strong>
+          <div class="row">
+            <button class="tab-btn teal on" id="figPrepBtn0" onclick="setPrepFig(0)">Diagnóstico de Nulos</button>
+            <button class="tab-btn teal" id="figPrepBtn1" onclick="setPrepFig(1)">Outliers Versión A vs. B</button>
+          </div>
+        </div>
+        <div class="fig-stage">
+          <img id="prepImg" src="./reports/eda_jobpath/figures/g08_nulos_por_columna.png" alt="Diagnóstico de preprocesamiento" onclick="openLb(this)">
+        </div>
+        <div class="fig-cap" id="prepCap">
+          <strong>Figura 2.0a:</strong> Diagnóstico de nulos por columna. Las <code>132,276</code> filas sin código ESCO (<code>7.07 %</code>) se documentan como exclusión estructural (<code>D05/D07</code>) sin fabricar habilidades artificiales.
+        </div>
+      </div>
+
+      <div class="analogy-box">
+        <strong class="tag">💡 Regla Anti-Trampa (D08):</strong>
+        Si el empleo 1 de Juan entrara a Entrenamiento y su empleo 2 a Prueba, el modelo memorizaría a Juan. Con <code>GroupShuffleSplit</code> por <code>resume_id</code> garantizamos <strong><code>0</code> personas compartidas</strong> entre Train y Test.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =================================================================== -->
+<!-- DIAPOSITIVA 4: REDUCCIÓN DE DIMENSIONALIDAD PCA (4.0 y 4.1)         -->
+<!-- =================================================================== -->
+<section class="slide" data-chap="2">
+  <div class="slide-head">
+    <div class="row">
+      <span class="kicker teal">BLOQUE 2 · METODOLOGÍAS APLICADAS · ESTRUCTURA DEL ESPACIO DE HABILIDADES</span>
+      <span class="pill teal">Cuadernos: 4.0_PCA.ipynb + 4.1_PCA_completo.ipynb</span>
+      <span class="pill">Decisión D12 · Identidad Aditiva Exacta E = C + K + U</span>
+    </div>
+    <h2>Reducción de Dimensionalidad (PCA): Colinealidad Exacta y Comparación Versión A vs. B</h2>
+  </div>
+
+  <div class="analogy-box">
+    <strong class="tag">💡 Analogía «No cobrar dos veces el combo y los ingredientes por separado»:</strong>
+    En el catálogo ESCO descubrimos que <strong>Total Habilidades Esenciales (<code>E</code>) = Competencias Prácticas (<code>C</code>) + Conocimientos Teóricos (<code>K</code>) + Sin clasificar (<code>U</code>)</strong> (con <code>U = 0</code> en el <code>99.10 %</code> de las filas). Por eso de las 10 variables numéricas solo <strong>9 aportan información independiente (rango efectivo 9)</strong> y el 10.º componente tiene varianza <code>0.0000 %</code>.
+  </div>
+
+  <div class="grid2">
+    <div class="card fill" style="justify-content:space-between">
+      <h3>Varianza Explicada Acumulada en PCA (Train <code>1,391,018</code> filas · Precisión <code>float64</code>)</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Componentes ($k$)</th>
+              <th>Versión A · Con Outliers (Indiv. / Acum.)</th>
+              <th>Versión B · Sin Outliers IQR (Indiv. / Acum.)</th>
+              <th>Interpretación y Decisión Metodológica</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong><code>k = 1</code> (PC1)</strong></td>
+              <td><code>32.91 %</code> / <strong><code>32.91 %</code></strong></td>
+              <td><code>39.68 %</code> / <strong><code>39.68 %</code></strong></td>
+              <td>Versión B concentra <strong><code>+6.77 pp</code></strong> más de señal en el primer eje (volumen general de competencias ESCO).</td>
+            </tr>
+            <tr>
+              <td><strong><code>k = 2</code> (PC2)</strong></td>
+              <td><code>22.71 %</code> / <strong><code>55.62 %</code></strong></td>
+              <td><code>26.21 %</code> / <strong><code>65.89 %</code></strong></td>
+              <td>Segundo eje: contraste entre experiencia temporal (<code>dur_q</code>, <code>job_order</code>) y perfil cognitivo.</td>
+            </tr>
+            <tr class="highlight">
+              <td><strong><code>k = 3</code> (80 % en B)</strong></td>
+              <td><code>19.50 %</code> / <strong><code>75.12 %</code></strong></td>
+              <td><code>14.70 %</code> / <strong><code>80.59 %</code> (≥ 80 %)</strong></td>
+              <td><strong>Versión B alcanza el 80 % con solo 3 componentes</strong> (<code>k* = 2.95</code> por interpolación inversa $P_2$).</td>
+            </tr>
+            <tr>
+              <td><strong><code>k = 4</code> (80 % en A)</strong></td>
+              <td><code>10.27 %</code> / <strong><code>85.39 %</code> (≥ 80 %)</strong></td>
+              <td><code>8.50 %</code> / <strong><code>89.09 %</code></strong></td>
+              <td>Versión A requiere <strong>4 componentes</strong> para superar el 80 % (<code>k* = 3.43</code>).</td>
+            </tr>
+            <tr class="highlight-indigo">
+              <td><strong><code>k = 5</code> (95 % en B)</strong></td>
+              <td><code>6.22 %</code> / <strong><code>91.61 %</code> (≥ 90 %)</strong></td>
+              <td><code>6.27 %</code> / <strong><code>95.36 %</code> (≥ 95 %)</strong></td>
+              <td><strong>Versión B supera tanto el 90 % como el 95 % con 5 componentes</strong> (<code>k* = 4.10</code> para 90 %).</td>
+            </tr>
+            <tr>
+              <td><strong><code>k = 6..9 → 10</code></strong></td>
+              <td><code>96.16 %</code> ($k=6$) → <strong><code>100.00 %</code> ($k=9,10$)</strong></td>
+              <td><code>99.28 %</code> ($k=6$) → <strong><code>100.00 %</code> ($k=9,10$)</strong></td>
+              <td>En $k=9$ se llega al <code>100.0000 %</code>; el componente 10 vale <code>0.0000 %</code> por la suma exacta $E = C + K + U$.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card teal">
+        <strong>Impacto Directo en los Modelos Siguientes (<code>6.0</code> a <code>8.1</code>):</strong>
+        <p class="small">
+          Este hallazgo justificó eliminar conteos redundantes en K-Means y Clustering Jerárquico (usando <code>competence</code>, <code>knowledge</code> y la proporción <code>prop_competence_essential</code> sin duplicar <code>essential</code>) y mantener las <code>2,967</code> dummies de oficio fuera del PCA para conservar la trazabilidad por profesión.
+        </p>
+      </div>
+    </div>
+
+    <div class="fig-panel">
+      <div class="row" style="justify-content:space-between">
+        <strong>📈 Diagnóstico Visual de Estabilidad PCA (<code>4.0</code> y <code>4.1</code>):</strong>
+        <span class="pill teal">Estabilidad 10k vs 50k vs 1.39M</span>
+      </div>
+      <div class="fig-stage">
+        <img src="./reports/eda_jobpath/figures/g23_pca_estabilidad.png" alt="Estabilidad PCA Versión A vs Versión B" onclick="openLb(this)">
+      </div>
+      <div class="fig-cap">
+        <strong>Figura 4.1 (clic para ampliar):</strong> Curvas de varianza explicada comparando muestras de <code>10,000</code> y <code>50,000</code> registros en Versión A y Versión B. Confirma que la estructura espectral no depende del tamaño muestral y que la Versión B ahorra 1 dimensión en los umbrales de 80 % y 95 %.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =================================================================== -->
+<!-- DIAPOSITIVA 5: ANÁLISIS EXPLORATORIO DE DATOS EDA (5.0)             -->
+<!-- =================================================================== -->
+<section class="slide" data-chap="2">
+  <div class="slide-head">
+    <div class="row">
+      <span class="kicker teal">BLOQUE 2 · METODOLOGÍAS APLICADAS · ENTENDIMIENTO FORMAL DE LOS DATOS</span>
+      <span class="pill teal">Cuaderno: 5.0_EDA_jobpath.ipynb</span>
+      <span class="pill">Decisión D13 · Auditoría Anti-Fuga y Dinámica Sectorial ISCO-08</span>
+    </div>
+    <h2>Análisis Exploratorio (EDA): Bloqueo de Fuga del Target y Radiografía de los 10 Grupos ISCO</h2>
+  </div>
+
+  <div class="grid2">
+    <!-- IZQUIERDA: TABLA DE LOS 10 GRUPOS ISCO OCUPANDO TODA LA COLUMNA -->
+    <div class="card fill" style="justify-content:space-between">
+      <h3>Tasas Reales de Reincidencia en los 10 Grandes Grupos ISCO-08 (<code>1,738,738</code> empleos)</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Gran Grupo ISCO-08 (1 Dígito)</th>
+              <th>Filas Train</th>
+              <th>Personas Train</th>
+              <th>Tasa Train (IC95%)</th>
+              <th>Tasa Test</th>
+              <th>Vs. Media (30%)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="highlight">
+              <td><strong><code>5</code> · Servicios y vendedores</strong></td>
+              <td><code>302,706</code></td>
+              <td><code>142,409</code></td>
+              <td><strong><code>33.84 %</code></strong> <code>[33.67, 34.01]</code></td>
+              <td><strong><code>33.87 %</code></strong></td>
+              <td><code>+3.83 pp</code> (Máx)</td>
+            </tr>
+            <tr class="highlight">
+              <td><strong><code>3</code> · Técnicos y nivel medio</strong></td>
+              <td><code>272,574</code></td>
+              <td><code>141,941</code></td>
+              <td><strong><code>33.72 %</code></strong> <code>[33.54, 33.90]</code></td>
+              <td><strong><code>33.37 %</code></strong></td>
+              <td><code>+3.71 pp</code> (Alto)</td>
+            </tr>
+            <tr class="highlight">
+              <td><strong><code>9</code> · Ocupaciones elementales</strong></td>
+              <td><code>189,819</code></td>
+              <td><code>101,030</code></td>
+              <td><strong><code>33.03 %</code></strong> <code>[32.81, 33.24]</code></td>
+              <td><strong><code>33.05 %</code></strong></td>
+              <td><code>+3.01 pp</code> (Alto)</td>
+            </tr>
+            <tr>
+              <td><strong><code>2</code> · Profesionales científicos e int.</strong></td>
+              <td><code>243,705</code></td>
+              <td><code>110,488</code></td>
+              <td><code>29.98 %</code> <code>[29.80, 30.16]</code></td>
+              <td><code>30.13 %</code></td>
+              <td><code>-0.04 pp</code> (Media)</td>
+            </tr>
+            <tr>
+              <td><strong><code>8</code> · Operadores de máquinas</strong></td>
+              <td><code>80,665</code></td>
+              <td><code>50,927</code></td>
+              <td><code>24.66 %</code> <code>[24.37, 24.96]</code></td>
+              <td><code>24.71 %</code></td>
+              <td><code>-5.35 pp</code></td>
+            </tr>
+            <tr>
+              <td><strong><code>7</code> · Oficiales, operarios y artesanos</strong></td>
+              <td><code>100,371</code></td>
+              <td><code>58,550</code></td>
+              <td><code>23.11 %</code> <code>[22.85, 23.37]</code></td>
+              <td><code>23.08 %</code></td>
+              <td><code>-6.91 pp</code></td>
+            </tr>
+            <tr>
+              <td><strong><code>4</code> · Apoyo administrativo</strong></td>
+              <td><code>111,705</code></td>
+              <td><code>70,795</code></td>
+              <td><code>22.46 %</code> <code>[22.21, 22.70]</code></td>
+              <td><code>22.55 %</code></td>
+              <td><code>-7.55 pp</code></td>
+            </tr>
+            <tr>
+              <td><strong><code>1</code> · Directores y gerentes</strong></td>
+              <td><code>81,000</code></td>
+              <td><code>50,460</code></td>
+              <td><code>22.07 %</code> <code>[21.78, 22.35]</code></td>
+              <td><code>21.37 %</code></td>
+              <td><code>-7.95 pp</code></td>
+            </tr>
+            <tr>
+              <td><strong><code>6</code> · Agricultores / agropecuarios</strong></td>
+              <td><code>5,080</code></td>
+              <td><code>4,288</code></td>
+              <td><code>21.12 %</code> <code>[20.02, 22.27]</code></td>
+              <td><code>21.92 %</code></td>
+              <td><code>-8.89 pp</code></td>
+            </tr>
+            <tr class="warn-row">
+              <td><strong><code>0</code> · Ocupaciones militares</strong></td>
+              <td><code>3,393</code></td>
+              <td><code>3,159</code></td>
+              <td><strong><code>7.43 %</code></strong> <code>[6.59, 8.36]</code></td>
+              <td><strong><code>7.61 %</code></strong></td>
+              <td><code>-22.58 pp</code> (Mín)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small muted">
+        <strong>Consistencia muestral:</strong> Las tasas en Train (80 %) y Test (20 %) coinciden dentro del intervalo de confianza de Wilson al 95 % en los 10 grupos.
+      </p>
+    </div>
+
+    <!-- DERECHA: TARJETA ANTI-FUGA D13 + GALERÍA INTERACTIVA (CERO ESPACIO VACÍO) -->
+    <div class="stack fill">
+      <div class="card rose">
+        <div class="row" style="justify-content:space-between">
+          <span class="pill rose">Hallazgo Bloqueante D13 · Auditoría Anti-Fuga</span>
+          <span class="small"><strong>Verificado en las <code>1,391,018</code> filas de Train</strong></span>
+        </div>
+        <p class="small">
+          El EDA demostró que las variables derivadas del conteo de repeticiones (<code>veces_ese_oficio_rob</code>, <code>veces_ese_oficio_bin</code>, <code>n_returns</code>, <code>n_self_loops</code>, <code>exploration_ratio</code>) reproducen el <strong><code>100 %</code></strong> de la etiqueta <code>reincide</code> porque <code>reincide = (veces_ese_oficio &gt; 1)</code>. <strong>Decisión D13/D14:</strong> Prohibirlas tajantemente en la matriz predictora $X$ de todos los modelos supervisados (<code>6.0</code> a <code>7.2</code>) y no supervisados (<code>8.0</code> y <code>8.1</code>).
+        </p>
+      </div>
+
+      <div class="fig-panel">
+        <div class="row" style="justify-content:space-between">
+          <strong>📊 Galería Interactiva del EDA <code>5.0</code> (Clic en pestañas o zoom):</strong>
+          <div class="row">
+            <button class="tab-btn teal on" id="figEdaBtn0" onclick="setEdaFig(0)">Target por ISCO</button>
+            <button class="tab-btn teal" id="figEdaBtn1" onclick="setEdaFig(1)">Fuga Target (D13)</button>
+            <button class="tab-btn teal" id="figEdaBtn2" onclick="setEdaFig(2)">Transiciones ISCO</button>
+            <button class="tab-btn teal" id="figEdaBtn3" onclick="setEdaFig(3)">Pearson vs Spearman</button>
+          </div>
+        </div>
+        <div class="fig-stage">
+          <img id="edaImg" src="./reports/eda_jobpath/figures/g27_target_por_isco.png" alt="Gráfica EDA 5.0" onclick="openLb(this)">
+        </div>
+        <div class="fig-cap" id="edaCap">
+          <strong>Figura 5.0a:</strong> Tasa de reincidencia ocupacional por Gran Grupo ISCO-08. Demuestra que el sector laboral separa tasas desde <code>7.43 %</code> hasta <code>33.84 %</code> con total consistencia entre Train y Test.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =================================================================== -->
+<!-- DIAPOSITIVA 6: TORNEO SUPERVISADO (6.0, 7.0, 7.1, 7.2)              -->
+<!-- =================================================================== -->
+<section class="slide" data-chap="2">
+  <div class="slide-head">
+    <div class="row">
+      <span class="kicker teal">BLOQUE 2 · METODOLOGÍAS APLICADAS · CAMINO SUPERVISADO</span>
+      <span class="pill teal">Cuadernos: 6.0_modelado · 7.0_arbol_decision · 7.1_naive_bayes · 7.2_knn</span>
+      <span class="pill">Evaluación en Test: 347,720 empleos (70,419 personas)</span>
+    </div>
+    <h2>Torneo Supervisado: Comparación Completa entre Baselines (6.0), Árboles (7.0), KNN (7.2) y Naive Bayes (7.1)</h2>
+  </div>
+
+  <div class="grid2 wide-left">
+    <!-- IZQUIERDA: TABLA MAESTRA DE LOS 11 MODELOS (SIN CORTARSE ABAJO) -->
+    <div class="card fill" style="justify-content:space-between">
+      <h3>Tabla Comparativa Unificada en Test (<code>347,720</code> experiencias · <code>70,419</code> personas · <code>0</code> fuga)</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Familia</th>
+              <th>Modelo y Punto Operativo</th>
+              <th>Cols X</th>
+              <th>PR-AUC</th>
+              <th>ROC-AUC</th>
+              <th>F1 (Clase 1)</th>
+              <th>Recall / Prec.</th>
+              <th>Brier</th>
+              <th>Fit / Test</th>
+              <th>Decisión</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>6.0 Base</strong></td>
+              <td>Ref 1 (Todo 0) / Ref 2 (Todo 1)</td>
+              <td>0</td>
+              <td><code>0.2997</code></td>
+              <td><code>0.5000</code></td>
+              <td><code>0.000 / 0.461</code></td>
+              <td><code>100% / 30.0%</code></td>
+              <td><code>0.2099</code></td>
+              <td><code>0.001 s</code></td>
+              <td>Piso trivial</td>
+            </tr>
+            <tr>
+              <td><strong>6.0 Boosting</strong></td>
+              <td>HistGradientBoosting (14 densas)</td>
+              <td>14</td>
+              <td><code>0.4951</code></td>
+              <td><code>0.6936</code></td>
+              <td><code>0.5151</code></td>
+              <td><code>61.1% / 44.5%</code></td>
+              <td><code>0.2211</code></td>
+              <td><code>8.59 / 0.41 s</code></td>
+              <td>Techo denso</td>
+            </tr>
+            <tr>
+              <td><strong>6.0 Techo</strong></td>
+              <td>Logística Regularizada OHE</td>
+              <td>2,981</td>
+              <td><code>0.5109</code></td>
+              <td><code>0.7133</code></td>
+              <td><code>0.5321</code></td>
+              <td><code>61.5% / 46.9%</code></td>
+              <td><code>0.2108</code></td>
+              <td><code>4.01 / 0.01 s</code></td>
+              <td>Techo 100 %</td>
+            </tr>
+            <tr>
+              <td><strong>7.0 Árboles</strong></td>
+              <td>Árbol 1 · ISCO 1d (<code>balanced</code>, prof. 4)</td>
+              <td>10</td>
+              <td>—</td>
+              <td><code>0.5459</code></td>
+              <td><code>0.4620</code></td>
+              <td><code>79.6% / 32.5%</code></td>
+              <td>—</td>
+              <td><code>0.02 s</code></td>
+              <td><span class="pill rose">21.5 % techo</span></td>
+            </tr>
+            <tr>
+              <td><strong>7.0 Árboles</strong></td>
+              <td>Árbol 2 · Educación (<code>balanced</code>, prof. 4)</td>
+              <td>2</td>
+              <td>—</td>
+              <td><code>0.5208</code></td>
+              <td><code>0.4564</code></td>
+              <td><code>87.4% / 30.9%</code></td>
+              <td>—</td>
+              <td><code>0.01 s</code></td>
+              <td><span class="pill rose">9.8 % techo</span></td>
+            </tr>
+            <tr>
+              <td><strong>7.0 Árboles</strong></td>
+              <td>Árbol 3 · Skills ESCO (<code>balanced</code>, prof. 4)</td>
+              <td>7</td>
+              <td>—</td>
+              <td><code>0.6157</code></td>
+              <td><code>0.4550</code></td>
+              <td><code>54.2% / 39.2%</code></td>
+              <td>—</td>
+              <td><code>0.03 s</code></td>
+              <td><span class="pill amber">54.2 % techo</span></td>
+            </tr>
+            <tr>
+              <td><strong>7.2 KNN</strong></td>
+              <td>KNN-D (11 densas, <code>kd_tree</code>, $\tau^*=0.27$)</td>
+              <td>11</td>
+              <td><code>0.4652</code></td>
+              <td><code>0.6677</code></td>
+              <td><code>0.5010</code></td>
+              <td><code>71.2% / 38.6%</code></td>
+              <td><code>0.1936</code></td>
+              <td><code>5.2 / 71.6 s</code></td>
+              <td><span class="pill rose">Menor a NB</span></td>
+            </tr>
+            <tr>
+              <td><strong>7.2 KNN</strong></td>
+              <td>KNN-G (Denso + 10 ISCO, $\tau^*=0.27$)</td>
+              <td>21</td>
+              <td><code>0.4928</code></td>
+              <td><code>0.6919</code></td>
+              <td><code>0.5186</code></td>
+              <td><code>71.2% / 40.8%</code></td>
+              <td><code>0.1887</code></td>
+              <td><code>8.8 / 1,104.7 s</code></td>
+              <td><span class="pill rose">18.4 min Test</span></td>
+            </tr>
+            <tr class="warn-row">
+              <td><strong>7.2 KNN</strong></td>
+              <td>KNN-W (Denso + 2,967 oficios, <code>brute</code>)</td>
+              <td>2,978</td>
+              <td><code>0.5247</code></td>
+              <td><code>0.7245</code></td>
+              <td><code>0.5471</code></td>
+              <td><code>70.8% / 44.6%</code></td>
+              <td><code>0.1817</code></td>
+              <td><code>0.08 / 29,146.8 s</code></td>
+              <td><span class="pill rose">❌ 8.1 Horas</span></td>
+            </tr>
+            <tr>
+              <td><strong>7.1 Bayes</strong></td>
+              <td>NB-G (14 densas) / NB-B (2,971 bin)</td>
+              <td>2,971</td>
+              <td><code>0.4829</code></td>
+              <td><code>0.7024</code></td>
+              <td><code>0.5323</code></td>
+              <td><code>72.9% / 41.9%</code></td>
+              <td><code>0.1877</code></td>
+              <td><code>0.09 / 0.05 s</code></td>
+              <td>94.9 % techo</td>
+            </tr>
+            <tr class="highlight">
+              <td><strong>7.1 Bayes</strong></td>
+              <td><strong>NB-H · Híbrido (10 densas + 2,971 bin)</strong></td>
+              <td><strong>2,981</strong></td>
+              <td><strong><code>0.4962</code></strong></td>
+              <td><strong><code>0.7058</code></strong></td>
+              <td><strong><code>0.5337</code></strong></td>
+              <td><strong><code>72.8% / 42.1%</code></strong></td>
+              <td><strong><code>0.1871</code></strong></td>
+              <td><strong><code>0.56 / 0.241 s</code></strong></td>
+              <td><span class="pill emerald">🏆 GANADOR</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- DERECHA: SIMULADOR ARRIBA + GRÁFICAS ABAJO (LLENA EL 100% DEL ESPACIO DERECHO) -->
+    <div class="stack fill">
+      <div class="sim-box">
+        <div class="row" style="justify-content:space-between">
+          <strong>🔍 Haz clic en cada familia para examinar su diagnóstico:</strong>
+          <span class="pill" id="supBadge">7.1 Naive Bayes Híbrido</span>
+        </div>
+        <div class="row">
+          <button class="tab-btn" id="btnSup0" onclick="selSup(0)">7.0 Árboles (Prof. ≤ 4)</button>
+          <button class="tab-btn" id="btnSup1" onclick="selSup(1)">7.2 KNN (8.1 Horas)</button>
+          <button class="tab-btn on" id="btnSup2" onclick="selSup(2)">7.1 Naive Bayes (Ganador)</button>
+        </div>
+        <div class="card" id="supDetail" style="padding:10px 12px"></div>
+      </div>
+
+      <div class="fig-panel">
+        <div class="row" style="justify-content:space-between">
+          <strong>📈 Gráficas del Torneo Supervisado:</strong>
+          <div class="row">
+            <button class="tab-btn on" id="figSupBtn0" onclick="setSupFig(0)">Modelos A vs. B (7.1)</button>
+            <button class="tab-btn" id="figSupBtn1" onclick="setSupFig(1)">Costo vs. AUC (7.2)</button>
+            <button class="tab-btn" id="figSupBtn2" onclick="setSupFig(2)">3 Árboles vs. Techo (7.0)</button>
+          </div>
+        </div>
+        <div class="fig-stage" style="min-height:175px">
+          <img id="supImg" src="./reports/naive_bayes_jobpath/figures/nb15_comparacion_modelos_y_versiones_ab.png" alt="Comparación modelos supervisados" style="max-height:215px" onclick="openLb(this)">
+        </div>
+        <div class="fig-cap" id="supCap">
+          <strong>Figura 7.1a:</strong> Comparación unificada en Test (<code>347,720</code> filas). <code>NB-H</code> alcanza el <code>96.48 %</code> del techo de Regresión Logística OHE y supera su F1 (<code>0.5337</code> vs <code>0.5321</code>).
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =================================================================== -->
+<!-- DIAPOSITIVA 7: CAMINO NO SUPERVISADO (8.0 K-MEANS vs 8.1 JERÁRQUICO)-->
+<!-- =================================================================== -->
+<section class="slide" data-chap="2">
+  <div class="slide-head">
+    <div class="row">
+      <span class="kicker teal">BLOQUE 2 · METODOLOGÍAS APLICADAS · CAMINO NO SUPERVISADO</span>
+      <span class="pill teal">Cuadernos: 8.0_kmeans_clustering.ipynb + 8.1_clustering_jerarquico.ipynb</span>
+      <span class="pill">Higiene Zero Target Leakage · Convergencia en k* = 4</span>
+    </div>
+    <h2>Torneo No Supervisado: Por qué Fallan Single/Average/Complete y Cómo Ward y K-Means Coinciden en $k^*=4$</h2>
+  </div>
+
+  <div class="grid2">
+    <!-- IZQUIERDA: LAS 2 TABLAS CON ENCABEZADOS COMPACTOS QUE NO EMPUJAN LA DERECHA -->
+    <div class="stack fill">
+      <div class="card">
+        <h3>1. Torneo de Métodos de Enlace en Clustering Jerárquico (<code>8.1</code> · Muestra $n = 3,000$ de Train, $k = 4$)</h3>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Enlace</th>
+                <th>Cofenética</th>
+                <th>Silueta</th>
+                <th>Davies-B.</th>
+                <th>Calinski-H.</th>
+                <th>Mín ($n$)</th>
+                <th>Máx ($n$ y %)</th>
+                <th>Diagnóstico y Decisión</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="highlight">
+                <td><strong><code>ward</code></strong></td>
+                <td><strong><code>0.4463</code></strong></td>
+                <td><strong><code>0.1827</code></strong></td>
+                <td><strong><code>1.9489</code></strong></td>
+                <td><strong><code>370.72</code></strong></td>
+                <td><strong><code>160</code> (<code>5.3%</code>)</strong></td>
+                <td><strong><code>1,650</code> (<code>55.00 %</code>)</strong></td>
+                <td>✅ <strong>Minimiza $\Delta\text{ESS}$; 4 grupos balanceados</strong></td>
+              </tr>
+              <tr class="warn-row">
+                <td><code>complete</code></td>
+                <td><code>0.5623</code></td>
+                <td><code>0.2249</code></td>
+                <td><code>1.3672</code></td>
+                <td><code>210.72</code></td>
+                <td><code>38</code> (<code>1.3%</code>)</td>
+                <td><code>2,701</code> (<strong><code>90.03 %</code></strong>)</td>
+                <td>❌ Descartado: 1 mega-clúster absorbe el 90 %</td>
+              </tr>
+              <tr class="warn-row">
+                <td><code>average</code></td>
+                <td><code>0.7348</code></td>
+                <td><code>0.4431</code></td>
+                <td><code>0.8927</code></td>
+                <td><code>121.36</code></td>
+                <td><code>2</code> (<code>0.1%</code>)</td>
+                <td><code>2,925</code> (<strong><code>97.50 %</code></strong>)</td>
+                <td>❌ Descartado: encadenamiento severo (97.5 %)</td>
+              </tr>
+              <tr class="warn-row">
+                <td><code>single</code></td>
+                <td><code>0.5010</code></td>
+                <td><code>0.5048</code></td>
+                <td><code>0.4334</code></td>
+                <td><code>10.53</code></td>
+                <td><code>1</code> (<code>0.03%</code>)</td>
+                <td><code>2,996</code> (<strong><code>99.87 %</code></strong>)</td>
+                <td>❌ Descartado: patología extrema de <em>chaining</em></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card fill" style="justify-content:space-between">
+        <h3>2. Búsqueda de $k = 2..8$ en Ward (<code>8.1</code>) y K-Means (<code>8.0</code> · <code>281,674</code> Personas y <code>1.39M</code> Empleos)</h3>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>$k$</th>
+                <th>Altura Ward</th>
+                <th>Salto Ward $\Delta h$</th>
+                <th>Inercia WCSS (8.0)</th>
+                <th>Caída %</th>
+                <th>Silueta Pers.</th>
+                <th>DBI Pers.</th>
+                <th>Calinski-H. Pers.</th>
+                <th>Silueta Exp.</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>2</code></td>
+                <td><code>76.4 → 71.1</code></td>
+                <td><code>5.297</code></td>
+                <td><code>2,185,781</code></td>
+                <td>—</td>
+                <td><code>0.1660</code></td>
+                <td><code>2.2810</code></td>
+                <td><code>45,011.7</code></td>
+                <td><code>0.1951</code></td>
+              </tr>
+              <tr>
+                <td><code>3</code></td>
+                <td><code>71.1 → 61.0</code></td>
+                <td><code>10.190</code></td>
+                <td><code>1,921,140</code></td>
+                <td><code>-12.11 %</code></td>
+                <td><code>0.1958</code></td>
+                <td><code>1.8498</code></td>
+                <td><code>45,006.2</code></td>
+                <td><code>0.2342</code></td>
+              </tr>
+              <tr class="highlight">
+                <td><strong><code>4</code> ($k^*$)</strong></td>
+                <td><strong><code>61.0 → 50.9</code></strong></td>
+                <td><strong><code>10.060</code> (Corte)</strong></td>
+                <td><strong><code>1,692,018</code></strong></td>
+                <td><strong><code>-11.93 %</code></strong></td>
+                <td><strong><code>0.1948</code></strong></td>
+                <td><strong><code>1.6298</code></strong></td>
+                <td><strong><code>46,780.8</code> (Máx)</strong></td>
+                <td><strong><code>0.2465</code> (Máx)</strong></td>
+              </tr>
+              <tr>
+                <td><code>5</code></td>
+                <td><code>50.9 → 49.5</code></td>
+                <td><strong><code>1.431</code> (-85.8%)</strong></td>
+                <td><code>1,547,831</code></td>
+                <td><code>-8.52 %</code></td>
+                <td><code>0.1751</code></td>
+                <td><code>1.6292</code></td>
+                <td><code>44,913.6</code></td>
+                <td><code>0.2373</code></td>
+              </tr>
+              <tr>
+                <td><code>6..8</code></td>
+                <td><code>49.5 → 36.9</code></td>
+                <td><code>0.837 .. 7.912</code></td>
+                <td><code>1.43M → 1.24M</code></td>
+                <td><code>-7.7→-5.9%</code></td>
+                <td><code>0.182→0.174</code></td>
+                <td><code>1.49→1.44</code></td>
+                <td><code>43.7k → 41.7k</code></td>
+                <td><code>0.217→0.218</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- DERECHA: ANALOGÍA ARRIBA + GRÁFICA GRANDE ABAJO (46% DEL ANCHO) -->
+    <div class="stack fill">
+      <div class="analogy-box">
+        <strong class="tag">💡 Analogía «Evitar el Efecto Fila India (Chaining)»:</strong>
+        Unir trabajadores por su vecino más cercano (<code>single</code>) crea puentes que meten al <strong><code>99.87 %</code> (<code>2,996/3,000</code>) de las personas en un solo grupo gigante</strong>. Solo <strong><code>Ward</code> (8.1)</strong> y <strong><code>K-Means++</code> (8.0)</strong> penalizan grupos dispersos y coinciden exactamente en <strong>$k^* = 4$ perfiles laborales naturales</strong>.
+      </div>
+
+      <div class="fig-panel">
+        <div class="row" style="justify-content:space-between">
+          <strong>📊 Gráficas de Selección de $k^* = 4$ (Clic para zoom):</strong>
+          <div class="row">
+            <button class="tab-btn teal on" id="figCluBtn0" onclick="setCluFig(0)">Codo y Silueta K-Means</button>
+            <button class="tab-btn teal" id="figCluBtn1" onclick="setCluFig(1)">Dendrograma Ward</button>
+            <button class="tab-btn teal" id="figCluBtn2" onclick="setCluFig(2)">Torneo Linkage 8.1</button>
+          </div>
+        </div>
+        <div class="fig-stage">
+          <img id="cluImg" src="./reports/kmeans_jobpath/figures/01_metodo_codo_y_silueta_kmeans_personas.png" alt="Evidencia clustering" onclick="openLb(this)">
+        </div>
+        <div class="fig-cap" id="cluCap">
+          <strong>Figura 8.0a:</strong> Curvas de K-Means en las <code>281,674</code> personas de Train. Confirma el máximo global de Calinski-Harabasz (<code>46,780.83</code>) en $k^* = 4$.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =================================================================== -->
+<!-- DIAPOSITIVA 8: CONCLUSIÓN 1 — NAIVE BAYES (7.1)                     -->
+<!-- =================================================================== -->
+<section class="slide" data-chap="3">
+  <div class="slide-head">
+    <div class="row">
+      <span class="kicker emerald">BLOQUE 3 · CONCLUSIONES Y MODELOS ELEGIDOS (1 DE 2: ENFOQUE SUPERVISADO)</span>
+      <span class="pill emerald">Modelo Elegido: 7.1_naive_bayes.ipynb (Hybrid Naive Bayes NB-H)</span>
+      <span class="pill">Salvaguardas MR-07 (No Causalidad) y MR-08 (Atribución ESCO)</span>
+    </div>
+    <h2>Conclusión Supervisada: Por qué Elegimos Naive Bayes Híbrido (<code>NB-H</code>) como Modelo Ganador</h2>
+  </div>
+
+  <div class="grid2">
+    <!-- IZQUIERDA: FÓRMULA LLR + TABLA DE VARIANTES (2 ELEMENTOS, CERO RECORTE) -->
+    <div class="stack fill">
+      <div class="card emerald">
+        <div class="row" style="justify-content:space-between">
+          <h3>«La Balanza de Pistas»: Descomposición Aditiva Exacta por Variable (<code>LLR</code>)</h3>
+          <span class="pill emerald">96.48 % del Techo Lineal en 0.241 s</span>
+        </div>
+        <div class="formula" data-plain="Log-Odds(Reincide = 1 | x) = Log-Odds Base (30.01% vs 69.99%) + Suma de Pistas LLR_j(x_j) de cada variable j">
+          $$\log \frac{P(\text{Reincide}=1 \mid \mathbf{x})}{P(\text{Reincide}=0 \mid \mathbf{x})} = \underbrace{\log \frac{P(1)}{P(0)}}_{\text{Base: } -0.8468} + \sum_{j=1}^{10} \underbrace{\text{LLR}_j^{\text{Gauss}}(x_j)}_{\text{10 Continuas/Ord.}} + \sum_{k=1}^{2971} \underbrace{\text{LLR}_k^{\text{Bernoulli}}(b_k)}_{\text{2,967 Oficios + 4 Bin.}}$$
+        </div>
+        <p class="small">
+          <strong>Explicación para personas sin contexto:</strong> El modelo parte de la probabilidad general (<code>30.01 %</code>) y por cada característica del empleo (oficio ESCO, duración, número de empleo y educación) suma o resta un puntaje auditable <strong><code>LLR</code> (Razón de Verosimilitud Logarítmica)</strong>. Con el umbral óptimo <code>tau* = 0.265</code> hallado en validación cruzada por persona, detecta al <strong><code>72.79 %</code> (Recall)</strong> de todos los trabajadores que realmente reinciden.
+        </p>
+      </div>
+
+      <div class="card fill" style="justify-content:space-between">
+        <h3>Resultados en Test (<code>347,720</code> empleos · Bootstrap Pareado IC 95 % por Persona)</h3>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Variante Naive Bayes</th>
+                <th>Versión</th>
+                <th>$\tau^*$</th>
+                <th>PR-AUC (IC95%)</th>
+                <th>ROC-AUC (IC95%)</th>
+                <th>F1 Clase 1 (IC95%)</th>
+                <th>Recall / Prec.</th>
+                <th>Brier / Fit</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong><code>NB-G</code> · Gaussiano</strong> (14 cols)</td>
+                <td>Test A</td>
+                <td><code>0.295</code></td>
+                <td><code>0.3778 [0.374, 0.382]</code></td>
+                <td><code>0.5921 [0.589, 0.595]</code></td>
+                <td><code>0.4687 [0.466, 0.471]</code></td>
+                <td><code>85.5% / 32.3%</code></td>
+                <td><code>0.2086 / 0.22s</code></td>
+              </tr>
+              <tr>
+                <td><strong><code>NB-B</code> · Bernoulli</strong> (2,971 bin)</td>
+                <td>Test A y B</td>
+                <td><code>0.270</code></td>
+                <td><code>0.4829 [0.478, 0.487]</code></td>
+                <td><code>0.7024 [0.700, 0.705]</code></td>
+                <td><code>0.5323 [0.529, 0.535]</code></td>
+                <td><code>72.9% / 41.9%</code></td>
+                <td><code>0.1877 / 0.10s</code></td>
+              </tr>
+              <tr class="highlight">
+                <td><strong><code>NB-H</code> · Híbrido (Elegido)</strong></td>
+                <td><strong>Test A (Con)</strong></td>
+                <td><strong><code>0.265</code></strong></td>
+                <td><strong><code>0.4962 [0.491, 0.500]</code></strong></td>
+                <td><strong><code>0.7058 [0.703, 0.708]</code></strong></td>
+                <td><strong><code>0.5337 [0.530, 0.537]</code></strong></td>
+                <td><strong><code>72.8% / 42.1%</code></strong></td>
+                <td><strong><code>0.1871 / 0.63s</code></strong></td>
+              </tr>
+              <tr class="highlight-indigo">
+                <td><strong><code>NB-H</code> · Híbrido (Sensib.)</strong></td>
+                <td><strong>Test B (Sin)</strong></td>
+                <td><strong><code>0.265</code></strong></td>
+                <td><strong><code>0.4979 [0.493, 0.502]</code></strong></td>
+                <td><strong><code>0.7065 [0.704, 0.709]</code></strong></td>
+                <td><strong><code>0.5341 [0.531, 0.537]</code></strong></td>
+                <td><strong><code>72.7% / 42.2%</code></strong></td>
+                <td><strong><code>0.1867 / 0.56s</code></strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- DERECHA: SIMULADOR ISCO ARRIBA + GRÁFICAS ABAJO (LLENA EL 100% DEL ESPACIO DERECHO) -->
+    <div class="stack fill">
+      <div class="sim-box emerald">
+        <div class="row" style="justify-content:space-between">
+          <strong>🎛️ Simulador de Calibración <code>NB-H</code> por Sector ISCO-08:</strong>
+          <span class="pill emerald" id="nbIscoTag">ISCO 5 · Servicios</span>
+        </div>
+        <div class="row">
+          <button class="tab-btn emerald on" id="btnNb0" onclick="selNbIsco(0)">ISCO 5 (Servicios)</button>
+          <button class="tab-btn emerald" id="btnNb1" onclick="selNbIsco(1)">ISCO 3 (Técnicos)</button>
+          <button class="tab-btn emerald" id="btnNb2" onclick="selNbIsco(2)">ISCO 9 (Elementales)</button>
+          <button class="tab-btn emerald" id="btnNb3" onclick="selNbIsco(3)">ISCO 2 (Científicos)</button>
+          <button class="tab-btn emerald" id="btnNb4" onclick="selNbIsco(4)">ISCO 4 (Admin.)</button>
+          <button class="tab-btn emerald" id="btnNb5" onclick="selNbIsco(5)">ISCO 1 (Directivos)</button>
+          <button class="tab-btn emerald" id="btnNb6" onclick="selNbIsco(6)">ISCO 0 (Militares)</button>
+        </div>
+        <div class="grid3" id="nbIscoKpis"></div>
+        <div class="small" id="nbIscoDesc" style="background:#fff;padding:7px 11px;border-radius:8px;border:1px solid #a7f3d0"></div>
+      </div>
+
+      <div class="fig-panel">
+        <div class="row" style="justify-content:space-between">
+          <strong>📈 Evidencia Visual de Naive Bayes (<code>7.1</code>):</strong>
+          <div class="row">
+            <button class="tab-btn emerald on" id="figNbBtn0" onclick="setNbFig(0)">Calibración ISCO</button>
+            <button class="tab-btn emerald" id="figNbBtn1" onclick="setNbFig(1)">Curvas PR y ROC</button>
+            <button class="tab-btn emerald" id="figNbBtn2" onclick="setNbFig(2)">Evidencia LLR (P1)</button>
+            <button class="tab-btn emerald" id="figNbBtn3" onclick="setNbFig(3)">Deciles y Lift (P3)</button>
+          </div>
+        </div>
+        <div class="fig-stage" style="min-height:170px">
+          <img id="nbImg" src="./reports/naive_bayes_jobpath/figures/nb07_o1_o2_reincidencia_y_desempeno_isco.png" alt="Gráfica Naive Bayes" style="max-height:205px" onclick="openLb(this)">
+        </div>
+        <div class="fig-cap" id="nbCap">
+          <strong>Figura 7.1c:</strong> Sincronía casi exacta entre la tasa observada en Test y la probabilidad media predicha por <code>NB-H</code> en los 10 grupos ISCO-08.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =================================================================== -->
+<!-- DIAPOSITIVA 9: CONCLUSIÓN 2 — K-MEANS (8.0)                         -->
+<!-- =================================================================== -->
+<section class="slide" data-chap="3">
+  <div class="slide-head">
+    <div class="row">
+      <span class="kicker emerald">BLOQUE 3 · CONCLUSIONES Y MODELOS ELEGIDOS (2 DE 2: ENFOQUE NO SUPERVISADO)</span>
+      <span class="pill emerald">Modelo Elegido: 8.0_kmeans_clustering.ipynb ($k^* = 4$ · Versión B Primaria)</span>
+      <span class="pill">Censo Completo: 352,093 Personas y 1,738,738 Experiencias</span>
+    </div>
+    <h2>Conclusión No Supervisada: Por qué Elegimos K-Means y el Retrato Robot de los 4 Arquetipos</h2>
+  </div>
+
+  <!-- 3 KPIs ARRIBA A TODO EL ANCHO -->
+  <div class="grid3">
+    <div class="kpi-card">
+      <div class="kpi-lbl">1. Escalabilidad al 100 % del Censo</div>
+      <div class="kpi-val">281,674 Train + 70,419 Test</div>
+      <div class="kpi-sub">Entrena sobre las <strong><code>352,093</code> personas y <code>1.74M</code> empleos</strong> (frente al límite cuadrático $O(N^2)$ de <code>n = 3,000</code> en Ward que exigiría <code>&gt;317 GB</code> RAM).</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-lbl">2. Equivalencia Escala Humana</div>
+      <div class="kpi-val teal">Error = 0.000000</div>
+      <div class="kpi-sub">Al invertir <code>StandardScaler</code>, los centroides coinciden con <code>groupby("cluster").mean()</code> con diferencia <strong><code>0.000000</code> (<code>&lt;10⁻¹²</code>)</strong>.</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-lbl">3. Estabilidad Train/Test y A/B</div>
+      <div class="kpi-val emerald">ARI = 0.8633</div>
+      <div class="kpi-sub">Las proporciones entre Train y Test varían <strong><code>&lt;0.21 pp</code></strong> y la concordancia entre Versión B y Versión A es <code>ARI = 0.8633</code> (<code>NMI = 0.8437</code>).</div>
+    </div>
+  </div>
+
+  <!-- CUERPO EN 2 COLUMNAS PERFECTAMENTE CONTENIDAS (CERO SCROLL HORIZONTAL) -->
+  <div class="grid2">
+    <div class="stack fill">
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Arquetipo ($k^*=4$)</th>
+              <th>% Train / Test ($n$ Pers.)</th>
+              <th>Empleos / Carrera / Dur.</th>
+              <th>Solap.</th>
+              <th>Skills: Comp / Know / Ess</th>
+              <th>Educ / MNAR</th>
+              <th>Reincide Test (Pers. / Exp.)</th>
+              <th>ISCO Dom.</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="highlight">
+              <td><strong>0 · Operativo Joven</strong></td>
+              <td><code>43.9% / 43.7%</code> (<code>154,577</code>)</td>
+              <td><code>4.82</code> emp · <code>38.7</code> / <code>8.8</code> tr</td>
+              <td><code>1.03</code></td>
+              <td><code>18.1 / 2.5 / 20.6</code></td>
+              <td><code>1.42 / 0.00</code></td>
+              <td><strong><code>47.78%</code> (1.05x)</strong> / <code>31.85%</code></td>
+              <td><code>5 · Servicios</code></td>
+            </tr>
+            <tr>
+              <td><strong>1 · Estable MNAR</strong></td>
+              <td><code>11.7% / 11.7%</code> (<code>41,062</code>)</td>
+              <td><code>4.72</code> emp · <code>58.4</code> / <code>14.1</code> tr</td>
+              <td><code>1.03</code></td>
+              <td><code>18.1 / 3.2 / 21.4</code></td>
+              <td><code>2.00 /</code> <strong><code>1.00</code></strong></td>
+              <td><code>45.00%</code> (0.99x) / <code>30.86%</code></td>
+              <td><code>5 · Servicios</code></td>
+            </tr>
+            <tr class="highlight-indigo">
+              <td><strong>2 · Profesional ESCO</strong></td>
+              <td><code>28.0% / 28.1%</code> (<code>98,553</code>)</td>
+              <td><code>4.92</code> emp · <code>42.5</code> / <code>10.4</code> tr</td>
+              <td><code>1.12</code></td>
+              <td><strong><code>19.3 / 6.0 / 25.4</code></strong></td>
+              <td><strong><code>2.33</code></strong> <code>/ 0.00</code></td>
+              <td><strong><code>42.75%</code> (0.94x)</strong> / <code>28.32%</code></td>
+              <td><code>2 · Científicos</code></td>
+            </tr>
+            <tr>
+              <td><strong>3 · Carrera Larga</strong></td>
+              <td><code>16.5% / 16.4%</code> (<code>57,901</code>)</td>
+              <td><strong><code>5.44</code> emp · <code>112.1</code> / <code>37.5</code> tr</strong></td>
+              <td><strong><code>1.61</code></strong></td>
+              <td><code>17.6 / 3.7 / 21.3</code></td>
+              <td><code>1.45 / 0.02</code></td>
+              <td><code>45.55%</code> (1.00x) / <strong><code>23.13%</code></strong></td>
+              <td><code>3 · Técnicos</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="sim-box emerald" style="flex:1;justify-content:space-between">
+        <div class="row" style="justify-content:space-between">
+          <strong>👥 Haz clic en cada perfil para leer su interpretación causal en Personas y Experiencias:</strong>
+          <span class="pill emerald" id="kmBadge">Clúster 0 · 43.9 %</span>
+        </div>
+        <div class="row">
+          <button class="tab-btn emerald on" id="btnKm0" onclick="selKm(0)">Clúster 0: Operativo Joven (43.9 %)</button>
+          <button class="tab-btn emerald" id="btnKm1" onclick="selKm(1)">Clúster 1: Estable MNAR (11.7 %)</button>
+          <button class="tab-btn emerald" id="btnKm2" onclick="selKm(2)">Clúster 2: Profesional ESCO (28.0 %)</button>
+          <button class="tab-btn emerald" id="btnKm3" onclick="selKm(3)">Clúster 3: Carrera Larga (16.5 %)</button>
+        </div>
+        <div class="card fill" id="kmDetail" style="justify-content:center"></div>
+      </div>
+    </div>
+
+    <div class="fig-panel">
+      <div class="row" style="justify-content:space-between">
+        <strong>📊 Mapas de K-Means (<code>8.0</code> · Clic para zoom):</strong>
+        <div class="row">
+          <button class="tab-btn emerald on" id="figKmBtn0" onclick="setKmFig(0)">Centroides y Reincide</button>
+          <button class="tab-btn emerald" id="figKmBtn1" onclick="setKmFig(1)">Mapa PCA 2D Personas</button>
+          <button class="tab-btn emerald" id="figKmBtn2" onclick="setKmFig(2)">Sensibilidad B vs. A</button>
+        </div>
+      </div>
+      <div class="fig-stage">
+        <img id="kmImg" src="./reports/kmeans_jobpath/figures/06_centroides_escala_original_y_tasa_reincide.png" alt="Perfiles K-Means" onclick="openLb(this)">
+      </div>
+      <div class="fig-cap" id="kmCap">
+        <strong>Figura 8.0a:</strong> Perfiles de los 4 clústeres de K-Means en unidades reales y su tasa externa <em>post-hoc</em> de repetición de oficio (<code>reincide</code>).
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =================================================================== -->
+<!-- DIAPOSITIVA 10: SÍNTESIS, GLOSARIO E INDEXACIÓN A MÉTODOS NUMÉRICOS -->
+<!-- =================================================================== -->
+<section class="slide" data-chap="3">
+  <div class="slide-head">
+    <div class="row">
+      <span class="kicker emerald">BLOQUE 3 · SÍNTESIS GENERAL, GLOSARIO CIUDADANO E INDEXACIÓN OFICIAL</span>
+      <span class="pill emerald">Proyecto Completo: Cuadernos 1.0 a 8.1</span>
+      <span class="pill amber">Indexación Funcional a Presentación de Métodos Numéricos</span>
+    </div>
+    <h2>Síntesis de Decisiones, Glosario para No Expertos y Portal de Métodos Numéricos</h2>
+  </div>
+
+  <div class="grid2 equal">
+    <!-- COLUMNA IZQUIERDA: SÍNTESIS + GLOSARIO QUE LLENA HASTA ABAJO -->
+    <div class="stack fill">
+      <div class="card emerald">
+        <h3>Sinergia Final: Cómo se Unen K-Means (<code>8.0</code>) y Naive Bayes (<code>7.1</code>)</h3>
+        <ul>
+          <li><strong>1. El Mapa Macro (<code>K-Means 8.0</code> sobre <code>352,093</code> personas):</strong> Descubre sin usar la etiqueta que el mercado se divide en 4 arquetipos reales. Explica <em>por qué</em> los <strong>Profesionales Científicos (Clúster 2, ISCO 2, <code>25.37</code> habilidades esenciales)</strong> tienen la menor tasa de repetición del mismo código de oficio (<code>42.75 %</code> en Personas / <code>28.32 %</code> en Experiencias; <code>34.34 %</code> en Ward): su movilidad es por <strong>ascenso vertical</strong> cambiando de código ESCO. En cambio, los <strong>Oficios Operativos y de Servicios (Clúster 0, ISCO 5)</strong> rotan horizontalmente entre empleadores repitiendo el mismo oficio (<code>47.78 %</code>), y los <strong>Empleos de Larga Permanencia (Clúster 3, <code>66.30</code> trimestres ≈ 16.5 años)</strong> tienen baja reincidencia por experiencia (<code>23.13 %</code>) al permanecer estables en un solo puesto.</li>
+          <li><strong>2. La Brújula Micro (<code>Naive Bayes Híbrido 7.1</code> sobre <code>1,738,738</code> empleos):</strong> Para cada experiencia individual, combina en <code>0.241 s</code> las <code>10</code> variables continuas y las <code>2,971</code> binarias para entregar una probabilidad calibrada de reincidencia (<code>ROC-AUC = 0.7058</code>, <code>F1 = 0.5337</code>, <code>Recall = 72.79 %</code>) desglosada factor por factor mediante puntajes <code>LLR</code>.</li>
+        </ul>
+      </div>
+
+      <div class="card fill">
+        <h3>📖 Glosario Rápido sin Tecnicismos (Traducción para Todo Público)</h3>
+        <div class="gloss-grid">
+          <div class="gloss-item"><strong><code>ESCO v1.2.1 / ISCO-08</code>:</strong> Catálogo oficial europeo de 3,039 oficios agrupados en 10 grandes familias ocupacionales.</div>
+          <div class="gloss-item"><strong><code>Reincide (Target)</code>:</strong> Vale <code>1</code> cuando el trabajador vuelve a un oficio que ya había ejercido antes (<code>30.01 %</code>).</div>
+          <div class="gloss-item teal"><strong><code>MNAR (Educación)</code>:</strong> Dato faltante informativo; se separa en la bandera <code>educacion_no_reportada</code> sin rellenar con cero.</div>
+          <div class="gloss-item teal"><strong><code>IQR y RobustScaler</code>:</strong> Métodos basados en la mediana y cuartiles que evitan que valores extremos deformen las distancias.</div>
+          <div class="gloss-item teal"><strong><code>E = C + K + U</code>:</strong> Habilidades Esenciales = Competencias prácticas + Conocimientos teóricos + Sin clasificar.</div>
+          <div class="gloss-item teal"><strong><code>Zero Target Leakage</code>:</strong> Prohibición estricta de incluir la respuesta (<code>reincide</code>) dentro de las variables de entrada $X$.</div>
+          <div class="gloss-item emerald"><strong><code>LLR (Log-Likelihood Ratio)</code>:</strong> Puntaje aditivo que muestra cuánto suma o resta cada pista en Naive Bayes.</div>
+          <div class="gloss-item amber"><strong><code>MR-04 a MR-09</code>:</strong> Reglas de rigor: nodos distintos (<code>04</code>), rechazo $R^2&lt;0.30$ (<code>06</code>), no causalidad (<code>07</code>), atribución ESCO (<code>08</code>) y empleos cerrados (<code>09</code>).</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLUMNA DERECHA: PORTAL DE INDEXACIÓN A MÉTODOS NUMÉRICOS -->
+    <div class="card amber fill" style="border:2px solid #f59e0b;justify-content:space-between">
+      <div class="row" style="justify-content:space-between">
+        <span class="pill amber">📌 PRESENTACIÓN INDEXADA · EVALUACIÓN POR APARTE</span>
+        <span class="pill dark">32 Diapositivas · 8 Casos Experimentales</span>
+      </div>
+      <div>
+        <h3>Módulo Indexado: Métodos Numéricos Aplicados a JobPath (Regresión MCO vs. Interpolación de Lagrange)</h3>
+        <p class="small">
+          En cumplimiento del punto 5, aquí queda indexada y conectada la presentación interactiva ubicada en <code>numerical_methods_presentation/index.html</code>, donde se evalúan por separado los métodos numéricos sobre el mismo universo de <strong>1.74M de empleos y 3,039 oficios ESCO</strong>:
+        </p>
+      </div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Caso en <code>index.html</code></th>
+              <th>Método Numérico</th>
+              <th>Hallazgo Principal Verificado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Caso 01 (<code>RL-01</code>)</strong></td>
+              <td>MCO + WLS</td>
+              <td>Progresión de habilidades del oficio por paso de carrera ($k=1..10$): <strong><code>R² = 0.9955</code></strong> (<code>+0.225</code> hab./paso) y control de Paradoja de Simpson.</td>
+            </tr>
+            <tr>
+              <td><strong>Caso 02 (<code>RL-02</code>)</strong></td>
+              <td>MCO + Regla <code>MR-06</code></td>
+              <td>Estructura del catálogo ESCO (<code>3,039</code> oficios): transferibilidad transversal del <strong><code>57.9 %</code></strong> y rechazo automático cuando <code>R² &lt; 0.30</code> (<code>greenShare R² = 0.00004</code>).</td>
+            </tr>
+            <tr>
+              <td><strong>Caso 03 (<code>RL-04</code>)</strong></td>
+              <td>MCO Centrado $t-2000$</td>
+              <td>Deriva anual 2000–2019 (<code>R² = 0.9729</code>), mejora numérica de <strong><code>4,672×</code></strong> al centrar el año y peligro de extrapolación lineal en 2021–2027 (<code>-4.96</code> trim.).</td>
+            </tr>
+            <tr>
+              <td><strong>Caso 04 (<code>RL-05</code>)</strong></td>
+              <td>Invarianza Afín MCO</td>
+              <td>Demostración en 4 vías (<code>1.74M</code> filas) de que <code>RobustScaler</code> reescala pendientes por $s_x/s_y$ dejando <strong>invariante <code>R²</code></strong> (diferencia <code>7e-14</code>).</td>
+            </tr>
+            <tr>
+              <td><strong>Caso 05 (<code>LG-01</code>)</strong></td>
+              <td>Lagrange + Chebyshev</td>
+              <td>Curva de supervivencia laboral ($q=1..40$): eliminación del Fenómeno de Runge reduciendo el error máximo <strong><code>19.4 veces</code></strong> (<code>2.53 → 0.1301</code>) con <code>0</code> violaciones.</td>
+            </tr>
+            <tr>
+              <td><strong>Caso 06 (<code>LG-02</code>)</strong></td>
+              <td>Lagrange Inverso $P_2$</td>
+              <td>Interpolación directa e inversa en PCA con guarda <code>MR-04</code>: para retener el 90 % de varianza, Versión B requiere <strong><code>k* = 4.10</code></strong> vs. <code>4.33</code> en Versión A.</td>
+            </tr>
+            <tr class="highlight">
+              <td><strong>Casos 07–08 (<code>HYB</code>)</strong></td>
+              <td>LOOCV + GeoGebra + SHA-256</td>
+              <td>Torneo <code>LOOCV</code> en 4 regímenes, 5 scripts para <strong>GeoGebra Classic</strong> y auditoría criptográfica <strong>SHA-256 (<code>19/19</code> pruebas con error <code>&lt; 10⁻¹⁰</code>)</strong>.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="row" style="gap:10px">
+        <a class="btn amber" href="./numerical_methods_presentation/index.html" style="padding:9px 15px;font-size:13px">
+          🚀 Abrir Presentación de Métodos Numéricos (index.html) ↗
+        </a>
+        <button class="btn ghost" onclick="openNumModal()" style="padding:9px 14px;font-size:12.6px">
+          👁️ Abrir Vista Interactiva Integrada (Modal en Vivo)
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- FOOTER FIJO DE NAVEGACIÓN -->
+<footer class="footer">
+  <div class="row">
+    <button class="ghost" onclick="step(-1)">← Anterior</button>
+    <button onclick="step(1)">Siguiente →</button>
+    <button class="ghost" onclick="toggleFs()" title="Tecla F">⛶ Pantalla Completa</button>
+  </div>
+  <div class="dots" id="dots"></div>
+  <div class="row">
+    <span class="small muted" id="slideCount">Diapositiva 1 / 10</span>
+  </div>
+</footer>
+
+<!-- LIGHTBOX PARA AMPLIAR GRÁFICAS -->
+<div class="lightbox" id="lightbox" onclick="closeLb()">
+  <img id="lbImg" src="" alt="Gráfica ampliada">
+  <div class="lightbox-cap" id="lbCap"></div>
+</div>
+
+<!-- MODAL 1: BITÁCORA COMPLETA DE DECISIONES D01 A D14 -->
+<div class="modal-overlay" id="bitacoraModal" onclick="if(event.target===this)closeBitacoraModal()">
+  <div class="modal-box" style="height:auto;max-height:88vh">
+    <div class="modal-head">
+      <div class="row">
+        <span class="pill teal">TRAZABILIDAD COMPLETA</span>
+        <strong>Bitácora Verificada de Decisiones del Proyecto (<code>D01</code> a <code>D14</code> · <code>reports/eda_jobpath/tables/bitacora_decisiones_v1_vs_v2.csv</code>)</strong>
+      </div>
+      <button class="btn rose" onclick="closeBitacoraModal()">✕ Cerrar</button>
+    </div>
+    <div class="modal-body" style="padding:14px 18px">
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Cuaderno / Fase</th>
+              <th>Componente</th>
+              <th>Valor y Resultado Verificado en el Proyecto</th>
+              <th>Justificación Técnica</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><code>D01</code></td><td><code>1.0 / 2.0</code></td><td>Fuente maestra (Versión A)</td><td><code>1,871,014</code> filas y <code>355,308</code> personas (unión train+test+val de JobHop v2 + ESCO v1.2.1).</td><td>Recupera +1.49M filas (+396.86 %) respecto a la partición simple v1.</td></tr>
+            <tr><td><code>D02</code></td><td><code>2.0</code></td><td>RowCountFunnel</td><td>Alerta si se pierde &gt; 5 % de filas en limpieza (<code>0.00 %</code> de pérdida no documentada en 2.0).</td><td>Previene pérdidas silenciosas de registros o personas.</td></tr>
+            <tr><td><code>D03</code></td><td><code>2.0</code></td><td>Duplicados y pluriempleo</td><td><code>0</code> duplicados exactos de 5 llaves; se conservan <code>92,099</code> filas de clave corta (<code>4.92 %</code>).</td><td>Representan pluriempleo o cambio de cargo dentro del mismo trimestre.</td></tr>
+            <tr><td><code>D04</code></td><td><code>2.0</code></td><td>Educación <code>MNAR</code></td><td><code>205,238</code> filas brutas (<code>10.97 %</code>; <code>200,934</code> clasificadas) como <code>No reportado</code>.</td><td>La omisión del nivel educativo es informativa (MNAR) y no equivale a educación cero.</td></tr>
+            <tr><td><code>D05</code></td><td><code>2.0</code></td><td>Nulos MAR y censura</td><td><code>132,276</code> sin código ESCO (<code>7.07 %</code>) y <code>95,136</code> vigentes (<code>5.08 %</code>, bandera <code>es_vigente</code>).</td><td>Imputar habilidades en cargos no clasificados fabricaría datos falsos.</td></tr>
+            <tr><td><code>D06</code></td><td><code>2.0</code></td><td>Winsorización IQR (Versión B)</td><td>Topes Tukey $k=1.5$: esenciales $\le 47.5$, competencias $\le 39.5$, conocimientos $\le 13.5$ (<code>193,596</code> filas = <code>10.35 %</code>).</td><td>Controla colas extremas (hasta 129 skills) sin recortar la duración real <code>dur_q</code>.</td></tr>
+            <tr><td><code>D07</code></td><td><code>3.0</code></td><td>Universo modelable</td><td>Filtro <code>n_skills_essential.notna()</code>: <strong><code>1,738,738</code> empleos y <code>352,093</code> personas</strong>.</td><td>Garantiza valores finitos reales del catálogo ESCO en todos los modelos.</td></tr>
+            <tr><td><code>D08</code></td><td><code>3.0</code></td><td>Partición por persona</td><td><code>GroupShuffleSplit</code> 80/20 (<code>seed=42</code>): Train <code>1,391,018</code> (<code>281,674</code> pers.) / Test <code>347,720</code> (<code>70,419</code> pers.), <code>shared=0</code>.</td><td>Evita fuga de historial individual entre entrenamiento y prueba.</td></tr>
+            <tr><td><code>D09</code></td><td><code>3.0</code></td><td>Codificación One-Hot</td><td><code>2,967</code> dummies <code>occupation_code_*</code> ajustadas en Train en formato compacto <code>uint8</code>.</td><td>Captura la señal específica de cada oficio reduciendo 8× el consumo de RAM.</td></tr>
+            <tr><td><code>D10</code></td><td><code>3.0</code></td><td>Escalado resistente</td><td><code>RobustScaler</code> (10 cols) + <code>MinMaxScaler</code> + <code>KBinsDiscretizer</code> ajustados solo en Train.</td><td>Centra en mediana 0.0 y escala por IQR sin contaminar Test.</td></tr>
+            <tr><td><code>D11</code></td><td><code>3.0</code></td><td>Target <code>reincide</code></td><td><code>reincide = (veces_ese_oficio &gt; 1)</code>: prevalencia <code>30.01 %</code> en Train y <code>29.97 %</code> en Test.</td><td>Idéntico entre Versiones A y B porque el tope IQR (3.5) es mayor al umbral (&gt; 1).</td></tr>
+            <tr><td><code>D12</code></td><td><code>4.0 / 4.1</code></td><td>Estabilidad PCA</td><td><code>PC1 = 32.91 %</code> (A) vs <code>39.68 %</code> (B); 3 componentes en B (<code>80.59 %</code>) vs 4 en A para $\ge 80 \%$.</td><td>Identifica la suma exacta $E = C + K + U$ (rango efectivo 9 de 10).</td></tr>
+            <tr><td><code>D13</code></td><td><code>5.0</code></td><td>Bloqueo de fuga</td><td><code>veces_ese_oficio_rob/bin</code> reproducen el 100 % del target en las <code>1,391,018</code> filas de Train.</td><td>Se excluyen obligatoriamente de $X$ en todo el modelado supervisado y no supervisado.</td></tr>
+            <tr class="highlight"><td><code>D14</code></td><td><code>6.0 a 8.1</code></td><td>Modelado y ganadores</td><td>Validación por persona + elección de <strong>Naive Bayes (<code>7.1</code>)</strong> y <strong>K-Means (<code>8.0</code>)</strong>.</td><td>Máxima interpretabilidad, velocidad (<code>0.241 s</code>) y cobertura del 100 % del censo (<code>352,093</code> personas).</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL 2: PRESENTACIÓN INDEXADA DE MÉTODOS NUMÉRICOS -->
+<div class="modal-overlay" id="numModal" onclick="if(event.target===this)closeNumModal()">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="row">
+        <span class="pill amber">PRESENTACIÓN INDEXADA</span>
+        <strong>Métodos Numéricos en JobPath (MCO vs. Lagrange) — <code>numerical_methods_presentation/index.html</code></strong>
+      </div>
+      <div class="row">
+        <a class="btn amber" href="./numerical_methods_presentation/index.html">Abrir en Pestaña Completa ↗</a>
+        <button class="btn rose" onclick="closeNumModal()">✕ Cerrar</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <iframe id="numFrame" src="" title="Presentación Indexada de Métodos Numéricos"></iframe>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================================
+// 1. NAVEGACIÓN DE LAS 10 DIAPOSITIVAS (CON RESET DE SCROLL AL TOPE)
+// ============================================================================
+const slides = Array.from(document.querySelectorAll('.slide'));
+const dotsWrap = document.getElementById('dots');
+const prog = document.getElementById('progressBar');
+const cnt = document.getElementById('slideCount');
+let cur = 0;
+
+slides.forEach((s, i) => {
+  const d = document.createElement('button');
+  const ch = s.dataset.chap;
+  d.className = 'dot' + (ch === '2' ? ' teal' : ch === '3' ? ' emerald' : '');
+  d.title = 'Ir a diapositiva ' + (i + 1);
+  d.onclick = () => go(i);
+  dotsWrap.appendChild(d);
+});
+
+function go(idx) {
+  cur = Math.max(0, Math.min(slides.length - 1, idx));
+  slides.forEach((s, i) => {
+    s.classList.toggle('active', i === cur);
+    s.classList.toggle('before', i < cur);
+    if (i === cur) s.scrollTop = 0;
+  });
+  Array.from(dotsWrap.children).forEach((d, i) => d.classList.toggle('on', i === cur));
+  prog.style.width = ((cur + 1) / slides.length * 100) + '%';
+  cnt.textContent = 'Diapositiva ' + (cur + 1) + ' / ' + slides.length;
+  const ch = slides[cur].dataset.chap;
+  document.getElementById('chap1').classList.toggle('on', ch === '1');
+  document.getElementById('chap2').classList.toggle('on', ch === '2');
+  document.getElementById('chap3').classList.toggle('on', ch === '3');
+}
+function step(dir) { go(cur + dir); }
+function toggleFs() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
+  else document.exitFullscreen().catch(()=>{});
+}
+document.addEventListener('keydown', e => {
+  if (document.getElementById('numModal').classList.contains('open')) {
+    if (e.key === 'Escape') closeNumModal();
+    return;
+  }
+  if (document.getElementById('bitacoraModal').classList.contains('open')) {
+    if (e.key === 'Escape') closeBitacoraModal();
+    return;
+  }
+  if (document.getElementById('lightbox').classList.contains('open')) {
+    if (e.key === 'Escape') closeLb();
+    return;
+  }
+  if (e.key === 'ArrowRight' || e.key === 'PageDown') step(1);
+  else if (e.key === 'ArrowLeft' || e.key === 'PageUp') step(-1);
+  else if (e.key === 'Home') go(0);
+  else if (e.key === 'End') go(slides.length - 1);
+  else if (e.key === 'f' || e.key === 'F') toggleFs();
+});
+
+// ============================================================================
+// 2. LIGHTBOX Y MODALES
+// ============================================================================
+function openLb(img) {
+  document.getElementById('lbImg').src = img.src;
+  const panel = img.closest('.fig-panel');
+  const cap = panel ? panel.querySelector('.fig-cap') : null;
+  document.getElementById('lbCap').innerHTML = cap ? cap.innerHTML : img.alt;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLb() { document.getElementById('lightbox').classList.remove('open'); }
+function openNumModal() {
+  const fr = document.getElementById('numFrame');
+  if (!fr.getAttribute('src')) fr.setAttribute('src', './numerical_methods_presentation/index.html');
+  document.getElementById('numModal').classList.add('open');
+}
+function closeNumModal() { document.getElementById('numModal').classList.remove('open'); }
+function openBitacoraModal() { document.getElementById('bitacoraModal').classList.add('open'); }
+function closeBitacoraModal() { document.getElementById('bitacoraModal').classList.remove('open'); }
+
+// ============================================================================
+// 3. DIAPOSITIVA 3: PREPROCESAMIENTO Y TRANSFORMACIÓN (D01 a D11)
+// ============================================================================
+const PREP_DATA = [
+  {
+    badge: 'Etapa 1 · Embudo y Pluriempleo (D01–D03)',
+    figIdx: 0,
+    html: `<strong>1. Unificación Completa y Regla de Pluriempleo (<code>2.0_preprocesamiento_jobpath.ipynb</code>):</strong>
+      <ul>
+        <li><strong>Recuperación del censo (<code>D01</code>):</strong> Se integraron las 3 particiones originales de JobHop v2 (train + test + val) pasando de <code>376,567</code> filas en v1 a <strong><code>1,871,014</code> experiencias y <code>355,308</code> personas</strong> (+396.86 % más datos).</li>
+        <li><strong>Control de duplicados (<code>D02–D03</code>):</strong> Hay <code>0</code> duplicados exactos en la llave completa de 5 columnas. Las <code>92,099</code> filas con misma persona y trimestre (<code>4.92 %</code>) se conservan porque reflejan pluriempleo o cambio de cargo real.</li>
+      </ul>`
+  },
+  {
+    badge: 'Etapa 2 · Nulos MNAR y Exclusión ESCO (D04–D05)',
+    figIdx: 0,
+    html: `<strong>2. Tratamiento Honesto de Nulos Informativos (<code>MNAR</code>) y Estructurales (<code>MAR</code>):</strong>
+      <ul>
+        <li><strong>Silencio ≠ Cero estudios (<code>D04</code>):</strong> Las <code>205,238</code> filas brutas (<code>10.97 %</code>; <code>200,934</code> en el universo clasificado) sin dato de universidad no son "educación cero". Se creó la bandera binaria ortogonal <code>educacion_no_reportada = 1</code>.</li>
+        <li><strong>Cero invención de habilidades (<code>D05</code>):</strong> Las <code>132,276</code> experiencias sin oficio ESCO (<code>7.07 %</code>: <code>128,981 unknown</code> y <code>3,295 rescatado</code>) se excluyen al modelar competencias, y los <code>95,136</code> empleos aún abiertos se etiquetan con <code>es_vigente = 1</code> (<code>MR-09</code>).</li>
+      </ul>`
+  },
+  {
+    badge: 'Etapa 3 · Outliers Versión A vs. Versión B (D06)',
+    figIdx: 1,
+    html: `<strong>3. Bifurcación Experimental: Versión A (Con Outliers) vs. Versión B (Winsorizada IQR):</strong>
+      <ul>
+        <li><strong>El fenómeno extremo:</strong> Existen oficios ESCO con hasta <strong><code>129</code> habilidades esenciales</strong> (promedio por persona de hasta <code>99.0</code>), lo que distorsiona varianzas y distancias euclidianas al cuadrado.</li>
+        <li><strong>La decisión (<code>D06</code>):</strong> Mantuvimos <strong>Versión A</strong> intacta y generamos <strong>Versión B</strong> aplicando recorte Tukey $k=1.5$ sobre 4 conteos: esenciales $\\le 47.5$, competencias $\\le 39.5$, conocimientos $\\le 13.5$ y repeticiones $\\le 3.5$ (modificando <code>193,596</code> filas = <code>10.35 %</code>). La duración <code>dur_q</code> no se recorta porque carreras de 20 años son reales.</li>
+      </ul>`
+  },
+  {
+    badge: 'Etapa 4 · Split por Persona y Escalado (D07–D11)',
+    figIdx: 1,
+    html: `<strong>4. Partición por Persona y Escalado Resistente a Extremos (<code>3.0_transformacion.ipynb</code>):</strong>
+      <ul>
+        <li><strong>Partición limpia 80/20 (<code>D08</code>):</strong> Con <code>GroupShuffleSplit(seed=42)</code> sobre <code>resume_id</code>, <code>281,674</code> personas (<code>1,391,018</code> empleos) van a Train y <code>70,419</code> personas (<code>347,720</code> empleos) a Test, con <strong><code>0</code> personas compartidas</strong>.</li>
+        <li><strong>Escalado y OHE compacto (<code>D09–D11</code>):</strong> <code>RobustScaler</code> (centrado en mediana y dividido por <code>IQR = Q3 − Q1</code>) ajustado solo en Train + <code>2,967</code> indicadores binarios de oficio en formato <code>uint8</code>.</li>
+      </ul>`
+  }
+];
+const PREP_FIGS = [
+  { src: './reports/eda_jobpath/figures/g08_nulos_por_columna.png',
+    cap: '<strong>Figura 2.0a:</strong> Diagnóstico de nulos por columna. Las <code>132,276</code> filas sin código ESCO (<code>7.07 %</code>) se documentan como exclusión estructural (<code>D05/D07</code>) sin fabricar habilidades artificiales.' },
+  { src: './reports/eda_jobpath/figures/g09_outliers_iqr_ab.png',
+    cap: '<strong>Figura 2.0b:</strong> Distribución antes y después de la winsorización IQR (<strong>Versión A</strong> con colas hasta 129 habilidades vs. <strong>Versión B</strong> acotada en <code>47.5 / 39.5 / 13.5</code>).' }
+];
+function setPrepFig(idx) {
+  [0,1].forEach(k => document.getElementById('figPrepBtn'+k).classList.toggle('on', k===idx));
+  document.getElementById('prepImg').src = PREP_FIGS[idx].src;
+  document.getElementById('prepCap').innerHTML = PREP_FIGS[idx].cap;
+}
+function selPrep(i) {
+  [0,1,2,3].forEach(k => document.getElementById('btnPrep'+k).classList.toggle('on', k===i));
+  document.getElementById('prepBadge').textContent = PREP_DATA[i].badge;
+  document.getElementById('prepDetail').innerHTML = PREP_DATA[i].html;
+  setPrepFig(PREP_DATA[i].figIdx);
+}
+selPrep(0);
+
+// ============================================================================
+// 4. DIAPOSITIVA 5: GALERÍA DEL EDA (5.0)
+// ============================================================================
+const EDA_FIGS = [
+  { src: './reports/eda_jobpath/figures/g27_target_por_isco.png',
+    cap: '<strong>Figura 5.0a:</strong> Tasa de reincidencia ocupacional por Gran Grupo ISCO-08. Demuestra que el sector laboral separa tasas desde <code>7.43 %</code> (Militares) hasta <code>33.84 %</code> (Servicios y Ventas).' },
+  { src: './reports/eda_jobpath/figures/g30_fuga_target.png',
+    cap: '<strong>Figura 5.0b:</strong> Auditoría de Fuga del Target (<code>D13</code>). Demuestra visualmente por qué <code>veces_ese_oficio</code> reproduce el 100 % de la etiqueta y fue bloqueada en la matriz predictora $X$.' },
+  { src: './reports/eda_jobpath/figures/g21_transiciones_isco.png',
+    cap: '<strong>Figura 5.0c:</strong> Matriz de transiciones entre grandes grupos ISCO-08, evidenciando la fuerte diagonal de persistencia dentro de cada familia ocupacional.' },
+  { src: './reports/eda_jobpath/figures/g19_pearson_vs_spearman.png',
+    cap: '<strong>Figura 5.0d:</strong> Comparación de correlaciones lineales (Pearson) vs. rangos monótonos (Spearman), confirmando la colinealidad entre conteos de competencias ESCO.' }
+];
+function setEdaFig(idx) {
+  [0,1,2,3].forEach(k => document.getElementById('figEdaBtn'+k).classList.toggle('on', k===idx));
+  document.getElementById('edaImg').src = EDA_FIGS[idx].src;
+  document.getElementById('edaCap').innerHTML = EDA_FIGS[idx].cap;
+}
+
+// ============================================================================
+// 5. DIAPOSITIVA 6: TORNEO SUPERVISADO (6.0, 7.0, 7.1, 7.2)
+// ============================================================================
+const SUP_DATA = [
+  {
+    badge: '7.0 Árboles (Descartado como final)',
+    figIdx: 2, roc: 61.57, f1: 45.50, spd: 98,
+    html: `<strong>Árboles de Decisión (<code>7.0_arbol_decision.ipynb</code> · 60 intentos, regla 1-SE, prof. ≤ 4):</strong><br>
+      Evaluamos 3 hipótesis: <strong>Árbol 1 ISCO 1d (<code>ROC-AUC = 0.5459</code>, 21.5 % del techo)</strong>, <strong>Árbol 2 Educación (<code>0.5208</code>, 9.8 % del techo)</strong> y <strong>Árbol 3 Competencias ESCO (<code>0.6157</code>, <code>F1 = 0.4550</code>, 54.2 % del techo)</strong>. Se descartan como modelo final porque 4 niveles de corte rígido pierden el 45 % de la señal frente a un modelo que integre las 2,981 variables.`
+  },
+  {
+    badge: '7.2 KNN (Descartado por 8.1 h en Test)',
+    figIdx: 1, roc: 69.19, f1: 51.86, spd: 6,
+    html: `<strong>K-Vecinos Más Cercanos (<code>7.2_knn.ipynb</code> · Auditoría geométrica y computacional):</strong><br>
+      En baja dimensión (<code>KNN-D: 0.6677</code>, <code>KNN-G: 0.6919</code>) rinde menos que Naive Bayes tardando hasta <code>1,104.7 s</code>. Al incluir las 2,967 ocupaciones (<code>KNN-W: 0.7245</code>), evaluar las 347,720 filas de Test por fuerza bruta tarda <strong><code>29,146.83 segundos</code> (~8.1 horas)</strong>, haciéndolo inviable en operación.`
+  },
+  {
+    badge: '7.1 Naive Bayes Híbrido (🏆 GANADOR)',
+    figIdx: 0, roc: 70.58, f1: 53.37, spd: 100,
+    html: `<strong>Naive Bayes Híbrido (<code>7.1_naive_bayes.ipynb</code> · <code>NB-H</code> sobre 2,981 variables):</strong><br>
+      Integra verosimilitud Gaussiana (10 continuas/ordinales) + Bernoulli CSR (2,967 oficios + 4 binarias). Alcanza <strong><code>ROC-AUC = 0.7058</code> (<code>96.48 %</code> del techo lineal)</strong> y el mayor <strong><code>F1 = 0.5337</code></strong>, entrenando en <strong><code>0.56 s</code></strong> y evaluando todo Test en <strong><code>0.241 s</code> (<code>120,941×</code> más rápido que <code>KNN-W</code>)</strong>.`
+  }
+];
+const SUP_FIGS = [
+  { src: './reports/naive_bayes_jobpath/figures/nb15_comparacion_modelos_y_versiones_ab.png',
+    cap: '<strong>Figura 7.1a:</strong> Comparación unificada en Test (<code>347,720</code> filas). <code>NB-H</code> alcanza el <code>96.48 %</code> del techo de Regresión Logística OHE y supera su F1 (<code>0.5337</code> vs <code>0.5321</code>).' },
+  { src: './reports/knn_jobpath/figures/knn13_frontera_desempeno_vs_costo.png',
+    cap: '<strong>Figura 7.2:</strong> Frontera Desempeño vs. Costo Computacional en escala logarítmica. Muestra por qué <code>KNN-W</code> (29,146.8 s ≈ 8.1 h) se descarta frente a <code>NB-H</code> (0.241 s).' },
+  { src: './reports/arbol_decision_jobpath/figures/08_comparacion_tres_arboles_y_techo.png',
+    cap: '<strong>Figura 7.0:</strong> Desempeño de los 3 Árboles de Decisión (ISCO <code>0.5459</code>, Educación <code>0.5208</code> y Competencias ESCO <code>0.6157</code>) frente al techo de referencia.' }
+];
+function setSupFig(idx) {
+  [0,1,2].forEach(k => document.getElementById('figSupBtn'+k).classList.toggle('on', k===idx));
+  document.getElementById('supImg').src = SUP_FIGS[idx].src;
+  document.getElementById('supCap').innerHTML = SUP_FIGS[idx].cap;
+}
+function selSup(i) {
+  [0,1,2].forEach(k => document.getElementById('btnSup'+k).classList.toggle('on', k===i));
+  const d = SUP_DATA[i];
+  document.getElementById('supBadge').textContent = d.badge;
+  document.getElementById('supDetail').innerHTML = `
+    <div class="small" style="margin-bottom:6px">${d.html}</div>
+    <div class="grid3" style="gap:8px;font-size:11.6px">
+      <div><strong>ROC-AUC Test: ${(d.roc/100).toFixed(4)}</strong><div class="bar-track"><div class="bar-fill" style="width:${d.roc}%"></div></div></div>
+      <div><strong>F1 Clase 1 Test: ${(d.f1/100).toFixed(4)}</strong><div class="bar-track"><div class="bar-fill teal" style="width:${d.f1*1.4}%"></div></div></div>
+      <div><strong>Viabilidad / Velocidad:</strong><div class="bar-track"><div class="bar-fill emerald" style="width:${d.spd}%"></div></div></div>
+    </div>`;
+  setSupFig(d.figIdx);
+}
+selSup(2);
+
+// ============================================================================
+// 6. DIAPOSITIVA 7: GALERÍA DE CLUSTERING (8.0 y 8.1)
+// ============================================================================
+const CLU_FIGS = [
+  { src: './reports/kmeans_jobpath/figures/01_metodo_codo_y_silueta_kmeans_personas.png',
+    cap: '<strong>Figura 8.0a:</strong> Curvas de K-Means en las <code>281,674</code> personas de Train. Confirma el máximo global de Calinski-Harabasz (<code>46,780.83</code>) y el codo de inercia en $k^* = 4$.' },
+  { src: './reports/clustering_jerarquico_jobpath/figures/02_dendrograma_truncado_n3000_corte_optimo.png',
+    cap: '<strong>Figura 8.1a:</strong> Dendrograma truncado de Ward ($n=3,000$) con corte horizontal óptimo en altura <code>55.921</code> ($k^*=4$), antes del desplome del <code>85.8 %</code> en el salto vertical.' },
+  { src: './reports/clustering_jerarquico_jobpath/figures/03_comparacion_metodos_linkage_metricas.png',
+    cap: '<strong>Figura 8.1b:</strong> Comparación de los 4 métodos de linkage (<code>ward</code>, <code>complete</code>, <code>average</code>, <code>single</code>), demostrando el colapso por encadenamiento en los enlaces no variacionales.' }
+];
+function setCluFig(idx) {
+  [0,1,2].forEach(k => document.getElementById('figCluBtn'+k).classList.toggle('on', k===idx));
+  document.getElementById('cluImg').src = CLU_FIGS[idx].src;
+  document.getElementById('cluCap').innerHTML = CLU_FIGS[idx].cap;
+}
+
+// ============================================================================
+// 7. DIAPOSITIVA 8: SIMULADOR Y GALERÍA DE NAIVE BAYES (7.1)
+// ============================================================================
+const NB_ISCO = [
+  { tag:'ISCO 5 · Servicios y Ventas', nTr:'302,706', obsTe:'33.87 %', predTe:'33.90 %', diff:'+3.89 pp sobre media',
+    desc:'<strong>ISCO 5 (Servicios y Vendedores):</strong> Sector con mayor reincidencia de todo el catálogo (<code>33.87 %</code> real en Test vs. <code>33.90 %</code> predicho por <code>NB-H</code>; error de solo <code>0.03 pp</code>), debido a la alta rotación horizontal entre comercios conservando el mismo oficio.' },
+  { tag:'ISCO 3 · Técnicos y Nivel Medio', nTr:'272,574', obsTe:'33.37 %', predTe:'34.08 %', diff:'+3.39 pp sobre media',
+    desc:'<strong>ISCO 3 (Técnicos y Profesionales de Nivel Medio):</strong> Segunda tasa más alta (<code>33.37 %</code> en Test vs. <code>34.08 %</code> en <code>NB-H</code>), asociada a especialización técnica aplicada.' },
+  { tag:'ISCO 9 · Ocupaciones Elementales', nTr:'189,819', obsTe:'33.05 %', predTe:'32.48 %', diff:'+3.08 pp sobre media',
+    desc:'<strong>ISCO 9 (Ocupaciones Elementales):</strong> Alta repetición (<code>33.05 %</code> en Test vs. <code>32.48 %</code> en <code>NB-H</code>) vinculada a contratos operativos y estacionales recurrentes.' },
+  { tag:'ISCO 2 · Profesionales Científicos', nTr:'243,705', obsTe:'30.13 %', predTe:'31.64 %', diff:'+0.16 pp (en la media)',
+    desc:'<strong>ISCO 2 (Profesionales Científicos e Intelectuales):</strong> Se ubica en el promedio global (<code>30.13 %</code>), ya que el progreso profesional suele implicar ascenso hacia cargos con nuevo código ESCO.' },
+  { tag:'ISCO 4 · Apoyo Administrativo', nTr:'111,705', obsTe:'22.55 %', predTe:'20.93 %', diff:'-7.42 pp bajo media',
+    desc:'<strong>ISCO 4 (Personal de Apoyo Administrativo):</strong> Menor repetición (<code>22.55 %</code> real vs. <code>20.93 %</code> en <code>NB-H</code>), al funcionar frecuentemente como rol de transición hacia puestos técnicos o de gestión.' },
+  { tag:'ISCO 1 · Directores y Gerentes', nTr:'81,000', obsTe:'21.37 %', predTe:'21.97 %', diff:'-8.60 pp bajo media',
+    desc:'<strong>ISCO 1 (Directores y Gerentes):</strong> Baja repetición del mismo código específico (<code>21.37 %</code> real vs. <code>21.97 %</code> en <code>NB-H</code>) por movilidad ejecutiva entre distintas áreas funcionales.' },
+  { tag:'ISCO 0 · Ocupaciones Militares', nTr:'3,393', obsTe:'7.61 %', predTe:'6.43 %', diff:'-22.37 pp bajo media',
+    desc:'<strong>ISCO 0 (Ocupaciones Militares):</strong> Mínima tasa de reincidencia del mercado (<code>7.61 %</code> en Test vs. <code>6.43 %</code> en <code>NB-H</code>), correspondiente a un ciclo de servicio antes de pasar a empleos civiles.' }
+];
+const NB_FIGS = [
+  { src: './reports/naive_bayes_jobpath/figures/nb07_o1_o2_reincidencia_y_desempeno_isco.png',
+    cap: '<strong>Figura 7.1c:</strong> Sincronía casi exacta entre la tasa observada en Test y la probabilidad media predicha por <code>NB-H</code> en los 10 grupos ISCO-08.' },
+  { src: './reports/naive_bayes_jobpath/figures/nb05_curvas_pr_roc_test.png',
+    cap: '<strong>Figura 7.1b:</strong> Curvas Precision-Recall y ROC en Test (<code>347,720</code> filas) para <code>NB-G</code>, <code>NB-B</code> y el ganador híbrido <code>NB-H</code> (<code>ROC-AUC = 0.7058</code>).' },
+  { src: './reports/naive_bayes_jobpath/figures/nb10_p1_evidencia_log_likelihood_ratio.png',
+    cap: '<strong>Figura 7.1d:</strong> Ranking de evidencia por Log-Likelihood Ratio (<code>LLR</code>), mostrando qué variables continuas y binarias aportan mayor poder discriminante.' },
+  { src: './reports/naive_bayes_jobpath/figures/nb12_p3_deciles_lift_gain.png',
+    cap: '<strong>Figura 7.1e:</strong> Curvas de Lift y Gain por deciles de riesgo en Test, demostrando la capacidad de <code>NB-H</code> para concentrar los casos positivos en los deciles superiores.' }
+];
+function setNbFig(idx) {
+  [0,1,2,3].forEach(k => document.getElementById('figNbBtn'+k).classList.toggle('on', k===idx));
+  document.getElementById('nbImg').src = NB_FIGS[idx].src;
+  document.getElementById('nbCap').innerHTML = NB_FIGS[idx].cap;
+}
+function selNbIsco(i) {
+  [0,1,2,3,4,5,6].forEach(k => document.getElementById('btnNb'+k).classList.toggle('on', k===i));
+  const d = NB_ISCO[i];
+  document.getElementById('nbIscoTag').textContent = d.tag;
+  document.getElementById('nbIscoKpis').innerHTML = `
+    <div class="card" style="padding:7px 10px"><div class="kpi-lbl">Tasa Real Test</div><div class="kpi-val emerald" style="font-size:18px">${d.obsTe}</div><div class="small muted">Train: ${d.nTr} filas</div></div>
+    <div class="card" style="padding:7px 10px"><div class="kpi-lbl">Predicción NB-H</div><div class="kpi-val" style="font-size:18px">${d.predTe}</div><div class="small muted">Brier global 0.1871</div></div>
+    <div class="card" style="padding:7px 10px"><div class="kpi-lbl">Brecha vs. Media</div><div class="kpi-val teal" style="font-size:16.5px">${d.diff}</div><div class="small muted">Consistente Train/Test</div></div>`;
+  document.getElementById('nbIscoDesc').innerHTML = d.desc;
+}
+selNbIsco(0);
+
+// ============================================================================
+// 8. DIAPOSITIVA 9: SIMULADOR Y GALERÍA DE K-MEANS (8.0)
+// ============================================================================
+const KM_CLUSTERS = [
+  {
+    badge: 'Clúster 0 · 154,577 Personas (43.94 % Train / 43.73 % Test)',
+    html: `<strong>Arquetipo 0: Inserción Temprana y Trayectorias Cortas en Oficios Operativos y de Servicios (ISCO 5 dominante)</strong><br>
+      En la Vista Personas agrupa al <code>43.9 %</code> del censo (<code>4.82</code> empleos, <code>38.71</code> trimestres de carrera, <code>8.75</code> trimestres por puesto, <code>18.08</code> competencias prácticas y <code>2.51</code> conocimientos). En la Vista Experiencias (<code>49.59 %</code>, <code>861,919</code> empleos, proporción práctica <code>0.90</code>) y en Personas alcanza la <strong>mayor tasa externa <em>post-hoc</em> de repetición de oficio: <code>47.78 %</code> en Personas (Lift <code>1.046×</code>) y <code>31.85 %</code> en Experiencias (Lift <code>1.063×</code>)</strong> por rotación horizontal en el mismo oficio.`
+  },
+  {
+    badge: 'Clúster 1 · 41,062 Personas (11.65 % Train / 11.70 % Test)',
+    html: `<strong>Arquetipo 1: Trabajadores Operativos Estables con Educación No Reportada (<code>MNAR = 100 %</code> · ISCO 5 dominante)</strong><br>
+      Tanto K-Means (<code>11.65 %</code>, <code>41,062</code> personas) como Ward (<code>11.65 %</code>, <code>41,006</code> personas) aíslan exactamente este subespacio ortogonal ($z = +2.687$) donde <code>educacion_no_reportada = 1</code>. Presentan carreras más largas y estables que el Clúster 0 (<code>58.35</code> trimestres de amplitud, <code>14.12</code> trimestres por empleo) y una tasa de repetición <em>post-hoc</em> de <strong><code>45.00 %</code> en Personas y <code>30.86 %</code> en Experiencias</strong>.`
+  },
+  {
+    badge: 'Clúster 2 · 98,553 Personas (27.95 % Train / 28.14 % Test)',
+    html: `<strong>Arquetipo 2: Profesionales Intensivos en Conocimiento y Alta Exigencia ESCO (ISCO 2 Científicos e Intelectuales dominante)</strong><br>
+      Es el segmento con mayor nivel universitario (<code>2.33</code>) y <strong>mayor complejidad del oficio ESCO: <code>25.37</code> habilidades esenciales en Personas y <code>27.33</code> en Experiencias (<code>555,229</code> empleos)</strong>, exigiendo de <code>5.98</code> a <code>7.05</code> conocimientos teóricos especializados. Registra la <strong>menor repetición del mismo código de oficio en Personas (<code>42.75 %</code>, Lift <code>0.936×</code>; y <code>34.34 %</code> en Ward)</strong> porque su carrera progresa por <em>ascenso vertical</em> cambiando de código ESCO.`
+  },
+  {
+    badge: 'Clúster 3 · 57,901 Personas (16.45 % Train / 16.43 % Test)',
+    html: `<strong>Arquetipo 3: Trayectorias Consolidadas de Larga Permanencia o Pluriempleo Solapado (ISCO 3 Técnicos dominante)</strong><br>
+      Agrupa las carreras más extensas del mercado: <strong><code>112.14</code> trimestres de amplitud (~28 años)</strong>, duración media de <strong><code>37.47</code> trimestres por empleo (~9.4 años)</strong>, <code>5.44</code> empleos y el mayor solapamiento (<code>overlap_ratio = 1.61</code>). En la Vista Experiencias (<code>127,801</code> empleos de etapa avanzada con duración media de <strong><code>66.30</code> trimestres ≈ 16.5 años</strong>), la tasa de repetición cae a <strong><code>23.13 %</code> (Lift <code>0.772×</code>)</strong> porque quien permanece 16 años en un puesto estable no acumula múltiples contratos repetidos.`
+  }
+];
+const KM_FIGS = [
+  { src: './reports/kmeans_jobpath/figures/06_centroides_escala_original_y_tasa_reincide.png',
+    cap: '<strong>Figura 8.0a:</strong> Perfiles de los 4 clústeres de K-Means en unidades reales y su tasa externa <em>post-hoc</em> de repetición de oficio (<code>reincide</code>).' },
+  { src: './reports/kmeans_jobpath/figures/03_proyeccion_pca_2d_clusters_y_centroides_personas.png',
+    cap: '<strong>Figura 8.0b:</strong> Proyección PCA 2D de las <code>281,674</code> personas de Train y los 4 centroides de K-Means, mostrando la separación geométrica de los arquetipos.' },
+  { src: './reports/kmeans_jobpath/figures/07_sensibilidad_version_b_vs_version_a_centroides.png',
+    cap: '<strong>Figura 8.0c:</strong> Análisis de sensibilidad Versión B (sin outliers IQR) vs. Versión A (con outliers), confirmando una concordancia <code>ARI = 0.8633</code>.' }
+];
+function setKmFig(idx) {
+  [0,1,2].forEach(k => document.getElementById('figKmBtn'+k).classList.toggle('on', k===idx));
+  document.getElementById('kmImg').src = KM_FIGS[idx].src;
+  document.getElementById('kmCap').innerHTML = KM_FIGS[idx].cap;
+}
+function selKm(i) {
+  [0,1,2,3].forEach(k => document.getElementById('btnKm'+k).classList.toggle('on', k===i));
+  document.getElementById('kmBadge').textContent = KM_CLUSTERS[i].badge;
+  document.getElementById('kmDetail').innerHTML = '<div class="small">' + KM_CLUSTERS[i].html + '</div>';
+}
+selKm(0);
+
+// ============================================================================
+// 9. RENDERIZADO KATEX CON RESPALDO OFFLINE AUTOMÁTICO
+// ============================================================================
+window.addEventListener('load', () => {
+  if (typeof renderMathInElement === 'function') {
+    try {
+      renderMathInElement(document.body, {
+        delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}],
+        throwOnError: false
+      });
+    } catch (e) { applyPlainMathFallback(); }
+  } else {
+    applyPlainMathFallback();
+  }
+});
+function applyPlainMathFallback() {
+  document.querySelectorAll('.formula[data-plain]').forEach(el => {
+    if (!el.querySelector('.katex')) {
+      el.innerHTML = '<code>' + el.getAttribute('data-plain') + '</code>';
+    }
+  });
+}
+go(0);
+</script>
+</body>
+</html>
