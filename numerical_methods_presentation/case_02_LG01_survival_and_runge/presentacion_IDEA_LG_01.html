@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Caso 2 · IDEA-LG-01 Supervivencia Laboral y Fenómeno de Runge · JobPath</title>
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+<script defer src="../assets/katex/katex.min.js"></script>
+<script defer src="../assets/katex/contrib/auto-render.min.js"></script>
+<style>
+:root{
+  --bg:#f4f6fc; --card:#ffffff; --ink:#17203d; --muted:#56607e; --line:#e1e5f2;
+  --indigo:#4f46e5; --indigo-soft:#eef0ff; --teal:#0d9488; --teal-soft:#e6f7f5;
+  --amber:#d97706; --amber-soft:#fff6e6; --rose:#e11d48; --rose-soft:#fff0f3;
+  --emerald:#059669; --emerald-soft:#ecfdf5; --dark:#131b34;
+  --accent:#0d9488; --accent2:#4f46e5;
+  --shadow:0 10px 28px rgba(23,32,61,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+.progress{position:fixed;left:0;top:0;height:5px;background:linear-gradient(90deg,var(--accent),var(--accent2));z-index:70;transition:width .3s}
+.top-links{position:fixed;top:12px;right:clamp(14px,3.5vw,48px);display:flex;gap:7px;z-index:60;flex-wrap:wrap}
+.top-links a{font-size:11.8px;font-weight:700;text-decoration:none;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.94);color:var(--ink);border:1px solid var(--line);box-shadow:0 4px 12px rgba(23,32,61,.08)}
+.top-links a:hover{border-color:var(--accent);color:var(--accent)}
+.deck{position:relative;height:100vh;width:100vw}
+.slide{position:absolute;inset:0;padding:50px clamp(18px,4vw,64px) 78px;display:flex;flex-direction:column;gap:12px;
+  opacity:0;pointer-events:none;transform:translateX(36px);transition:opacity .35s ease,transform .35s ease;overflow-y:auto}
+.slide.active{opacity:1;pointer-events:auto;transform:none}
+.slide.before{transform:translateX(-36px)}
+.kicker{font-size:clamp(11px,.95vw,13px);font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:var(--accent)}
+h1{font-size:clamp(26px,3.6vw,48px);line-height:1.08;font-weight:800;letter-spacing:-.025em}
+h2{font-size:clamp(20px,2.1vw,30px);font-weight:800;letter-spacing:-.015em;line-height:1.18}
+h3{font-size:clamp(14.5px,1.15vw,17.5px);font-weight:800;margin-bottom:7px}
+p,li{font-size:clamp(13.2px,1.02vw,15.8px);line-height:1.5}
+.muted{color:var(--muted)} .small{font-size:12.6px;line-height:1.45}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:clamp(12px,1.5vw,22px);align-items:start}
+.grid2.wide-left{grid-template-columns:1.15fr .85fr}
+.grid2.wide-right{grid-template-columns:.88fr 1.12fr}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media (max-width:960px){.grid2,.grid2.wide-left,.grid2.wide-right,.grid3,.grid4{grid-template-columns:1fr}.top-links{display:none}.slide{padding-top:20px}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:clamp(12px,1.35vw,19px);box-shadow:var(--shadow)}
+.card.indigo{background:var(--indigo-soft);border-color:#d4daff}
+.card.teal{background:var(--teal-soft);border-color:#b8ebe4}
+.card.amber{background:var(--amber-soft);border-color:#fde0b2}
+.card.rose{background:var(--rose-soft);border-color:#fecdd8}
+.stack{display:flex;flex-direction:column;gap:11px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:999px;font-size:12px;font-weight:700;background:var(--teal-soft);color:var(--teal)}
+.pill.indigo{background:var(--indigo-soft);color:var(--indigo)}
+.pill.dark{background:var(--dark);color:#fff}
+button,.btn{font:inherit;font-size:13px;font-weight:700;border:none;border-radius:10px;padding:7px 13px;cursor:pointer;background:var(--accent);color:#fff;transition:transform .12s,box-shadow .12s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+button:hover,.btn:hover{transform:translateY(-1px);box-shadow:0 6px 14px rgba(23,32,61,.15)}
+button.ghost,.btn.ghost{background:#fff;color:var(--ink);border:1.5px solid var(--line)}
+button.amber{background:var(--amber)} button.rose{background:var(--rose)}
+.cover{justify-content:center;background:radial-gradient(1000px 520px at 88% 15%,var(--teal-soft) 0%,transparent 62%),radial-gradient(820px 440px at 6% 96%,#e0e7ff 0%,transparent 58%),var(--bg)}
+.kpi-card{background:#fff;border:1px solid var(--line);border-radius:15px;padding:14px 16px;box-shadow:var(--shadow)}
+.kpi-lbl{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.kpi-val{font-size:clamp(21px,2vw,30px);font-weight:800;margin:4px 0;font-variant-numeric:tabular-nums;color:var(--accent)}
+.kpi-sub{font-size:12px;color:var(--muted)}
+.formula{background:#fff;border:1.5px dashed #a7dfd8;border-radius:13px;padding:10px 14px;overflow-x:auto;font-size:clamp(13.5px,1.15vw,17px);text-align:center}
+.sym-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+@media (max-width:960px){.sym-grid{grid-template-columns:1fr}}
+.sym-item{background:rgba(255,255,255,.9);border:1.5px solid var(--line);border-radius:10px;padding:7px 10px;font-size:13px;line-height:1.42;cursor:pointer;transition:opacity .22s ease,transform .22s ease,border-color .22s ease,box-shadow .22s ease}
+.sym-item:hover{border-color:#5eead4;transform:translateY(-1px)}
+.sym-item b.sym{font-family:"JetBrains Mono",monospace;color:var(--teal);font-size:13px;background:var(--teal-soft);padding:1px 6px;border-radius:5px;margin-right:5px}
+.sym-item.indigo b.sym{color:var(--indigo);background:var(--indigo-soft)}
+.slide.focus-mode .sym-item.is-dim{opacity:.24;transform:scale(.985);filter:grayscale(.35)}
+.slide.focus-mode .sym-item.is-done{opacity:.72}
+.slide.focus-mode .sym-item.is-active{opacity:1;transform:translateY(-2px) scale(1.015);border-color:var(--teal);box-shadow:0 8px 20px rgba(13,148,136,.18);background:#fff}
+.slide.focus-mode .sym-item.indigo.is-active{border-color:var(--indigo);box-shadow:0 8px 20px rgba(79,70,229,.18)}
+.sym-toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:6px 11px;background:rgba(255,255,255,.88);border:1px solid var(--line);border-radius:12px}
+.step-btn{font-size:12px;padding:5px 10px;border-radius:8px;font-weight:700}
+.step-hint{font-size:12px;color:var(--muted)}
+.live-svg-wrap{background:#fff;border:1px solid var(--line);border-radius:13px;padding:6px 8px 4px;margin-bottom:8px}
+.live-svg-wrap svg{width:100%;height:auto;display:block}
+code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.87em;background:rgba(23,32,61,.065);padding:1px 5px;border-radius:5px}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+ul.clean{list-style:none}
+ul.clean li{padding-left:20px;position:relative;margin-bottom:6px}
+ul.clean li::before{content:"";position:absolute;left:3px;top:.56em;width:8px;height:8px;border-radius:2.5px;background:var(--accent)}
+.card.rose ul.clean li::before{background:var(--rose)}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:#fff}
+table{border-collapse:collapse;width:100%;font-size:clamp(11.6px,.92vw,13.2px);font-variant-numeric:tabular-nums}
+th,td{padding:6.5px 9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{background:var(--dark);color:#fff;font-weight:700;white-space:nowrap}
+tr:nth-child(even) td{background:#fafbff}
+td.num,th.num{text-align:right;font-family:"JetBrains Mono",monospace}
+.ok{color:var(--teal);font-weight:700} .bad{color:var(--rose);font-weight:700} .warn{color:var(--amber);font-weight:700}
+.fig-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px;box-shadow:var(--shadow)}
+.fig-card img{width:100%;height:auto;max-height:48vh;object-fit:contain;border-radius:8px;cursor:zoom-in;display:block;margin:0 auto}
+.fig-card figcaption{font-size:12px;color:var(--muted);margin-top:6px;text-align:center}
+.slider-row{display:grid;grid-template-columns:115px 1fr 105px;gap:10px;align-items:center;font-weight:700;margin:8px 0}
+input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer}
+.big-num{font-size:clamp(22px,2.1vw,34px);font-weight:800;font-variant-numeric:tabular-nums}
+.bar-row{display:grid;grid-template-columns:122px 1fr 78px;gap:8px;align-items:center;margin-bottom:7px;font-size:12.6px}
+.bar-track{position:relative;height:16px;background:#eef0f7;border-radius:7px;overflow:hidden}
+.bar-zero{position:absolute;left:50%;top:0;bottom:0;width:2px;background:#94a3b8;z-index:2}
+.bar-fill{position:absolute;top:1px;bottom:1px;border-radius:5px;transition:all .15s}
+.badge-status{display:inline-block;padding:5px 11px;border-radius:999px;font-size:12.5px;font-weight:700}
+.badge-ok{background:var(--emerald-soft);color:var(--emerald)}
+.badge-bad{background:var(--rose-soft);color:var(--rose)}
+.badge-warn{background:var(--amber-soft);color:var(--amber)}
+.ggb-box{background:#131b34;color:#e8ebff;border-radius:14px;overflow:hidden;border:1px solid #283358}
+.ggb-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 13px;background:rgba(255,255,255,.07);font-size:12px}
+.ggb-box pre{padding:11px 13px;overflow-x:auto;font-family:"JetBrains Mono",monospace;font-size:11.8px;line-height:1.48;max-height:38vh;white-space:pre}
+.copy-btn{padding:4px 10px;font-size:11.8px;border-radius:8px;background:var(--accent);color:#fff}
+.footnote{font-size:12px;color:var(--muted);margin-top:6px;padding:7px 10px;background:#f8fafc;border-left:3px solid var(--amber);border-radius:7px}
+.nav{position:fixed;left:0;right:0;bottom:0;height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(14px,3vw,36px);
+  background:rgba(244,246,252,.95);backdrop-filter:blur(8px);border-top:1px solid var(--line);z-index:60}
+.nav .title{font-size:13px;color:var(--muted);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:36vw}
+.nav .ctrls{display:flex;gap:7px;align-items:center}
+.counter{font-variant-numeric:tabular-nums;font-weight:800;min-width:60px;text-align:center;font-size:13.5px}
+.dots{display:flex;gap:5px}
+.dots span{width:7px;height:7px;border-radius:50%;background:#cbd2e6;cursor:pointer;transition:all .2s}
+.dots span.on{background:var(--accent);width:20px;border-radius:6px}
+@media (max-width:820px){.dots{display:none}}
+.lightbox{position:fixed;inset:0;background:rgba(15,23,42,.92);display:none;align-items:center;justify-content:center;flex-direction:column;z-index:120;padding:24px;cursor:zoom-out}
+.lightbox.open{display:flex}
+.lightbox img{max-width:95vw;max-height:85vh;border-radius:12px;background:#fff;padding:8px}
+.toast{position:fixed;left:50%;bottom:72px;transform:translateX(-50%);background:var(--dark);color:#fff;padding:8px 15px;border-radius:10px;font-size:12.8px;font-weight:700;opacity:0;transition:opacity .25s;z-index:100;pointer-events:none}
+.toast.on{opacity:1}
+@media print{html,body{overflow:visible;height:auto}.nav,.top-links,.progress,.lightbox,.toast{display:none !important}.deck{height:auto;width:auto}.slide{position:static;opacity:1;pointer-events:auto;transform:none;page-break-after:always;padding:18px}}
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div class="top-links">
+  <a href="../index.html">← Presentación Unificada</a>
+  <a href="../case_01_RL04_annual_drift_extrapolation/presentacion_IDEA_RL_04.html">← Ir al Caso 1 (MCO)</a>
+  <a href="./GUIA_FACIL_IDEA_LG_01.md" target="_blank">📖 Guía Fácil (.md)</a>
+</div>
+
+<div class="deck" id="deck">
+
+<!-- S1 -->
+<section class="slide cover" data-title="Portada">
+  <div class="kicker">Caso 2 · Interpolación Polinomial de Lagrange · JobPath</div>
+  <h1>Supervivencia Laboral <code>S(q)</code><br>y <span style="color:var(--teal)">Fenómeno de Runge</span> Empírico</h1>
+  <p class="muted" style="max-width:790px;margin-top:6px">
+    <b>JobPath (<code>MineriaProtect</code>):</b> trayectorias laborales de JobHop v2 enriquecidas con el catálogo europeo <b>ESCO v1.2.1</b> (<code>3,039</code> oficios). Aquí reconstruimos la permanencia laboral sobre <b>1,643,772 empleos cerrados (<code>~es_vigente</code>)</b> de <code>data/03_processed/</code> desde 4 hitos y comprobamos cómo <b>Chebyshev-Lobatto</b> reduce <b>19.4×</b> el Fenómeno de Runge con <b>0 violaciones en <code>[0, 1]</code></b>.
+  </p>
+  <div class="grid4" style="margin-top:12px">
+    <div class="kpi-card"><div class="kpi-lbl">Empleos Cerrados</div><div class="kpi-val">1.64 M</div><div class="kpi-sub">Filtro estricto <code>~es_vigente</code> (<code>MR-09</code>)</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">Reducción de Runge</div><div class="kpi-val">19.4×</div><div class="kpi-sub">Error <code>E∞</code>: 2.53 → 0.130 (grado 16)</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">Partición Unidad ΣLᵢ</div><div class="kpi-val" style="color:var(--indigo)">1.0000</div><div class="kpi-sub">Error <code>4.44e-16</code> (<code>MR-03</code>)</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">Violaciones [0,1]</div><div class="kpi-val">0 / 5</div><div class="kpi-sub">Chebyshev-Lobatto en grados 3 a 16</div></div>
+  </div>
+  <div class="row" style="margin-top:10px">
+    <span class="pill">IDEA-LG-01</span>
+    <span class="pill indigo">Reglas clave: MR-03 · MR-04 · MR-05 · MR-09</span>
+  </div>
+</section>
+
+<!-- S2 -->
+<section class="slide" data-title="El problema y analogía">
+  <div class="kicker">Contexto y Analogía Cotidiana</div>
+  <h2>De 4 hitos ejecutivos a la curva continua... sin que la varilla explote</h2>
+  <div class="grid2">
+    <div class="card">
+      <h3>Los 4 hitos conocidos de permanencia laboral</h3>
+      <p>De <code>1,643,772</code> empleos finalizados (<code>03_processed</code>, <code>~es_vigente</code>) conocemos 4 puntos exactos:</p>
+      <ul class="clean" style="margin-top:8px">
+        <li><b>1 año (<code>q = 4</code> trim.):</b> sigue en el cargo el <b><code>66.09 %</code></b> (<code>0.660880</code>).</li>
+        <li><b>2 años (<code>q = 8</code> trim.):</b> sigue el <b><code>37.05 %</code></b> (<code>0.370539</code>).</li>
+        <li><b>5 años (<code>q = 20</code> trim.):</b> sigue el <b><code>13.58 %</code></b> (<code>0.135783</code>).</li>
+        <li><b>10 años (<code>q = 40</code> trim.):</b> sigue el <b><code>4.30 %</code></b> (<code>0.042983</code>).</li>
+      </ul>
+      <p class="footnote"><b>Mapa de capas <code>data/</code> en este caso:</b> usa directamente <b><code>03_processed/empleos_unificado_limpio.csv</code></b> (Versión A filtrada a <code>~es_vigente</code>). Las capas <code>01_raw/</code>, <code>02_interim/</code> y <code>04_transformed/</code> no se leen directamente en <code>IDEA-LG-01</code>.</p>
+    </div>
+    <div class="card teal">
+      <h3>💡 Analogía cotidiana: la varilla elástica en la pared</h3>
+      <p>Una varilla flexible pasa suavemente por <b>4 clavos</b>. Pero si clavas <b>17 clavos</b> a igual distancia en una curva muy empinada, la varilla da <b>latigazos gigantes cerca de los bordes</b> (<b>Fenómeno de Runge</b>: predice <b><code>−248 %</code></b>!).</p>
+      <p style="margin-top:10px"><b>Las 2 soluciones:</b> (1) concentrar clavos en las esquinas (<b>nodos de Chebyshev-Lobatto</b>) o (2) usar trocitos cortos de varilla de a 3 puntos (<b>Lagrange local por tramos <code>P₂</code></b>).</p>
+    </div>
+  </div>
+</section>
+
+<!-- S3: FÓRMULAS LAGRANGE SÍMBOLO POR SÍMBOLO -->
+<section class="slide" data-title="Fórmulas de Lagrange Símbolo por Símbolo">
+  <div class="kicker">Fundamento Matemático · Desglose Total</div>
+  <h2>∑ Fórmulas de Lagrange explicadas símbolo por símbolo (+ ejemplo en <code>q = 12</code>)</h2>
+  <div class="sym-toolbar">
+    <div class="row">
+      <button class="step-btn" onclick="stepFocus(this,'next')">▶ Paso a paso</button>
+      <button class="step-btn ghost" onclick="stepFocus(this,'prev')">◀ Anterior</button>
+      <button class="step-btn ghost" onclick="stepFocus(this,'all')">Mostrar todos</button>
+      <span class="pill step-status">Todos visibles (6 símbolos)</span>
+    </div>
+    <span class="step-hint">Clic en cualquier símbolo para iluminarlo · tecla <code>.</code> avanza</span>
+  </div>
+  <div class="card teal">
+    <div class="grid2">
+      <div class="formula" data-plain="Pₙ(q) = Σ S(qᵢ)·Lᵢ(q),   Lᵢ(q) = Π_{j≠i} (q − qⱼ) / (qᵢ − qⱼ)">$$P_n(q) = \sum_{i=0}^{n} S(q_i)\,L_i(q), \qquad L_i(q) = \prod_{\substack{j=0\\ j\ne i}}^{n} \frac{q - q_j}{q_i - q_j}$$</div>
+      <div class="formula" data-plain="Forma monómica: P₃(q) = −7.91×10⁻⁵·q³ + 0.005845·q² − 0.133867·q + 1.107889">$$P_3(q) = -7.91 \times 10^{-5}\,q^3 + 0.005845\,q^2 - 0.133867\,q + 1.107889$$</div>
+    </div>
+    <div class="sym-grid">
+      <div class="sym-item"><b class="sym">q</b>Trimestre consultado (<code>4</code> trimestres = <code>1</code> año; <code>q = 12</code> es 3 años).</div>
+      <div class="sym-item"><b class="sym">n</b>Grado del polinomio = nodos menos 1 (4 hitos ⇒ grado cúbico <code>n = 3</code>).</div>
+      <div class="sym-item"><b class="sym">qᵢ, S(qᵢ)</b>Hito conocido <code>i</code> (<code>4, 8, 20, 40</code>) y su probabilidad real exacta <code>S(qᵢ)</code>.</div>
+      <div class="sym-item"><b class="sym">Lᵢ(q)</b><b>Peso base con signo:</b> numerador <code>(q − qⱼ)</code> lo apaga en otros nodos; denominador <code>(qᵢ − qⱼ)</code> lo normaliza a 1 en <code>qᵢ</code> (exige <code>qᵢ ≠ qⱼ</code>, regla <b><code>MR-04</code></b>).</div>
+      <div class="sym-item"><b class="sym">MR-03</b><b>Delta de Kronecker:</b> <code>Lᵢ(qᵢ) = 1</code>, <code>Lᵢ(qⱼ) = 0</code> (err <code>0.0</code>). <b>Partición de la unidad:</b> <code>∑Lᵢ(q) = 1</code> (err <code>4.44e-16</code>).</div>
+      <div class="sym-item"><b class="sym">P₃(q) mon.</b>Forma algebraica expandida en potencias de <code>q</code> (verificada frente a <code>scipy.interpolate.lagrange</code>, diff <code>5.05e-15</code>).</div>
+    </div>
+  </div>
+  <p class="footnote"><b>Ejemplo aritmético en 3 años (<code>q = 12</code>):</b> <code>L₀ = −0.3889</code>, <code>L₁ = +1.1667</code>, <code>L₂ = +0.2333</code>, <code>L₃ = −0.0111</code> → <code>∑Lᵢ = 1.0000 ✔</code> → <b><code>P₃(12) = 20.65 %</code></b> vs. real <code>25.19 %</code> (error <code>0.0455</code>).</p>
+</section>
+
+<!-- S4: CHEBYSHEV-LOBATTO Y ERRORES SÍMBOLO POR SÍMBOLO -->
+<section class="slide" data-title="Chebyshev-Lobatto y Métricas Símbolo por Símbolo">
+  <div class="kicker">Mitigación de Runge · Desglose de Fórmulas</div>
+  <h2>∑ Fórmulas de Chebyshev-Lobatto, <code>E∞</code> y <code>RMSE</code> símbolo por símbolo</h2>
+  <div class="sym-toolbar">
+    <div class="row">
+      <button class="step-btn" onclick="stepFocus(this,'next')">▶ Paso a paso</button>
+      <button class="step-btn ghost" onclick="stepFocus(this,'prev')">◀ Anterior</button>
+      <button class="step-btn ghost" onclick="stepFocus(this,'all')">Mostrar todos</button>
+      <span class="pill step-status">Todos visibles (8 símbolos)</span>
+    </div>
+    <span class="step-hint">Clic en cualquier símbolo para iluminarlo · tecla <code>.</code> avanza</span>
+  </div>
+  <div class="grid2">
+    <div class="card indigo">
+      <h3>Nodos de Chebyshev-Lobatto (2.ª especie)</h3>
+      <div class="formula" data-plain="qₖᴸᵒᵇ = round( (a+b)/2 + ((b−a)/2)·cos(kπ / n) ),  k = 0..n">$$q_k^{\text{Lob}} = \operatorname{round}\!\left(\frac{a+b}{2} + \frac{b-a}{2}\cos\!\left(\frac{k\pi}{n}\right)\right), \quad k=0\dots n$$</div>
+      <div class="sym-grid">
+        <div class="sym-item indigo"><b class="sym">a, b</b>Extremos del intervalo: <code>a = 1</code> y <code>b = 40</code> trimestres.</div>
+        <div class="sym-item indigo"><b class="sym">(a+b)/2</b>Centro del intervalo: <code>20.5</code> trimestres.</div>
+        <div class="sym-item indigo"><b class="sym">(b−a)/2</b>Semiancho (radio): <code>19.5</code> trimestres.</div>
+        <div class="sym-item indigo"><b class="sym">cos(kπ/n)</b>Agrupa nodos en bordes e <b>incluye siempre <code>q=1</code> y <code>q=40</code></b> (0 violaciones).</div>
+      </div>
+    </div>
+    <div class="card teal">
+      <h3>Métricas de error sobre <code>[1, 40]</code></h3>
+      <div class="formula" data-plain="E∞ = max_{q∈[1,40]} |S(q) − P(q)|   |   RMSE = √((1/m)·Σ(S(q) − P(q))²)">$$E_\infty = \max_{q \in [1, 40]} |S(q) - P(q)|, \qquad \text{RMSE} = \sqrt{\frac{1}{m}\sum_{q=1}^{m}(S(q) - P(q))^2}$$</div>
+      <div class="sym-grid">
+        <div class="sym-item"><b class="sym">E∞</b><b>Peor error absoluto puntual</b> en todo <code>[1, 40]</code> (detecta explosiones de Runge).</div>
+        <div class="sym-item"><b class="sym">RMSE</b><b>Error cuadrático medio</b> típico sobre los <code>m = 40</code> trimestres.</div>
+        <div class="sym-item"><b class="sym">round + MR-04</b>Al redondear a enteros en grado 16, 2 pares coinciden y <code>MR-04</code> los deduplica a <code>15 nodos*</code>.</div>
+        <div class="sym-item"><b class="sym">PCHIP</b>Interpolación cúbica por tramos que conserva monotonicidad decreciente.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- S5: SIMULADOR -->
+<section class="slide" data-title="Simulador de pesos base L₀..L₃">
+  <div class="kicker">Laboratorio Interactivo en Vivo</div>
+  <h2>Mueve <code>q</code> y observa Kronecker, <code>∑Lᵢ = 1</code> y la explosión en <code>q = 48</code></h2>
+  <div class="grid2 wide-right">
+    <div class="stack">
+      <div class="card">
+        <h3>Trimestre a consultar <code>q ∈ [2, 48]</code></h3>
+        <div class="slider-row">
+          <span>Trimestre q:</span>
+          <input type="range" id="sQ" min="2" max="48" step="1" value="12" oninput="updLG01()">
+          <span class="mono big-num" style="text-align:right;color:var(--teal)" id="vQ">12</span>
+        </div>
+        <div class="row">
+          <button class="ghost" onclick="setQ(4)">Hito 1a (q=4)</button>
+          <button class="ghost" onclick="setQ(8)">Hito 2a (q=8)</button>
+          <button onclick="setQ(12)">Interpolar 3a (q=12)</button>
+          <button class="amber" onclick="setQ(28)">Rebote 7a (q=28)</button>
+          <button class="rose" onclick="setQ(48)">Extrap. 12a (q=48)</button>
+        </div>
+      </div>
+      <div class="card teal">
+        <div class="grid3">
+          <div><div class="kpi-lbl">Supervivencia P₃(q)</div><div class="big-num" id="outP3">—</div></div>
+          <div><div class="kpi-lbl">Real S(q) CSV</div><div class="big-num" style="color:var(--indigo)" id="outRealS">—</div></div>
+          <div><div class="kpi-lbl">Suma Σ Lᵢ(q)</div><div class="big-num" style="color:var(--emerald)" id="outSumL">1.0000</div></div>
+        </div>
+        <div style="margin-top:10px" class="row"><span id="qBadge" class="badge-status badge-ok">—</span><span id="qErrPill" class="pill dark">—</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Curva <code>P₃(q)</code> vs. <code>S(q)</code> real y pesos base <code>L₀..L₃</code> en vivo</h3>
+      <div class="live-svg-wrap">
+        <svg id="svgLG01" viewBox="0 0 560 210" role="img" aria-label="Gráfico interactivo de supervivencia S(q) frente a P3(q)"></svg>
+      </div>
+      <div id="wBars"></div>
+    </div>
+  </div>
+</section>
+
+<!-- S6: GRÁFICAS -->
+<section class="slide" data-title="Evidencia visual (P₃ y Runge)">
+  <div class="kicker">Gráficos Reales Verificados (150 DPI · Clic para ampliar)</div>
+  <h2>Polinomio cúbico en 4 hitos y prueba empírica del Fenómeno de Runge</h2>
+  <div class="grid2">
+    <figure class="fig-card">
+      <img src="./figures/nm07_lg01_survival_milestones_and_weights.png" alt="Supervivencia P3 y pesos base">
+      <figcaption><b>🔍 Clic amplía:</b> <code>P₃(q)</code> sobre los 4 hitos ejecutivos y descomposición exacta de los pesos base <code>L₀..L₃</code>.</figcaption>
+    </figure>
+    <figure class="fig-card">
+      <img src="./figures/nm08_lg01_runge_phenomenon_vs_chebyshev.png" alt="Fenómeno de Runge vs Chebyshev-Lobatto">
+      <figcaption><b>🔍 Clic amplía:</b> Grado 16 equiespaciado explota hasta <b><code>−248 %</code></b> (<code>E∞ = 2.5262</code>) frente a <b>Chebyshev-Lobatto</b> (<code>0.1301</code>, <b>19.4× mejor</b>).</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- S7: BENCHMARK RUNGE -->
+<section class="slide" data-title="Benchmark Fenómeno de Runge">
+  <div class="kicker">Evidencia Cuantitativa (Grados 3 a 16)</div>
+  <h2>Equiespaciado vs. Chebyshev-Lobatto vs. Local por Tramos <code>P₂</code></h2>
+  <div class="card">
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Grado (n)</th><th>Estrategia de Nodos</th><th class="num">Error Máx. (E∞)</th><th class="num">RMSE</th><th class="num">Mín. / Máx. pred.</th><th class="num">Violaciones [0,1]</th></tr></thead>
+        <tbody>
+          <tr><td>3 (4 nodos)</td><td>Lagrange Equiespaciado</td><td class="num">0.1717</td><td class="num">0.0513</td><td class="num">0.0430 / 1.00</td><td class="num ok">0</td></tr>
+          <tr><td>8 (9 nodos)</td><td>Lagrange Equiespaciado</td><td class="num">0.2204</td><td class="num">0.0548</td><td class="num">0.0430 / 1.00</td><td class="num ok">0</td></tr>
+          <tr><td>8 (9 nodos)</td><td><b>Chebyshev-Lobatto</b></td><td class="num ok"><b>0.2091</b></td><td class="num ok">0.0473</td><td class="num">0.0327 / 1.00</td><td class="num ok">0</td></tr>
+          <tr><td>12 (13 nodos)</td><td>Lagrange Equiespaciado</td><td class="num warn">0.2615</td><td class="num">0.0650</td><td class="num bad">máx 1.2256</td><td class="num bad">1</td></tr>
+          <tr><td>12 (13 nodos)</td><td><b>Chebyshev-Lobatto</b></td><td class="num ok"><b>0.1476</b></td><td class="num ok">0.0328</td><td class="num ok">0.0430 / 1.00</td><td class="num ok">0</td></tr>
+          <tr><td>12 (13 nodos)</td><td><b>Local Cuadrático P₂</b></td><td class="num ok"><b>0.1196</b></td><td class="num ok">0.0317</td><td class="num ok">0.0430 / 1.00</td><td class="num ok">0</td></tr>
+          <tr><td>16 (17 nodos)</td><td>Lagrange Equiespaciado</td><td class="num bad"><b>2.5262 (Runge!)</b></td><td class="num bad">0.5120</td><td class="num bad"><b>−2.4827 (−248 %)</b></td><td class="num bad">2 graves</td></tr>
+          <tr><td>16 (15 nodos*)</td><td><b>Chebyshev-Lobatto</b></td><td class="num ok"><b>0.1301 (19.4× mejor)</b></td><td class="num ok">0.0327</td><td class="num ok">0.0430 / 1.00</td><td class="num ok">0</td></tr>
+          <tr><td>16 (17 nodos)</td><td>Local Cuadrático P₂</td><td class="num ok">0.1843</td><td class="num">0.0441</td><td class="num ok">0.0430 / 1.00</td><td class="num ok">0</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="footnote"><b>* Nota obligatoria sobre <code>15 nodos*</code> y métricas:</b> al redondear los 17 nodos coseno de Chebyshev-Lobatto a trimestres enteros en <code>[1, 40]</code>, 2 pares cercanos a los bordes coinciden y se deduplican (regla <code>MR-04</code> de nodos distintos), quedando 15 nodos únicos (grado efectivo 14). <b>E∞</b> = peor error absoluto puntual en <code>[1, 40]</code>; <b>RMSE</b> = error cuadrático medio.</p>
+  </div>
+</section>
+
+<!-- S8: CONCLUSIONES Y GLOSARIO -->
+<section class="slide" data-title="Conclusiones y Glosario">
+  <div class="kicker">Cierre Pedagógico · Salvaguardas MR</div>
+  <h2>Cuidados obligatorios y glosario completo</h2>
+  <div class="grid2">
+    <div class="card rose">
+      <h3>Cuidados obligatorios</h3>
+      <ul class="clean">
+        <li><b>Excluir empleos activos (<code>MR-09</code>):</b> solo <code>1.64 M</code> empleos cerrados (<code>~es_vigente</code>).</li>
+        <li><b>No extrapolar polinomios (<code>MR-05</code>):</b> en <code>q = 48</code> (12 años), <code>P₃</code> cae a <b><code>−59.84 %</code></b> (imposible).</li>
+        <li><b>No-monotonicidad y apilamiento anual:</b> <code>P₃(16) = 13.84 % &lt; P₃(28) = 20.58 %</code>, y <code>S(q)</code> cae en escalones cada 4 trimestres. En producción preferir <b><code>P₂</code> local</b> o <b>PCHIP</b> (interpolación cúbica monótona).</li>
+      </ul>
+    </div>
+    <div class="card teal">
+      <h3>Glosario Rápido (cero siglas sueltas)</h3>
+      <ul class="clean small">
+        <li><b>Supervivencia <code>S(q)</code>:</b> probabilidad de que un empleo cerrado (<code>~es_vigente</code>, <code>MR-09</code>) dure al menos <code>q</code> trimestres.</li>
+        <li><b>Delta de Kronecker / Partición (<code>MR-03</code>):</b> <code>Lᵢ(qᵢ)=1</code>, <code>Lᵢ(qⱼ)=0</code> y <code>∑Lᵢ(q)=1</code>.</li>
+        <li><b>Fenómeno de Runge:</b> latigazos en bordes al subir el grado con nodos equiespaciados.</li>
+        <li><b>Chebyshev-Lobatto / <code>MR-04</code>:</b> nodos coseno anclados en <code>[1, 40]</code>, deduplicados para impedir división por cero.</li>
+        <li><b>Apilamiento anual (<i>heaping</i>):</b> escalones en <code>S(q)</code> cada 4 trimestres por fechas redondeadas a años exactos.</li>
+        <li><b><code>E∞</code> / <code>RMSE</code> / <code>PCHIP</code> / <code>MR-05</code>:</b> error máximo absoluto, error cuadrático medio, interpolación cúbica monótona y bandera de extrapolación.</li>
+      </ul>
+      <div class="row" style="margin-top:8px">
+        <a class="btn" href="../index.html">← Volver a Presentación Unificada</a>
+        <a class="btn ghost" href="../case_01_RL04_annual_drift_extrapolation/presentacion_IDEA_RL_04.html">← Ver Caso 1 (MCO)</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<div class="nav">
+  <div class="title" id="navTitle">Caso 2 · IDEA-LG-01</div>
+  <div class="dots" id="dots"></div>
+  <div class="ctrls">
+    <button class="ghost" onclick="prev()">← Anterior</button>
+    <span class="counter" id="counter">1 / 8</span>
+    <button onclick="next()">Siguiente →</button>
+    <button class="ghost" onclick="toggleFS()" title="Pantalla completa (F)">⛶</button>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('open')"><img id="lbImg" alt="Zoom"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const LG01_REAL_S = {
+  1:1.0, 2:1.0, 3:0.687960, 4:0.660880, 5:0.640659, 6:0.392868, 7:0.380860, 8:0.370539,
+  9:0.362277, 10:0.263621, 11:0.257715, 12:0.251949, 13:0.247158, 14:0.189313, 15:0.185741,
+  16:0.181896, 17:0.178877, 18:0.140858, 19:0.138371, 20:0.135783, 21:0.133660, 22:0.106622,
+  23:0.104921, 24:0.103000, 25:0.101459, 26:0.083116, 27:0.081868, 28:0.080421, 29:0.079332,
+  30:0.066019, 31:0.065112, 32:0.064065, 33:0.063248, 34:0.053468, 35:0.052738, 36:0.051979,
+  37:0.051342, 38:0.044052, 39:0.043521, 40:0.042983, 48:0.029224
+};
+const NODES = [
+  {q:4,  y:0.6608799760550733, lbl:'L₀ (q=4 · 1a)'},
+  {q:8,  y:0.3705386148443945, lbl:'L₁ (q=8 · 2a)'},
+  {q:20, y:0.13578342981873398,lbl:'L₂ (q=20 · 5a)'},
+  {q:40, y:0.04298284676950331,lbl:'L₃ (q=40 · 10a)'}
+];
+const slides=[...document.querySelectorAll('.slide')]; let cur=0;
+const dotsEl=document.getElementById('dots');
+slides.forEach((s,k)=>{const d=document.createElement('span');d.title=s.dataset.title||('Diap. '+(k+1));d.onclick=()=>goTo(k);dotsEl.appendChild(d);});
+function goTo(i){if(i<0||i>=slides.length)return;cur=i;slides.forEach((s,k)=>{s.classList.toggle('active',k===i);s.classList.toggle('before',k<i);});document.getElementById('counter').textContent=(i+1)+' / '+slides.length;document.getElementById('navTitle').textContent='Caso 2 · Lagrange · '+(slides[i].dataset.title||'');document.getElementById('progress').style.width=((i+1)/slides.length*100)+'%';document.querySelectorAll('#dots span').forEach((d,k)=>d.classList.toggle('on',k===i));history.replaceState(null,'','#'+(i+1));}
+function next(){goTo(cur+1);} function prev(){goTo(cur-1);}
+function toggleFS(){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>{});}
+document.addEventListener('keydown',e=>{const tag=(e.target.tagName||'').toLowerCase();if(['input','textarea','select'].includes(tag))return;if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();next();}else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();prev();}else if(e.key==='Home')goTo(0);else if(e.key==='End')goTo(slides.length-1);else if(e.key==='f'||e.key==='F')toggleFS();else if(e.key==='.'){const s=slides[cur];if(s&&s.querySelector('.sym-toolbar')){const items=[...s.querySelectorAll('.sym-item')];const ci=s.dataset.focusIdx!==undefined?parseInt(s.dataset.focusIdx,10):-1;setSlideFocus(s,ci+1>=items.length?null:ci+1);}}else if(e.key==='Escape'){document.getElementById('lightbox').classList.remove('open');if(slides[cur])setSlideFocus(slides[cur],null);}});
+document.querySelectorAll('.fig-card img').forEach(im=>im.addEventListener('click',()=>{document.getElementById('lbImg').src=im.src;document.getElementById('lightbox').classList.add('open');}));
+function applyMathOrFallback(){if(window.renderMathInElement){renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false}],throwOnError:false});}else{document.querySelectorAll('.formula[data-plain]').forEach(el=>{if(!el.querySelector('.katex'))el.innerHTML='<span class="mono" style="font-weight:700;display:block;text-align:center">'+el.dataset.plain+'</span>';});}}
+window.addEventListener('load',applyMathOrFallback); setTimeout(()=>{if(!window.renderMathInElement)applyMathOrFallback();},1800);
+
+function setSlideFocus(slide,idx){const items=[...slide.querySelectorAll('.sym-item')];if(!items.length)return;const badge=slide.querySelector('.step-status');if(idx===null||idx<0||idx>=items.length){slide.classList.remove('focus-mode');delete slide.dataset.focusIdx;items.forEach(el=>el.classList.remove('is-active','is-done','is-dim'));if(badge)badge.textContent=`Todos visibles (${items.length})`;return;}slide.classList.add('focus-mode');slide.dataset.focusIdx=String(idx);items.forEach((el,k)=>{el.classList.toggle('is-active',k===idx);el.classList.toggle('is-done',k<idx);el.classList.toggle('is-dim',k>idx);});if(badge)badge.textContent=`Paso ${idx+1} / ${items.length}`;}
+function stepFocus(btn,dir){const slide=btn.closest('.slide'),items=[...slide.querySelectorAll('.sym-item')];if(!items.length)return;if(dir==='all'){setSlideFocus(slide,null);return;}const ci=slide.dataset.focusIdx!==undefined?parseInt(slide.dataset.focusIdx,10):-1;setSlideFocus(slide,dir==='next'?(ci+1>=items.length?null:ci+1):(ci<=0?null:ci-1));}
+document.querySelectorAll('.slide .sym-item').forEach(item=>item.addEventListener('click',()=>{const s=item.closest('.slide'),items=[...s.querySelectorAll('.sym-item')],idx=items.indexOf(item),ci=s.dataset.focusIdx!==undefined?parseInt(s.dataset.focusIdx,10):-1;if(ci===idx&&s.classList.contains('focus-mode')){setSlideFocus(s,null);}else{s.classList.add('focus-mode');s.dataset.focusIdx=String(idx);items.forEach((el,k)=>{el.classList.toggle('is-active',k===idx);el.classList.remove('is-done');el.classList.toggle('is-dim',k!==idx);});const b=s.querySelector('.step-status');if(b)b.textContent=`Enfoque: ${idx+1} / ${items.length}`;}}));
+
+function evalP3(q){let v=0;for(let i=0;i<NODES.length;i++){let li=1;for(let j=0;j<NODES.length;j++){if(i!==j)li*=(q-NODES[j].q)/(NODES[i].q-NODES[j].q);}v+=NODES[i].y*li;}return v;}
+function drawLG01Chart(curQ,curP3,curReal){
+  const svg=document.getElementById('svgLG01');if(!svg)return;
+  const W=560,H=210,L=44,R=18,T=14,B=26;
+  const xMap=q=>L+((q-1)/47)*(W-L-R), yMap=v=>T+((1.10-v)/1.80)*(H-T-B);
+  const y0=yMap(0),y1=yMap(1),x4=xMap(4),x40=xMap(40),p=[];
+  p.push(`<rect x="${x4}" y="${y1}" width="${x40-x4}" height="${y0-y1}" fill="#f0fdfa" opacity=".8"/>`);
+  p.push(`<rect x="${x40}" y="${y1}" width="${W-R-x40}" height="${y0-y1}" fill="#fffbeb" opacity=".8"/>`);
+  p.push(`<rect x="${L}" y="${y0}" width="${W-L-R}" height="${H-B-y0}" fill="#fff1f2" opacity=".9"/>`);
+  p.push(`<text x="${x4+6}" y="${y1+12}" font-size="9.3" font-weight="700" fill="#0d9488">Interpolación [4, 40]</text>`);
+  p.push(`<text x="${x40+4}" y="${y1+12}" font-size="9.3" font-weight="700" fill="#b45309">Extrap.</text>`);
+  p.push(`<text x="${L+6}" y="${H-B-5}" font-size="9.3" font-weight="700" fill="#e11d48">Probabilidad imposible (&lt; 0 %)</text>`);
+  [1.0,0.5,0.0,-0.5].forEach(v=>{const py=yMap(v),iz=v===0;p.push(`<line x1="${L}" y1="${py}" x2="${W-R}" y2="${py}" stroke="${iz?'#e11d48':'#e2e8f0'}" stroke-width="${iz?1.6:1}" ${iz?'stroke-dasharray="4,3"':''}/>`);p.push(`<text x="${L-6}" y="${py+3.5}" text-anchor="end" font-size="9.2" font-family="JetBrains Mono,monospace" fill="${iz?'#e11d48':'#64748b'}" font-weight="${iz?700:500}">${Math.round(v*100)}%</text>`);});
+  [4,8,12,20,28,40,48].forEach(q=>{const px=xMap(q);p.push(`<line x1="${px}" y1="${H-B}" x2="${px}" y2="${H-B+4}" stroke="#94a3b8"/>`);p.push(`<text x="${px}" y="${H-B+14}" text-anchor="middle" font-size="9.2" font-family="JetBrains Mono,monospace" fill="${q>40?'#e11d48':'#475569'}" font-weight="${[4,8,20,40,48].includes(q)?700:500}">q=${q}</text>`);});
+  const rp=[];for(let q=1;q<=40;q++)rp.push(`${xMap(q).toFixed(1)},${yMap(LG01_REAL_S[q]).toFixed(1)}`);
+  p.push(`<polyline fill="none" stroke="#334155" stroke-width="1.9" points="${rp.join(' ')}"/>`);
+  p.push(`<line x1="${xMap(40)}" y1="${yMap(LG01_REAL_S[40])}" x2="${xMap(48)}" y2="${yMap(LG01_REAL_S[48])}" stroke="#334155" stroke-width="1.5" stroke-dasharray="3,3" opacity=".7"/>`);
+  p.push(`<circle cx="${xMap(48)}" cy="${yMap(LG01_REAL_S[48])}" r="3" fill="#334155"/>`);
+  const mk=(a,b)=>{const arr=[];for(let q=a;q<=b+0.01;q+=0.5)arr.push(`${xMap(q).toFixed(1)},${yMap(evalP3(q)).toFixed(1)}`);return arr.join(' ');};
+  p.push(`<polyline fill="none" stroke="#e11d48" stroke-width="2.4" stroke-dasharray="5,4" points="${mk(2,4)}"/>`);
+  p.push(`<polyline fill="none" stroke="#0d9488" stroke-width="2.6" points="${mk(4,40)}"/>`);
+  p.push(`<polyline fill="none" stroke="#e11d48" stroke-width="2.6" stroke-dasharray="6,4" points="${mk(40,48)}"/>`);
+  NODES.forEach(nd=>p.push(`<circle cx="${xMap(nd.q)}" cy="${yMap(nd.y)}" r="4.4" fill="#fff" stroke="#0f766e" stroke-width="2.2"/>`));
+  const cx=xMap(curQ),cy=yMap(curP3),col=(curP3<0||curP3>1)?'#e11d48':(curQ<4||curQ>40?'#d97706':'#0d9488');
+  p.push(`<line x1="${cx}" y1="${T}" x2="${cx}" y2="${H-B}" stroke="${col}" stroke-width="1.2" stroke-dasharray="2,2" opacity=".7"/>`);
+  if(curReal!==undefined){const ry=yMap(curReal);p.push(`<line x1="${cx}" y1="${ry}" x2="${cx}" y2="${cy}" stroke="${col}" stroke-width="2" opacity=".75"/>`);p.push(`<circle cx="${cx}" cy="${ry}" r="4.2" fill="#334155" stroke="#fff" stroke-width="1.4"/>`);}
+  p.push(`<circle cx="${cx}" cy="${cy}" r="6" fill="${col}" stroke="#fff" stroke-width="2.2"/>`);
+  p.push(`<line x1="${W-162}" y1="${T+8}" x2="${W-145}" y2="${T+8}" stroke="#334155" stroke-width="2"/>`);
+  p.push(`<text x="${W-141}" y="${T+11}" font-size="9" fill="#334155" font-weight="600">Real S(q)</text>`);
+  p.push(`<line x1="${W-90}" y1="${T+8}" x2="${W-73}" y2="${T+8}" stroke="#0d9488" stroke-width="2.5"/>`);
+  p.push(`<text x="${W-69}" y="${T+11}" font-size="9" fill="#0d9488" font-weight="700">P₃(q)</text>`);
+  const bw=90,bh=20,bx=curQ>35?cx-bw-10:cx+10,by=Math.max(T+16,Math.min(H-B-bh-4,cy-10));
+  p.push(`<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="6" fill="${col}"/>`);
+  p.push(`<text x="${bx+bw/2}" y="${by+13.5}" text-anchor="middle" font-size="10" font-weight="700" font-family="JetBrains Mono,monospace" fill="#fff">q=${curQ}: ${(curP3*100).toFixed(1)}%</text>`);
+  svg.innerHTML=p.join('');
+}
+
+function setQ(v){document.getElementById('sQ').value=v;updLG01();}
+function updLG01(){
+  const q=+document.getElementById('sQ').value;
+  document.getElementById('vQ').textContent=q+' ('+(q/4).toFixed(2)+'a)';
+  let p3=0, sumL=0, html='';
+  const ls=NODES.map((ni,i)=>{let li=1;NODES.forEach((nj,j)=>{if(i!==j)li*=(q-nj.q)/(ni.q-nj.q);});p3+=ni.y*li;sumL+=li;return li;});
+  const maxAbs=Math.max(1.25,...ls.map(Math.abs));
+  ls.forEach((li,i)=>{const pct=Math.min(50,(Math.abs(li)/maxAbs)*48);const left=li>=0?50:(50-pct);const col=li>=0?'var(--teal)':'var(--rose)';html+=`<div class="bar-row"><span class="mono">${NODES[i].lbl}</span><div class="bar-track"><div class="bar-zero"></div><div class="bar-fill" style="left:${left}%;width:${pct}%;background:${col}"></div></div><span class="mono" style="text-align:right;font-weight:700;color:${col}">${li.toFixed(4)}</span></div>`;});
+  document.getElementById('wBars').innerHTML=html;
+  const out=document.getElementById('outP3');
+  out.textContent=(p3*100).toFixed(2)+' %';
+  out.style.color=(p3<0||p3>1)?'var(--rose)':'var(--teal)';
+  document.getElementById('outSumL').textContent=sumL.toFixed(4);
+  const realS=LG01_REAL_S[q];
+  document.getElementById('outRealS').textContent=realS!==undefined?(realS*100).toFixed(2)+' %':'N/D';
+  document.getElementById('qErrPill').textContent=realS!==undefined?`|P₃ − S| = ${Math.abs(p3-realS).toFixed(4)}`:'Fuera de malla [1, 40]';
+  const b=document.getElementById('qBadge');
+  if(p3<0||p3>1){b.className='badge-status badge-bad';b.textContent='❌ Extrapolación inválida: fuera de [0 %, 100 %]';}
+  else if(q<4||q>40){b.className='badge-status badge-warn';b.textContent='⚠ Extrapolación fuera de [4, 40]';}
+  else if([4,8,20,40].includes(q)){b.className='badge-status badge-ok';b.textContent='★ Hito exacto (Kronecker · error = 0.0000)';}
+  else if(q>=22&&q<=35){b.className='badge-status badge-warn';b.textContent='⚠ Interior [4, 40] · Rebote no monótono de P₃';}
+  else{b.className='badge-status badge-ok';b.textContent='✔ Interpolación válida dentro de [4, 40]';}
+  drawLG01Chart(q,p3,realS);
+}
+updLG01();
+const start=parseInt(location.hash.slice(1)); goTo(isNaN(start)?0:Math.min(slides.length,Math.max(1,start))-1);
+</script>
+</body>
+</html>

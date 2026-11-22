@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Caso 1 · IDEA-RL-04 Deriva Anual y Extrapolación (MCO) · JobPath</title>
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+<script defer src="../assets/katex/katex.min.js"></script>
+<script defer src="../assets/katex/contrib/auto-render.min.js"></script>
+<style>
+:root{
+  --bg:#f4f6fc; --card:#ffffff; --ink:#17203d; --muted:#56607e; --line:#e1e5f2;
+  --indigo:#4f46e5; --indigo-soft:#eef0ff; --teal:#0d9488; --teal-soft:#e6f7f5;
+  --amber:#d97706; --amber-soft:#fff6e6; --rose:#e11d48; --rose-soft:#fff0f3;
+  --emerald:#059669; --emerald-soft:#ecfdf5; --dark:#131b34;
+  --accent:#4f46e5; --accent2:#e11d48;
+  --shadow:0 10px 28px rgba(23,32,61,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+.progress{position:fixed;left:0;top:0;height:5px;background:linear-gradient(90deg,var(--accent),var(--accent2));z-index:70;transition:width .3s}
+.top-links{position:fixed;top:12px;right:clamp(14px,3.5vw,48px);display:flex;gap:7px;z-index:60;flex-wrap:wrap}
+.top-links a{font-size:11.8px;font-weight:700;text-decoration:none;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.94);color:var(--ink);border:1px solid var(--line);box-shadow:0 4px 12px rgba(23,32,61,.08)}
+.top-links a:hover{border-color:var(--accent);color:var(--accent)}
+.deck{position:relative;height:100vh;width:100vw}
+.slide{position:absolute;inset:0;padding:50px clamp(18px,4vw,64px) 78px;display:flex;flex-direction:column;gap:12px;
+  opacity:0;pointer-events:none;transform:translateX(36px);transition:opacity .35s ease,transform .35s ease;overflow-y:auto}
+.slide.active{opacity:1;pointer-events:auto;transform:none}
+.slide.before{transform:translateX(-36px)}
+.kicker{font-size:clamp(11px,.95vw,13px);font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:var(--accent)}
+.kicker.rose{color:var(--rose)} .kicker.teal{color:var(--teal)}
+h1{font-size:clamp(26px,3.6vw,48px);line-height:1.08;font-weight:800;letter-spacing:-.025em}
+h2{font-size:clamp(20px,2.1vw,30px);font-weight:800;letter-spacing:-.015em;line-height:1.18}
+h3{font-size:clamp(14.5px,1.15vw,17.5px);font-weight:800;margin-bottom:7px}
+p,li{font-size:clamp(13.2px,1.02vw,15.8px);line-height:1.5}
+.muted{color:var(--muted)} .small{font-size:12.6px;line-height:1.45}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:clamp(12px,1.5vw,22px);align-items:start}
+.grid2.wide-left{grid-template-columns:1.15fr .85fr}
+.grid2.wide-right{grid-template-columns:.88fr 1.12fr}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media (max-width:960px){.grid2,.grid2.wide-left,.grid2.wide-right,.grid4{grid-template-columns:1fr}.top-links{display:none}.slide{padding-top:20px}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:clamp(12px,1.35vw,19px);box-shadow:var(--shadow)}
+.card.indigo{background:var(--indigo-soft);border-color:#d4daff}
+.card.teal{background:var(--teal-soft);border-color:#b8ebe4}
+.card.amber{background:var(--amber-soft);border-color:#fde0b2}
+.card.rose{background:var(--rose-soft);border-color:#fecdd8}
+.card.emerald{background:var(--emerald-soft);border-color:#a7f3d0}
+.stack{display:flex;flex-direction:column;gap:11px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:999px;font-size:12px;font-weight:700;background:var(--indigo-soft);color:var(--indigo)}
+.pill.teal{background:var(--teal-soft);color:var(--teal)}
+.pill.amber{background:var(--amber-soft);color:var(--amber)}
+.pill.rose{background:var(--rose-soft);color:var(--rose)}
+.pill.dark{background:var(--dark);color:#fff}
+button,.btn{font:inherit;font-size:13px;font-weight:700;border:none;border-radius:10px;padding:7px 13px;cursor:pointer;background:var(--accent);color:#fff;transition:transform .12s,box-shadow .12s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+button:hover,.btn:hover{transform:translateY(-1px);box-shadow:0 6px 14px rgba(23,32,61,.15)}
+button.ghost,.btn.ghost{background:#fff;color:var(--ink);border:1.5px solid var(--line)}
+button.amber{background:var(--amber)} button.rose{background:var(--rose)}
+button.filter-btn{background:#fff;color:var(--muted);border:1.5px solid var(--line);font-size:12px;padding:5px 10px}
+button.filter-btn.on{background:var(--indigo);color:#fff;border-color:var(--indigo)}
+.cover{justify-content:center;background:radial-gradient(1000px 520px at 88% 15%,var(--indigo-soft) 0%,transparent 62%),radial-gradient(820px 440px at 6% 96%,#ffe4e6 0%,transparent 58%),var(--bg)}
+.kpi-card{background:#fff;border:1px solid var(--line);border-radius:15px;padding:14px 16px;box-shadow:var(--shadow)}
+.kpi-lbl{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.kpi-val{font-size:clamp(21px,2vw,30px);font-weight:800;margin:4px 0;font-variant-numeric:tabular-nums;color:var(--accent)}
+.kpi-sub{font-size:12px;color:var(--muted)}
+.formula{background:#fff;border:1.5px dashed #bfc5e8;border-radius:13px;padding:10px 14px;overflow-x:auto;font-size:clamp(13.5px,1.15vw,17px);text-align:center}
+.sym-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+@media (max-width:960px){.sym-grid{grid-template-columns:1fr}}
+.sym-item{background:rgba(255,255,255,.9);border:1.5px solid var(--line);border-radius:10px;padding:7px 10px;font-size:13px;line-height:1.42;cursor:pointer;transition:opacity .22s ease,transform .22s ease,border-color .22s ease,box-shadow .22s ease}
+.sym-item:hover{border-color:#9ca8f2;transform:translateY(-1px)}
+.sym-item b.sym{font-family:"JetBrains Mono",monospace;color:var(--indigo);font-size:13px;background:var(--indigo-soft);padding:1px 6px;border-radius:5px;margin-right:5px}
+.sym-item.teal b.sym{color:var(--teal);background:var(--teal-soft)}
+.slide.focus-mode .sym-item.is-dim{opacity:.24;transform:scale(.985);filter:grayscale(.35)}
+.slide.focus-mode .sym-item.is-done{opacity:.72}
+.slide.focus-mode .sym-item.is-active{opacity:1;transform:translateY(-2px) scale(1.015);border-color:var(--indigo);box-shadow:0 8px 20px rgba(79,70,229,.18);background:#fff}
+.slide.focus-mode .sym-item.teal.is-active{border-color:var(--teal);box-shadow:0 8px 20px rgba(13,148,136,.18)}
+.sym-toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:6px 11px;background:rgba(255,255,255,.88);border:1px solid var(--line);border-radius:12px}
+.step-btn{font-size:12px;padding:5px 10px;border-radius:8px;font-weight:700}
+.step-hint{font-size:12px;color:var(--muted)}
+.live-svg-wrap{background:#fff;border:1px solid var(--line);border-radius:13px;padding:6px 8px 4px;margin-bottom:8px}
+.live-svg-wrap svg{width:100%;height:auto;display:block}
+code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.87em;background:rgba(23,32,61,.065);padding:1px 5px;border-radius:5px}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+ul.clean{list-style:none}
+ul.clean li{padding-left:20px;position:relative;margin-bottom:6px}
+ul.clean li::before{content:"";position:absolute;left:3px;top:.56em;width:8px;height:8px;border-radius:2.5px;background:var(--accent)}
+.card.teal ul.clean li::before{background:var(--teal)}
+.card.rose ul.clean li::before{background:var(--rose)}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:#fff}
+table{border-collapse:collapse;width:100%;font-size:clamp(11.6px,.92vw,13.2px);font-variant-numeric:tabular-nums}
+th,td{padding:6.5px 9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{background:var(--dark);color:#fff;font-weight:700;white-space:nowrap}
+tr:nth-child(even) td{background:#fafbff}
+td.num,th.num{text-align:right;font-family:"JetBrains Mono",monospace}
+.ok{color:var(--teal);font-weight:700} .bad{color:var(--rose);font-weight:700} .warn{color:var(--amber);font-weight:700}
+.fig-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px;box-shadow:var(--shadow)}
+.fig-card img{width:100%;height:auto;max-height:54vh;object-fit:contain;border-radius:8px;cursor:zoom-in;display:block;margin:0 auto}
+.fig-card figcaption{font-size:12.2px;color:var(--muted);margin-top:7px;text-align:center}
+.slider-row{display:grid;grid-template-columns:115px 1fr 96px;gap:10px;align-items:center;font-weight:700;margin:8px 0}
+input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer}
+.big-num{font-size:clamp(22px,2.1vw,34px);font-weight:800;font-variant-numeric:tabular-nums}
+.badge-status{display:inline-block;padding:5px 11px;border-radius:999px;font-size:12.5px;font-weight:700}
+.badge-ok{background:var(--emerald-soft);color:var(--emerald)}
+.badge-bad{background:var(--rose-soft);color:var(--rose)}
+.badge-warn{background:var(--amber-soft);color:var(--amber)}
+.ggb-box{background:#131b34;color:#e8ebff;border-radius:14px;overflow:hidden;border:1px solid #283358}
+.ggb-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 13px;background:rgba(255,255,255,.07);font-size:12px}
+.ggb-box pre{padding:11px 13px;overflow-x:auto;font-family:"JetBrains Mono",monospace;font-size:11.8px;line-height:1.48;max-height:38vh;white-space:pre}
+.copy-btn{padding:4px 10px;font-size:11.8px;border-radius:8px;background:var(--accent);color:#fff}
+.footnote{font-size:12px;color:var(--muted);margin-top:6px;padding:7px 10px;background:#f8fafc;border-left:3px solid var(--amber);border-radius:7px}
+.nav{position:fixed;left:0;right:0;bottom:0;height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(14px,3vw,36px);
+  background:rgba(244,246,252,.95);backdrop-filter:blur(8px);border-top:1px solid var(--line);z-index:60}
+.nav .title{font-size:13px;color:var(--muted);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:36vw}
+.nav .ctrls{display:flex;gap:7px;align-items:center}
+.counter{font-variant-numeric:tabular-nums;font-weight:800;min-width:60px;text-align:center;font-size:13.5px}
+.dots{display:flex;gap:5px}
+.dots span{width:7px;height:7px;border-radius:50%;background:#cbd2e6;cursor:pointer;transition:all .2s}
+.dots span.on{background:var(--accent);width:20px;border-radius:6px}
+@media (max-width:820px){.dots{display:none}}
+.lightbox{position:fixed;inset:0;background:rgba(15,23,42,.92);display:none;align-items:center;justify-content:center;flex-direction:column;z-index:120;padding:24px;cursor:zoom-out}
+.lightbox.open{display:flex}
+.lightbox img{max-width:95vw;max-height:85vh;border-radius:12px;background:#fff;padding:8px}
+.toast{position:fixed;left:50%;bottom:72px;transform:translateX(-50%);background:var(--dark);color:#fff;padding:8px 15px;border-radius:10px;font-size:12.8px;font-weight:700;opacity:0;transition:opacity .25s;z-index:100;pointer-events:none}
+.toast.on{opacity:1}
+@media print{html,body{overflow:visible;height:auto}.nav,.top-links,.progress,.lightbox,.toast{display:none !important}.deck{height:auto;width:auto}.slide{position:static;opacity:1;pointer-events:auto;transform:none;page-break-after:always;padding:18px}}
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div class="top-links">
+  <a href="../index.html">← Presentación Unificada</a>
+  <a href="../case_02_LG01_survival_and_runge/presentacion_IDEA_LG_01.html">Ir al Caso 2 (Lagrange) →</a>
+  <a href="./GUIA_FACIL_IDEA_RL_04.md" target="_blank">📖 Guía Fácil (.md)</a>
+</div>
+
+<div class="deck" id="deck">
+
+<!-- S1 -->
+<section class="slide cover" data-title="Portada">
+  <div class="kicker">Caso 1 · Regresión Lineal por Mínimos Cuadrados (MCO) · JobPath</div>
+  <h1>Deriva Anual (2000–2023)<br>y <span style="color:var(--rose)">Falla por Extrapolación</span></h1>
+  <p class="muted" style="max-width:790px;margin-top:6px">
+    <b>JobPath (<code>MineriaProtect</code>):</b> análisis de <b>1,993,291</b> registros laborales crudos de JobHop v2 enriquecidos con el catálogo europeo <b>ESCO v1.2.1</b> (<code>3,039</code> oficios). Este caso demuestra cómo <b>4 años censurados (<code>2020–2023</code>)</b> invierten la recta MCO y cómo extrapolar una recta con <code>R² = 97.29 %</code> predice <b>duraciones negativas en 2027</b>.
+  </p>
+  <div class="grid4" style="margin-top:12px">
+    <div class="kpi-card"><div class="kpi-lbl">R² Duración (2000–19)</div><div class="kpi-val" style="color:var(--teal)">97.29 %</div><div class="kpi-sub">Solo cerrados <code>~es_vigente</code> (<code>MR-09</code>)</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">R² Skills con Cola</div><div class="kpi-val" style="color:var(--rose)">8.26 %</div><div class="kpi-sub">Se invierte de +0.097 a −0.101/año</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">Duración Predicha 2027</div><div class="kpi-val" style="color:var(--rose)">−4.96</div><div class="kpi-sub">Negativa ya desde 2021 (−0.20 trim.)</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">Ganancia al Centrar t</div><div class="kpi-val">4,672×</div><div class="kpi-sub">3.55e-15 vs. 1.66e-11 (t = año−2000)</div></div>
+  </div>
+  <div class="row" style="margin-top:10px">
+    <span class="pill">IDEA-RL-04</span>
+    <span class="pill rose">Reglas clave: MR-01 · MR-02 · MR-05 · MR-06 · MR-07 · MR-08 · MR-09</span>
+  </div>
+</section>
+
+<!-- S2 -->
+<section class="slide" data-title="El problema y analogía">
+  <div class="kicker">Contexto y Analogía Cotidiana</div>
+  <h2>Dos trampas silenciosas al analizar series laborales por año</h2>
+  <div class="grid2">
+    <div class="stack">
+      <div class="card rose">
+        <h3>Trampa 1: La cola censurada (2020–2023)</h3>
+        <p>Entre 2000 y 2019 hay entre <code>11,382</code> y <code>133,578</code> inicios anuales (<code>1,509,997</code> en total). Pero al cerrar la captura del dataset, en <code>2020–2023</code> solo quedan <b><code>59, 3, 3 y 1</code> registros</b>. Por elevar errores al cuadrado y estar en el extremo derecho, esos 4 años voltean la recta de <code>mean_skills</code> (<code>+0.0967 → −0.1011</code>) y desploman <code>R²</code> a <code>8.26 %</code> (🔴 Rechazado <code>MR-06</code>).</p>
+      </div>
+      <div class="card amber">
+        <h3>Trampa 2: Censura calendario y filtro <code>MR-09</code></h3>
+        <p>Excluir empleos aún activos (<code>~es_vigente</code>) elimina el falso rebote de 2019 (<code>6.61 → 8.31</code> pasa a caída limpia <code>3.14 → 2.27</code>, <code>R² = 97.29 %</code>), pero persiste el tope calendario: un empleo iniciado en 2019 y ya cerrado no pudo durar 10 años.</p>
+      </div>
+    </div>
+    <div class="card indigo">
+      <h3>💡 Analogía cotidiana: la taza de café caliente</h3>
+      <p>Tu café caliente baja <b>4 °C por minuto</b> durante los primeros 10 minutos (de 80 °C a 40 °C). Si extrapolas esa misma recta hasta el minuto 30 sin pensar en la física, la fórmula predice <b>−40 °C (congelado)</b>.</p>
+      <p style="margin-top:10px">Exactamente igual ocurre aquí: la recta de duración cerrada atraviesa el cero en <b><code>2020.74</code></b>, cae a <b><code>−0.20</code> trimestres en 2021</b> y llega a <b><code>−4.96</code> trimestres en 2027</b> (físicamente imposible).</p>
+    </div>
+  </div>
+</section>
+
+<!-- S3: FÓRMULAS MCO SÍMBOLO POR SÍMBOLO -->
+<section class="slide" data-title="Fórmulas MCO Símbolo por Símbolo">
+  <div class="kicker">Fundamento Matemático · Desglose Total</div>
+  <h2>∑ Fórmulas MCO explicadas símbolo por símbolo</h2>
+  <div class="sym-toolbar">
+    <div class="row">
+      <button class="step-btn" onclick="stepFocus(this,'next')">▶ Paso a paso</button>
+      <button class="step-btn ghost" onclick="stepFocus(this,'prev')">◀ Anterior</button>
+      <button class="step-btn ghost" onclick="stepFocus(this,'all')">Mostrar todos</button>
+      <span class="pill step-status">Todos visibles (12 símbolos)</span>
+    </div>
+    <span class="step-hint">Clic en cualquier símbolo para iluminarlo · tecla <code>.</code> avanza</span>
+  </div>
+  <div class="grid2">
+    <div class="card indigo">
+      <h3>Recta MCO y Ecuaciones Normales</h3>
+      <div class="formula" data-plain="ŷ(t) = a₀ + a₁·t   |   a₁ = [n·Σ(tᵢyᵢ) − (Σtᵢ)(Σyᵢ)] / [n·Σtᵢ² − (Σtᵢ)²]   |   a₀ = ȳ − a₁·t̄">$$\hat{y}(t) = a_0 + a_1 t, \qquad a_1 = \frac{n\sum t_i y_i - (\sum t_i)(\sum y_i)}{n\sum t_i^2 - (\sum t_i)^2}, \qquad a_0 = \bar{y} - a_1\bar{t}$$</div>
+      <div class="sym-grid">
+        <div class="sym-item"><b class="sym">t, tᵢ</b>Año centrado (<code>t = año − 2000</code>, de <code>0</code> a <code>19</code>).</div>
+        <div class="sym-item"><b class="sym">yᵢ, ŷ(t)</b><code>yᵢ</code> = dato real anual; <code>ŷ(t)</code> = valor predicho por la recta.</div>
+        <div class="sym-item"><b class="sym">a₁</b><b>Pendiente:</b> cambio promedio anual (<code>−0.7926</code> trim./año).</div>
+        <div class="sym-item"><b class="sym">a₀</b><b>Intercepto:</b> nivel esperado en <code>t = 0</code> (año 2000: <code>16.4417</code> trim.).</div>
+        <div class="sym-item"><b class="sym">n</b>Años válidos usados en el ajuste (<code>n = 20</code>, <code>2000–2019</code>).</div>
+        <div class="sym-item"><b class="sym">(t̄, ȳ)</b><b>Centroide <code>(9.5, 8.9120)</code></b> por donde siempre cruza la recta (<code>MR-01</code>).</div>
+      </div>
+    </div>
+    <div class="card teal">
+      <h3>Calidad del Ajuste (<code>Sₜ</code>, <code>Sᵣ</code>, <code>R²</code>, <code>S<sub>y/x</sub></code>)</h3>
+      <div class="formula" data-plain="Sₜ = Σ(yᵢ − ȳ)²   |   Sᵣ = Σ(yᵢ − ŷᵢ)² = Σeᵢ²   |   R² = (Sₜ − Sᵣ)/Sₜ   |   S_{y/x} = √(Sᵣ/(n−2))">$$S_t = \sum(y_i - \bar{y})^2, \quad S_r = \sum e_i^2, \quad R^2 = \frac{S_t - S_r}{S_t}, \quad S_{y/x} = \sqrt{\frac{S_r}{n - 2}}$$</div>
+      <div class="sym-grid">
+        <div class="sym-item teal"><b class="sym">eᵢ</b><b>Residuo</b> <code>yᵢ − ŷᵢ</code>: error vertical en cada año (<code>∑eᵢ ≈ 0</code>).</div>
+        <div class="sym-item teal"><b class="sym">Sₜ</b><b>Suma total de cuadrados</b> respecto a la media (<code>429.4119</code>).</div>
+        <div class="sym-item teal"><b class="sym">Sᵣ</b><b>Suma de residuos al cuadrado</b> que MCO minimiza (<code>11.6484</code>).</div>
+        <div class="sym-item teal"><b class="sym">R²</b>Fracción explicada por la recta (<code>97.29 %</code>). Si <code>&lt; 30 %</code> → rechazo <code>MR-06</code>.</div>
+        <div class="sym-item teal"><b class="sym">S<sub>y/x</sub></b>Error típico en trimestres (<code>0.8044</code>).</div>
+        <div class="sym-item teal"><b class="sym">n − 2</b>Grados de libertad (<code>20 − 2 = 18</code>, por estimar <code>a₀</code> y <code>a₁</code>, <code>MR-02</code>).</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- S4: CENTRADO Y CANCELACIÓN SÍMBOLO POR SÍMBOLO -->
+<section class="slide" data-title="Centrado t − 2000 y Cancelación">
+  <div class="kicker">Estabilidad Numérica · Modelo Centrado</div>
+  <h2>∑ Centrado <code>t = año − 2000</code> explicado símbolo por símbolo (<code>4,672×</code> más precisión)</h2>
+  <div class="sym-toolbar">
+    <div class="row">
+      <button class="step-btn" onclick="stepFocus(this,'next')">▶ Paso a paso</button>
+      <button class="step-btn ghost" onclick="stepFocus(this,'prev')">◀ Anterior</button>
+      <button class="step-btn ghost" onclick="stepFocus(this,'all')">Mostrar todos</button>
+      <span class="pill step-status">Todos visibles (4 símbolos)</span>
+    </div>
+    <span class="step-hint">Clic en cualquier símbolo para iluminarlo · tecla <code>.</code> avanza</span>
+  </div>
+  <div class="card indigo">
+    <div class="formula" data-plain="dur_estimada(t) = 16.4417 − 0.7926 · (año − 2000)   |   t₀ = 16.4417 / 0.7926 = 20.74 ⇒ año 2020.74">$$\widehat{\text{dur}}(t) = 16.4417 - 0.7926 \cdot (\text{año} - 2000), \qquad t_0 = \frac{16.4417}{0.7926} = 20.74 \implies \text{año } \mathbf{2020.74}$$</div>
+    <div class="sym-grid">
+      <div class="sym-item"><b class="sym">t = año − 2000</b>Tiempo trasladado al año 2000 (<code>t = 0</code> en 2000; <code>t = 27</code> en 2027).</div>
+      <div class="sym-item"><b class="sym">a₀ = 16.4417</b>Duración esperada (trimestres) en el año 2000 (vs. <code>+1,601.64</code> sin sentido en el año 0 d. C.).</div>
+      <div class="sym-item"><b class="sym">a₁ = −0.7926</b>Descenso promedio anual (trimestres/año). Invariante al centrado.</div>
+      <div class="sym-item"><b class="sym">t₀ = 20.74</b>Instante exacto donde la recta cruza el cero (<code>2020.74</code>): desde <code>2021</code> predice negativo.</div>
+    </div>
+  </div>
+  <div class="grid2">
+    <div class="card rose">
+      <h3>❌ Sin centrar (<code>x = 2000..2019</code>): Cancelación numérica</h3>
+      <p class="small"><code>20(80,762,470) − (40,190)² = 1,615,249,400 − 1,615,236,100 = 13,300</code>. Restar dos cifras de 1.615 mil millones que coinciden en 5 dígitos provoca pérdida de precisión en <code>float64</code> (diff vs. <code>polyfit</code>: <b><code>1.66 × 10⁻¹¹</code></b>).</p>
+    </div>
+    <div class="card emerald">
+      <h3>✔ Centrado (<code>t = 0..19</code>): <code>4,672×</code> mejor</h3>
+      <p class="small"><code>20(2,470) − 190² = 49,400 − 36,100 = 13,300</code>. Deja <code>a₁</code>, <code>R² = 0.9729</code> y <code>S<sub>y/x</sub> = 0.8044</code> <b>idénticos</b>, pero reduce la discrepancia frente a <code>numpy.polyfit</code> a <b><code>3.55 × 10⁻¹⁵</code></b>.</p>
+    </div>
+  </div>
+</section>
+
+<!-- S5: SIMULADOR -->
+<section class="slide" data-title="Simulador 2000–2027">
+  <div class="kicker">Laboratorio Interactivo en Vivo</div>
+  <h2>Arrastra el año hasta 2027 y mira fallar la extrapolación (vs. CSV real)</h2>
+  <div class="grid2 wide-right">
+    <div class="stack">
+      <div class="card">
+        <h3>Selector de año (<code>2000</code> a <code>2027</code>)</h3>
+        <div class="slider-row">
+          <span>Año (<span class="mono" id="vT">t = 15</span>):</span>
+          <input type="range" id="sYr" min="2000" max="2027" step="1" value="2015" oninput="updRL04()">
+          <span class="mono big-num" style="text-align:right;color:var(--indigo)" id="vYr">2015</span>
+        </div>
+        <div class="row">
+          <button class="ghost" onclick="setYr(2005)">2005 (Válido)</button>
+          <button class="ghost" onclick="setYr(2019)">2019 (Borde)</button>
+          <button class="amber" onclick="setYr(2020)">2020 (+0.59)</button>
+          <button class="rose" onclick="setYr(2021)">2021 (−0.20)</button>
+          <button class="rose" onclick="setYr(2027)">2027 (−4.96 ¡Falla!)</button>
+        </div>
+      </div>
+      <div class="card indigo">
+        <div class="grid2">
+          <div><div class="kpi-lbl">Duración predicha (trim.)</div><div class="big-num" id="durYrPred">—</div><div class="kpi-sub" id="durYrReal">—</div></div>
+          <div><div class="kpi-lbl">Habilidades ESCO predichas</div><div class="big-num" style="color:var(--indigo)" id="skYrPred">—</div><div class="kpi-sub" id="skYrReal">—</div></div>
+        </div>
+        <div style="margin-top:10px" class="row"><span id="yrBadge" class="badge-status badge-ok">—</span><span id="yrVol" class="pill dark">—</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Gráfico en vivo: recta MCO vs. datos reales cerrados (<code>2000–2027</code>)</h3>
+      <div class="live-svg-wrap">
+        <svg id="svgRL04" viewBox="0 0 560 225" role="img" aria-label="Gráfico interactivo de duración laboral 2000 a 2027"></svg>
+      </div>
+      <p class="footnote" style="margin-top:0"><b>Guía rápida (<code>MR-05</code> · <code>MR-09</code>):</b> puntos oscuros = promedios cerrados <code>2000–2019</code>; puntos ámbar = cola censurada <code>2020–2023</code>; la recta punteada cruza cero en <b><code>2020.74</code></b> y cae a <b><code>−4.96</code></b> en <code>2027</code>.</p>
+    </div>
+  </div>
+</section>
+
+<!-- S6: GRÁFICA -->
+<section class="slide" data-title="Evidencia visual (150 DPI)">
+  <div class="kicker">Gráfico Real Verificado (150 DPI · Clic para ampliar)</div>
+  <h2>Impacto de la cola censurada y cruce por cero hacia 2027</h2>
+  <figure class="fig-card">
+    <img src="./figures/nm05_rl04_annual_drift_and_censoring_extrapolation.png" alt="Deriva anual y extrapolación fallida en 2027">
+    <figcaption><b>🔍 Clic para ampliar:</b> Izquierda: la cola 2020–2023 invierte la pendiente de <code>mean_skills</code> y colapsa <code>R²</code> (<code>0.748 → 0.083</code>). Derecha: sobre empleos cerrados (<code>~es_vigente</code>, <code>R² = 0.9729</code>), extrapolar predice <code>−4.96</code> trimestres en 2027.</figcaption>
+  </figure>
+</section>
+
+<!-- S7: TABLAS CSV -->
+<section class="slide" data-title="Tablas comparativas CSV">
+  <div class="kicker">Evidencia Numérica Exacta (100 % sincronizada con CSV)</div>
+  <h2>Contraste de regímenes MCO y paridad de particiones crudas <code>01_raw</code></h2>
+  <div class="grid2">
+    <div class="card">
+      <h3>Regímenes (<code>rl04_ols_regime_comparison.csv</code>)</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Variable</th><th>Régimen</th><th class="num">a₀</th><th class="num">a₁</th><th class="num">R²</th><th class="num">Diff polyfit</th></tr></thead>
+          <tbody>
+            <tr><td><b>mean_skills</b></td><td>Centrado (t−2000)</td><td class="num">22.3672</td><td class="num ok">+0.0967</td><td class="num ok">0.7475</td><td class="num ok">7.11e-15</td></tr>
+            <tr><td>mean_skills</td><td>2000–2023 (cola)</td><td class="num">225.93</td><td class="num bad">−0.1011</td><td class="num bad">0.0826</td><td class="num">7.53e-12</td></tr>
+            <tr><td><b>mean_dur_q</b></td><td>Sin centrar (año)</td><td class="num warn">1,601.64</td><td class="num">−0.7926</td><td class="num ok">0.9729</td><td class="num warn">1.66e-11</td></tr>
+            <tr><td><b>mean_dur_q</b></td><td><b>Centrado (t−2000)</b></td><td class="num ok"><b>16.4417</b></td><td class="num">−0.7926</td><td class="num ok">0.9729</td><td class="num ok"><b>3.55e-15</b></td></tr>
+            <tr><td><b>mean_green</b></td><td>Centrado (t−2000)</td><td class="num">0.0240</td><td class="num">−0.00012</td><td class="num warn">0.6592</td><td class="num ok">2.44e-19</td></tr>
+            <tr><td>mean_green</td><td>2000–2023 (cola)</td><td class="num">0.8593</td><td class="num bad">−0.00042</td><td class="num bad">0.1714</td><td class="num">2.19e-14</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Paridad <code>01_raw</code> (archivos crudos originales · 1.99M filas)</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Archivo Crudo</th><th class="num">Filas totales</th><th class="num">2000–19</th><th class="num">Pend. %/año</th><th class="num">Diff polyfit</th></tr></thead>
+          <tbody>
+            <tr><td>JobHop_v2_train</td><td class="num">1,594,827</td><td class="num">1,337,511</td><td class="num ok">+0.1855</td><td class="num ok">3.35e-12</td></tr>
+            <tr><td>JobHop_v2_test</td><td class="num">198,877</td><td class="num">166,437</td><td class="num ok">+0.1808</td><td class="num ok">2.90e-12</td></tr>
+            <tr><td>JobHop_v2_val</td><td class="num">199,587</td><td class="num">167,401</td><td class="num ok">+0.1848</td><td class="num ok">3.24e-12</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="footnote"><b>Mapa de capas <code>data/</code> en este caso:</b> lee directamente <code>01_raw/</code> (paridad), <code>02_interim/ESCO/greenShareOcc_en_limpio.csv</code> (<code>mean_green</code>) y <code>03_processed/empleos_unificado_limpio.csv</code> (serie anual). <code>04_transformed/</code> no aplica aquí.</p>
+    </div>
+  </div>
+</section>
+
+<!-- S8: CONCLUSIONES, REGLAS MR Y GLOSARIO -->
+<section class="slide" data-title="Conclusiones y Glosario">
+  <div class="kicker">Cierre Pedagógico · Salvaguardas MR</div>
+  <h2>Reglas de oro, salvaguardas <code>MR</code> y glosario completo</h2>
+  <div class="grid2">
+    <div class="card teal">
+      <h3>Reglas de oro que deja el Caso 1</h3>
+      <ul class="clean">
+        <li><b>Revisa siempre el soporte muestral:</b> 4 años con <code>59, 3, 3, 1</code> registros invierten una recta de 20 años (<code>R²: 74.8 % → 8.3 %</code>, rechazo <b><code>MR-06</code></b>).</li>
+        <li><b>Centra <code>t = año − 2000</code>:</b> ganas interpretabilidad (<code>a₀ = 16.44</code>) y <code>4,672×</code> más estabilidad numérica, sin cambiar <code>R²</code>.</li>
+        <li><b>Cumple <code>MR-07</code>, <code>MR-08</code> y <code>MR-09</code>:</b> no afirmes causalidad, atribuye <code>mean_skills</code> al oficio ESCO y usa siempre empleos cerrados (<code>~es_vigente</code>).</li>
+        <li><b>Audita límites físicos (<code>MR-05</code>):</b> jamás extrapoles donde la recta predice duraciones <code>&lt; 0</code>.</li>
+      </ul>
+    </div>
+    <div class="card indigo">
+      <h3>Glosario Rápido (cero siglas sueltas)</h3>
+      <ul class="clean small">
+        <li><b><code>01_raw / 02_interim / 03_processed</code>:</b> capas solo lectura de <code>data/</code> (crudos JobHop, catálogos ESCO y dataset unificado limpio).</li>
+        <li><b>Cancelación numérica:</b> pérdida de decimales al restar sumas gigantes casi iguales (evitada al centrar <code>t − 2000</code>).</li>
+        <li><b>Censura derecha calendario:</b> empleos recientes ya cerrados no pudieron tener duraciones largas.</li>
+        <li><b><code>greenShare / mean_green</code>:</b> fracción de habilidades verdes exigidas por el oficio ESCO asignado al cargo (<code>MR-08</code>).</li>
+        <li><b><code>MR-06 / MR-07 / MR-08 / MR-09</code>:</b> rechazo <code>R²&lt;0.30</code>, no causalidad, atribución al oficio ESCO y solo empleos cerrados (<code>~es_vigente</code>).</li>
+        <li><b><code>Sₜ / Sᵣ / S<sub>y/x</sub></code>:</b> variación total, suma de residuos al cuadrado y error típico vertical (con <code>n − 2</code> gl).</li>
+      </ul>
+      <div class="row" style="margin-top:8px">
+        <a class="btn" href="../index.html">← Volver a Presentación Unificada</a>
+        <a class="btn ghost" href="../case_02_LG01_survival_and_runge/presentacion_IDEA_LG_01.html">Ver Caso 2 (Lagrange) →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<div class="nav">
+  <div class="title" id="navTitle">Caso 1 · IDEA-RL-04</div>
+  <div class="dots" id="dots"></div>
+  <div class="ctrls">
+    <button class="ghost" onclick="prev()">← Anterior</button>
+    <span class="counter" id="counter">1 / 8</span>
+    <button onclick="next()">Siguiente →</button>
+    <button class="ghost" onclick="toggleFS()" title="Pantalla completa (F)">⛶</button>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('open')"><img id="lbImg" alt="Zoom"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const RL04_OBS = {
+  2000:{n:31880, dur:18.3450, sk:22.2744}, 2001:{n:30386, dur:16.5669, sk:22.4937},
+  2002:{n:31374, dur:15.0082, sk:22.7668}, 2003:{n:35136, dur:14.0478, sk:22.7834},
+  2004:{n:41799, dur:13.1648, sk:22.6873}, 2005:{n:50988, dur:12.0892, sk:22.6747},
+  2006:{n:63814, dur:11.2605, sk:22.6089}, 2007:{n:77251, dur:10.3430, sk:22.6807},
+  2008:{n:88927, dur:9.4568,  sk:22.8363}, 2009:{n:91758, dur:8.4646,  sk:23.3596},
+  2010:{n:112621,dur:7.7814,  sk:23.3851}, 2011:{n:131312,dur:6.6656,  sk:23.4728},
+  2012:{n:133578,dur:6.0901,  sk:23.8721}, 2013:{n:125822,dur:5.5907,  sk:24.0054},
+  2014:{n:121633,dur:5.1637,  sk:24.1066}, 2015:{n:112332,dur:4.7216,  sk:24.2701},
+  2016:{n:96083, dur:4.2902,  sk:24.2702}, 2017:{n:74454, dur:3.7769,  sk:24.0725},
+  2018:{n:47467, dur:3.1420,  sk:23.7861}, 2019:{n:11382, dur:2.2712,  sk:23.3166},
+  2020:{n:59,    dur:2.3333,  sk:23.9661}, 2021:{n:3,     dur:2.0000,  sk:23.3333},
+  2022:{n:3,     dur:3.0000,  sk:15.6667}, 2023:{n:1,     dur:2.0000,  sk:14.0000}
+};
+const slides=[...document.querySelectorAll('.slide')]; let cur=0;
+const dotsEl=document.getElementById('dots');
+slides.forEach((s,k)=>{const d=document.createElement('span');d.title=s.dataset.title||('Diap. '+(k+1));d.onclick=()=>goTo(k);dotsEl.appendChild(d);});
+function goTo(i){if(i<0||i>=slides.length)return;cur=i;slides.forEach((s,k)=>{s.classList.toggle('active',k===i);s.classList.toggle('before',k<i);});document.getElementById('counter').textContent=(i+1)+' / '+slides.length;document.getElementById('navTitle').textContent='Caso 1 · MCO · '+(slides[i].dataset.title||'');document.getElementById('progress').style.width=((i+1)/slides.length*100)+'%';document.querySelectorAll('#dots span').forEach((d,k)=>d.classList.toggle('on',k===i));history.replaceState(null,'','#'+(i+1));}
+function next(){goTo(cur+1);} function prev(){goTo(cur-1);}
+function toggleFS(){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>{});}
+document.addEventListener('keydown',e=>{const tag=(e.target.tagName||'').toLowerCase();if(['input','textarea','select'].includes(tag))return;if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();next();}else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();prev();}else if(e.key==='Home')goTo(0);else if(e.key==='End')goTo(slides.length-1);else if(e.key==='f'||e.key==='F')toggleFS();else if(e.key==='.'){const s=slides[cur];if(s&&s.querySelector('.sym-toolbar')){const items=[...s.querySelectorAll('.sym-item')];const ci=s.dataset.focusIdx!==undefined?parseInt(s.dataset.focusIdx,10):-1;setSlideFocus(s,ci+1>=items.length?null:ci+1);}}else if(e.key==='Escape'){document.getElementById('lightbox').classList.remove('open');if(slides[cur])setSlideFocus(slides[cur],null);}});
+document.querySelectorAll('.fig-card img').forEach(im=>im.addEventListener('click',()=>{document.getElementById('lbImg').src=im.src;document.getElementById('lightbox').classList.add('open');}));
+function applyMathOrFallback(){if(window.renderMathInElement){renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false}],throwOnError:false});}else{document.querySelectorAll('.formula[data-plain]').forEach(el=>{if(!el.querySelector('.katex'))el.innerHTML='<span class="mono" style="font-weight:700;display:block;text-align:center">'+el.dataset.plain+'</span>';});}}
+window.addEventListener('load',applyMathOrFallback); setTimeout(()=>{if(!window.renderMathInElement)applyMathOrFallback();},1800);
+
+function setSlideFocus(slide,idx){const items=[...slide.querySelectorAll('.sym-item')];if(!items.length)return;const badge=slide.querySelector('.step-status');if(idx===null||idx<0||idx>=items.length){slide.classList.remove('focus-mode');delete slide.dataset.focusIdx;items.forEach(el=>el.classList.remove('is-active','is-done','is-dim'));if(badge)badge.textContent=`Todos visibles (${items.length})`;return;}slide.classList.add('focus-mode');slide.dataset.focusIdx=String(idx);items.forEach((el,k)=>{el.classList.toggle('is-active',k===idx);el.classList.toggle('is-done',k<idx);el.classList.toggle('is-dim',k>idx);});if(badge)badge.textContent=`Paso ${idx+1} / ${items.length}`;}
+function stepFocus(btn,dir){const slide=btn.closest('.slide'),items=[...slide.querySelectorAll('.sym-item')];if(!items.length)return;if(dir==='all'){setSlideFocus(slide,null);return;}const ci=slide.dataset.focusIdx!==undefined?parseInt(slide.dataset.focusIdx,10):-1;setSlideFocus(slide,dir==='next'?(ci+1>=items.length?null:ci+1):(ci<=0?null:ci-1));}
+document.querySelectorAll('.slide .sym-item').forEach(item=>item.addEventListener('click',()=>{const s=item.closest('.slide'),items=[...s.querySelectorAll('.sym-item')],idx=items.indexOf(item),ci=s.dataset.focusIdx!==undefined?parseInt(s.dataset.focusIdx,10):-1;if(ci===idx&&s.classList.contains('focus-mode')){setSlideFocus(s,null);}else{s.classList.add('focus-mode');s.dataset.focusIdx=String(idx);items.forEach((el,k)=>{el.classList.toggle('is-active',k===idx);el.classList.remove('is-done');el.classList.toggle('is-dim',k!==idx);});const b=s.querySelector('.step-status');if(b)b.textContent=`Enfoque: ${idx+1} / ${items.length}`;}}));
+
+function drawRL04Chart(curYr,curDur,curObs){
+  const svg=document.getElementById('svgRL04');if(!svg)return;
+  const W=560,H=225,L=44,R=18,T=16,B=28;
+  const xMap=y=>L+((y-2000)/27)*(W-L-R), yMap=v=>T+((20-v)/26)*(H-T-B);
+  const y0=yMap(0),x19=xMap(2019),xCross=xMap(2020.744),p=[];
+  p.push(`<rect x="${L}" y="${T}" width="${x19-L}" height="${y0-T}" fill="#ecfdf5" opacity=".55"/>`);
+  p.push(`<rect x="${x19}" y="${T}" width="${W-R-x19}" height="${y0-T}" fill="#fffbeb" opacity=".75"/>`);
+  p.push(`<rect x="${L}" y="${y0}" width="${W-L-R}" height="${H-B-y0}" fill="#fff1f2" opacity=".88"/>`);
+  p.push(`<text x="${L+6}" y="${T+12}" font-size="9.5" font-weight="700" fill="#059669">Soporte válido (2000–2019)</text>`);
+  p.push(`<text x="${x19+5}" y="${T+12}" font-size="9.5" font-weight="700" fill="#b45309">Extrap. (MR-05)</text>`);
+  p.push(`<text x="${L+6}" y="${H-B-5}" font-size="9.5" font-weight="700" fill="#e11d48">Zona físicamente imposible (&lt; 0 trimestres)</text>`);
+  [20,15,10,5,0,-5].forEach(v=>{const py=yMap(v),iz=v===0;p.push(`<line x1="${L}" y1="${py}" x2="${W-R}" y2="${py}" stroke="${iz?'#e11d48':'#e2e8f0'}" stroke-width="${iz?1.6:1}" ${iz?'stroke-dasharray="4,3"':''}/>`);p.push(`<text x="${L-6}" y="${py+3.5}" text-anchor="end" font-size="9.5" font-family="JetBrains Mono,monospace" fill="${iz?'#e11d48':'#64748b'}" font-weight="${iz?700:500}">${v}</text>`);});
+  p.push(`<line x1="${x19}" y1="${T}" x2="${x19}" y2="${H-B}" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="3,3"/>`);
+  [2000,2005,2010,2015,2019,2023,2027].forEach(yr=>{const px=xMap(yr);p.push(`<line x1="${px}" y1="${H-B}" x2="${px}" y2="${H-B+4}" stroke="#94a3b8"/>`);p.push(`<text x="${px}" y="${H-B+15}" text-anchor="middle" font-size="9.5" font-family="JetBrains Mono,monospace" fill="${yr>2019?'#b45309':'#475569'}" font-weight="${yr===2019||yr===2027?700:500}">${yr}</text>`);});
+  const d0=16.44171259,d19=16.44171259-0.79260066*19,d27=16.44171259-0.79260066*27;
+  p.push(`<line x1="${xMap(2000)}" y1="${yMap(d0)}" x2="${x19}" y2="${yMap(d19)}" stroke="#4f46e5" stroke-width="2.6"/>`);
+  p.push(`<line x1="${x19}" y1="${yMap(d19)}" x2="${xMap(2027)}" y2="${yMap(d27)}" stroke="#e11d48" stroke-width="2.6" stroke-dasharray="6,4"/>`);
+  p.push(`<circle cx="${xCross}" cy="${y0}" r="3.5" fill="#fff" stroke="#e11d48" stroke-width="2"/>`);
+  p.push(`<text x="${xCross-4}" y="${y0-7}" text-anchor="end" font-size="9" font-weight="700" fill="#e11d48">0 en 2020.74</text>`);
+  Object.entries(RL04_OBS).forEach(([ys,o])=>{const y=+ys;p.push(y<=2019?`<circle cx="${xMap(y)}" cy="${yMap(o.dur)}" r="2.9" fill="#1e293b" opacity=".82"/>`:`<circle cx="${xMap(y)}" cy="${yMap(o.dur)}" r="3.4" fill="#fff" stroke="#d97706" stroke-width="1.8"/>`);});
+  const cx=xMap(curYr),cy=yMap(curDur),col=curDur<0?'#e11d48':(curYr>2019?'#d97706':'#0d9488');
+  p.push(`<line x1="${cx}" y1="${T}" x2="${cx}" y2="${H-B}" stroke="${col}" stroke-width="1.2" stroke-dasharray="2,2" opacity=".7"/>`);
+  if(curObs){const ry=yMap(curObs.dur);p.push(`<line x1="${cx}" y1="${ry}" x2="${cx}" y2="${cy}" stroke="${col}" stroke-width="2" opacity=".7"/>`);p.push(`<circle cx="${cx}" cy="${ry}" r="4.8" fill="none" stroke="#1e293b" stroke-width="1.8"/>`);}
+  p.push(`<circle cx="${cx}" cy="${cy}" r="6" fill="${col}" stroke="#fff" stroke-width="2.2"/>`);
+  const bw=96,bh=20,bx=curYr>2021?cx-bw-10:cx+10,by=Math.max(T+14,Math.min(H-B-bh-4,cy-10));
+  p.push(`<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="6" fill="${col}"/>`);
+  p.push(`<text x="${bx+bw/2}" y="${by+13.5}" text-anchor="middle" font-size="10.2" font-weight="700" font-family="JetBrains Mono,monospace" fill="#fff">${curYr}: ${curDur.toFixed(2)} trim.</text>`);
+  svg.innerHTML=p.join('');
+}
+
+function setYr(y){document.getElementById('sYr').value=y;updRL04();}
+function updRL04(){
+  const yr=+document.getElementById('sYr').value, t=yr-2000;
+  document.getElementById('vYr').textContent=yr;
+  document.getElementById('vT').textContent='t = '+t;
+  const dur=16.44171259037386-0.7926006555639094*t;
+  const sk=22.367212541630604+0.09673143086666892*t;
+  const obs=RL04_OBS[yr];
+  const dEl=document.getElementById('durYrPred');
+  dEl.textContent=dur.toFixed(2);
+  dEl.style.color=dur<0?'var(--rose)':(yr>2019?'var(--amber)':'var(--teal)');
+  document.getElementById('skYrPred').textContent=sk.toFixed(2);
+  document.getElementById('durYrReal').textContent=obs?`Real cerrado CSV: ${obs.dur.toFixed(2)} trim.`:'Extrapolación pura (sin datos)';
+  document.getElementById('skYrReal').textContent=obs?`Real CSV: ${obs.sk.toFixed(2)} hab. ESCO`:'Extrapolación pura (sin datos)';
+  document.getElementById('yrVol').textContent=obs?`Inicios: ${obs.n.toLocaleString('en-US')}`:'Inicios: 0 (futuro)';
+  const b=document.getElementById('yrBadge');
+  if(dur<0){b.className='badge-status badge-bad';b.textContent='❌ FÍSICAMENTE IMPOSIBLE: '+dur.toFixed(2)+' trimestres';}
+  else if(yr>2019){b.className='badge-status badge-warn';b.textContent='⚠ Extrapolación (año > 2019): fuera del soporte válido';}
+  else{b.className='badge-status badge-ok';b.textContent='✔ Soporte válido (2000–2019 · t = '+t+')';}
+  drawRL04Chart(yr,dur,obs);
+}
+updRL04();
+const start=parseInt(location.hash.slice(1)); goTo(isNaN(start)?0:Math.min(slides.length,Math.max(1,start))-1);
+</script>
+</body>
+</html>
