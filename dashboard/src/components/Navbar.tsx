@@ -4,52 +4,33 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  BarChart3,
-  ShieldCheck,
+  SlidersHorizontal,
   UserSearch,
-  BrainCircuit,
-  Sigma,
-  BookOpenCheck,
+  BookOpen,
+  Info,
   Database,
 } from "lucide-react";
 
 const NAV_ITEMS = [
   {
     href: "/",
-    label: "1. Resumen y Viaje de Datos",
-    shortLabel: "1. Resumen",
-    icon: BarChart3,
-  },
-  {
-    href: "/transparencia",
-    label: "2. Transparencia y Muestreo",
-    shortLabel: "2. Transparencia",
-    icon: ShieldCheck,
-    highlight: true,
+    label: "Explorador de Datos",
+    icon: SlidersHorizontal,
   },
   {
     href: "/explorador",
-    label: "3. Explorador de Trayectorias",
-    shortLabel: "3. Explorador",
+    label: "Trayectoria por Persona",
     icon: UserSearch,
   },
   {
-    href: "/modelos",
-    label: "4. Modelos y Clustering",
-    shortLabel: "4. Modelos (6–8)",
-    icon: BrainCircuit,
+    href: "/ocupaciones",
+    label: "Catálogo de Ocupaciones ESCO",
+    icon: BookOpen,
   },
   {
-    href: "/metodos-numericos",
-    label: "5. Métodos Numéricos",
-    shortLabel: "5. MCO vs. Lagrange",
-    icon: Sigma,
-  },
-  {
-    href: "/metodologia",
-    label: "6. Metodología y Límites",
-    shortLabel: "6. Metodología",
-    icon: BookOpenCheck,
+    href: "/sobre-datos",
+    label: "Sobre estos datos",
+    icon: Info,
   },
 ];
 
@@ -58,65 +39,52 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
-      {/* Persistent Top Academic & Governance Banner */}
+      {/* Visible Banner: "Demo interactivo de datos" */}
       <div className="bg-slate-900 px-4 py-2 text-xs text-slate-100">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2 font-medium">
-            <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/20 px-2.5 py-0.5 text-[11px] font-semibold text-blue-200 ring-1 ring-inset ring-blue-400/40">
-              <Database className="h-3 w-3" />
-              Datos Académicos Verificados
+          <div className="flex items-center gap-2.5 font-medium">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-emerald-300 ring-1 ring-inset ring-emerald-400/40">
+              <Database className="h-3.5 w-3.5" />
+              Demo interactivo de datos
             </span>
-            <span>
-              <strong>JobPath (UNIMINUTO Ibagué)</strong> · Censo Clasificado{" "}
-              <code className="rounded bg-slate-800 px-1.5 py-0.5 text-amber-300">
-                352,093 personas
-              </code>{" "}
-              /{" "}
-              <code className="rounded bg-slate-800 px-1.5 py-0.5 text-amber-300">
-                1,738,738 empleos
-              </code>{" "}
-              (JobHop v2 + ESCO v1.2.1 · CC BY 4.0)
+            <span className="text-slate-200">
+              <strong>JobPath Explorer</strong> · Consulta en vivo sobre el censo clasificado{" "}
+              <span className="text-amber-300">JobHop v2 + ESCO v1.2.1</span>
             </span>
           </div>
-          <div className="flex items-center gap-3 text-[11px] text-slate-300">
-            <span className="inline-flex items-center gap-1">
+          <div className="flex items-center gap-2 text-[11px] text-slate-300">
+            <span className="inline-flex items-center gap-1.5">
               <span className="h-2 w-2 rounded-full bg-emerald-400" />
-              Neon PostgreSQL 18 (Rol: <code>jobpath_readonly</code> · Server-Only)
-            </span>
-            <span className="hidden sm:inline text-slate-400">|</span>
-            <span className="hidden sm:inline">
-              Semilla global: <code>SEED = 42</code> · 0 personas compartidas Train/Test
+              Neon PostgreSQL (Solo lectura · Paginado, sin exportación masiva)
             </span>
           </div>
         </div>
       </div>
 
-      {/* Main Navigation Bar */}
+      {/* Main Navigation */}
       <div className="mx-auto max-w-7xl px-4">
-        <div className="flex flex-col gap-2 py-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="group flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-700 font-bold text-white shadow-sm group-hover:bg-blue-800">
-                JP
+        <div className="flex flex-col gap-2 py-3 md:flex-row md:items-center md:justify-between">
+          <Link href="/" className="group flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-700 font-bold text-white shadow-sm group-hover:bg-blue-800">
+              JP
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-base font-extrabold tracking-tight text-slate-900">
+                  JobPath Explorer
+                </span>
+                <span className="rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-700 ring-1 ring-blue-200">
+                  Preview
+                </span>
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-base font-bold tracking-tight text-slate-900">
-                    JobPath Observatory
-                  </span>
-                  <span className="rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-blue-700 ring-1 ring-blue-200">
-                    Fase 3
-                  </span>
-                </div>
-                <p className="text-xs text-slate-500">
-                  Minería de Trayectorias Laborales y Métodos Numéricos
-                </p>
-              </div>
-            </Link>
-          </div>
+              <p className="text-xs text-slate-500">
+                Herramienta interactiva de consulta de trayectorias laborales
+              </p>
+            </div>
+          </Link>
 
           <nav
-            aria-label="Navegación principal del dashboard"
+            aria-label="Navegación del explorador"
             className="flex flex-wrap items-center gap-1.5"
           >
             {NAV_ITEMS.map((item) => {
@@ -130,15 +98,13 @@ export function Navbar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-bold transition-all sm:text-sm ${
                     isActive
-                      ? "bg-blue-700 text-white shadow-sm ring-1 ring-blue-700"
-                      : item.highlight
-                      ? "bg-amber-50 text-amber-900 ring-1 ring-amber-300 hover:bg-amber-100"
+                      ? "bg-blue-700 text-white shadow-sm"
                       : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
-                  <Icon className="h-3.5 w-3.5 shrink-0" />
+                  <Icon className="h-4 w-4 shrink-0" />
                   <span>{item.label}</span>
                 </Link>
               );

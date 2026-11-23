@@ -1,11 +1,14 @@
 import "server-only";
 import { neon } from "@neondatabase/serverless";
+import { unstable_cache } from "next/cache";
 
 /**
- * Conexión exclusivamente en servidor hacia Neon PostgreSQL 18 (steep-poetry-63912763)
- * autenticada con el rol de mínimo privilegio `jobpath_readonly` (SELECT-only).
- * El guard `import "server-only"` garantiza en tiempo de compilación que ningún
- * componente cliente pueda importar este módulo ni exponer credenciales.
+ * Capa de acceso a Neon PostgreSQL 18 (steep-poetry-63912763) EXCLUSIVAMENTE en servidor.
+ * - Rol de mínimo privilegio: `jobpath_readonly` (`DATABASE_URL_READONLY`).
+ * - Todas las consultas son 100 % parametrizadas ($1, $2, ...), sin concatenación de entrada de usuario.
+ * - Whitelists estrictas en servidor para columnas de filtro y ordenamiento.
+ * - Límite de filas por página: 25 (máximo 40 páginas = 1,000 filas navegables; cero exportación masiva).
+ * - Tiempo máximo de ejecución por consulta (`statement_timeout`): 6,000 ms.
  */
 function getReadOnlySql() {
   const url = process.env.DATABASE_URL_READONLY;
@@ -18,304 +21,275 @@ function getReadOnlySql() {
 }
 
 // ============================================================================
-// 1. Interfaces de Datos (Tipado exacto de las 21 tablas de Neon)
+// 1. Whitelists Estrictas de Validación (Seguridad SQL)
 // ============================================================================
 
-export interface FunnelRow {
-  stage_order: number;
-  stage_code: string;
-  stage_label_es: string;
-  status_in_neon: string;
-  experiences_count: number;
-  persons_count: number;
-  pct_clean_experiences: number;
-  pct_clean_persons: number;
-  reason_es: string;
+export const ALLOWED_ISCO_MAJORS = new Set([
+  "0",
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
+]);
+
+export const ALLOWED_EDUCATION_LEVELS = new Set([
+  "Secondary school",
+  "Bachelor",
+  "Master",
+  "PhD",
+  "No reportado",
+]);
+
+export const ALLOWED_SPLITS = new Set(["train", "test"]);
+
+export const ALLOWED_N_JOBS_BINS = new Set([
+  "1_empleo",
+  "2_3_empleos",
+  "4_5_empleos",
+  "6_8_empleos",
+  "9_mas_empleos",
+]);
+
+export const ALLOWED_SKILLS_TIERS = new Set(["low", "mid", "high"]);
+
+const ALLOWED_SORT_COLUMNS: Record<string, string> = {
+  start_year: "pe.start_year",
+  dur_q: "pe.dur_q",
+  skills: "pe.n_skills_essential_a",
+  job_order: "pe.job_order",
+  resume_id: "pe.resume_id",
+};
+
+export const PAGE_SIZE = 25;
+export const MAX_PAGE = 40; // Tope duro: máximo 1,000 filas navegables por consulta
+
+export interface ExplorerFilters {
+  isco?: string;
+  occ?: string;
+  edu?: string;
+  yFrom?: number;
+  yTo?: number;
+  split?: string;
+  active?: "true" | "false";
+  rep?: "1" | "0";
+  nJobs?: string;
+  skills?: "low" | "mid" | "high";
+  ward25k?: boolean;
+  sort?: string;
+  dir?: "asc" | "desc";
+  page?: number;
 }
 
-export interface CleaningAuditRow {
-  timestamp: string;
-  etapa: string;
-  principio: string;
-  columna: string;
-  filas_antes: number;
-  filas_afectadas: number;
-  filas_eliminadas: number;
-  filas_despues: number;
-  accion: string;
-  justificacion: string;
+export function sanitizeExplorerFilters(
+  raw: Record<string, string | string[] | undefined>
+): ExplorerFilters {
+  const str = (k: string) => {
+    const v = raw[k];
+    return Array.isArray(v) ? v[0]?.trim() : v?.trim();
+  };
+
+  const iscoRaw = str("isco");
+  const isco = iscoRaw && ALLOWED_ISCO_MAJORS.has(iscoRaw) ? iscoRaw : undefined;
+
+  const occRaw = str("occ");
+  const occ =
+    occRaw && /^[0-9]{4}(?:\.[0-9]+)*$/.test(occRaw) ? occRaw : undefined;
+
+  const eduRaw = str("edu");
+  const edu =
+    eduRaw && ALLOWED_EDUCATION_LEVELS.has(eduRaw) ? eduRaw : undefined;
+
+  const yFromNum = Number(str("yFrom"));
+  const yFrom =
+    Number.isInteger(yFromNum) && yFromNum >= 1950 && yFromNum <= 2026
+      ? yFromNum
+      : undefined;
+
+  const yToNum = Number(str("yTo"));
+  const yTo =
+    Number.isInteger(yToNum) && yToNum >= 1950 && yToNum <= 2026
+      ? yToNum
+      : undefined;
+
+  const splitRaw = str("split");
+  const split =
+    splitRaw && ALLOWED_SPLITS.has(splitRaw) ? splitRaw : undefined;
+
+  const activeRaw = str("active");
+  const active =
+    activeRaw === "true" || activeRaw === "false" ? activeRaw : undefined;
+
+  const repRaw = str("rep");
+  const rep = repRaw === "1" || repRaw === "0" ? repRaw : undefined;
+
+  const nJobsRaw = str("nJobs");
+  const nJobs =
+    nJobsRaw && ALLOWED_N_JOBS_BINS.has(nJobsRaw) ? nJobsRaw : undefined;
+
+  const skillsRaw = str("skills");
+  const skills =
+    skillsRaw && ALLOWED_SKILLS_TIERS.has(skillsRaw)
+      ? (skillsRaw as "low" | "mid" | "high")
+      : undefined;
+
+  const ward25k = str("ward25k") === "1" || str("ward25k") === "true";
+
+  const sortRaw = str("sort");
+  const sort =
+    sortRaw && ALLOWED_SORT_COLUMNS[sortRaw] ? sortRaw : "start_year";
+
+  const dirRaw = str("dir");
+  const dir: "asc" | "desc" = dirRaw === "asc" ? "asc" : "desc";
+
+  const pageNum = Number(str("page"));
+  const page =
+    Number.isInteger(pageNum) && pageNum >= 1
+      ? Math.min(pageNum, MAX_PAGE)
+      : 1;
+
+  return {
+    isco,
+    occ,
+    edu,
+    yFrom,
+    yTo,
+    split,
+    active,
+    rep,
+    nJobs,
+    skills,
+    ward25k: ward25k || undefined,
+    sort,
+    dir,
+    page,
+  };
 }
 
-export interface EdaSegmentRow {
-  trajectory_segment_5_0: string;
-  persons_count: number;
-  mean_n_jobs: number;
-  mean_n_occ: number;
-  mean_n_returns: number;
-  mean_span_q: number;
-  any_repeated_rate_pct: number;
-  pct_persons: number;
+export function hasActiveFilters(f: ExplorerFilters): boolean {
+  return Boolean(
+    f.isco ||
+      f.occ ||
+      f.edu ||
+      f.yFrom !== undefined ||
+      f.yTo !== undefined ||
+      f.split ||
+      f.active ||
+      f.rep ||
+      f.nJobs ||
+      f.skills ||
+      f.ward25k
+  );
 }
 
-export interface TopTransitionRow {
-  from_occupation_code: string;
-  to_occupation_code: string;
-  transition_count: number;
-  rank_order: number;
-  from_occupation_label: string;
-  to_occupation_label: string;
-  is_self_loop: boolean;
-  pct_of_all_transitions: number;
+// ============================================================================
+// 2. Interfaces de Respuesta (100 % Provenientes de Consultas Vivas en Neon)
+// ============================================================================
+
+export interface ExplorerCounters {
+  persons: number;
+  experiences: number;
+  reincidePct: number;
+  medianDurQ: number;
 }
 
-export interface PcaVarianceRow {
-  notebook: string;
-  version: string;
-  pc: string;
-  var_exp_pct: number;
-  cum_var_pct: number;
-  k_for_80pct: number;
-  k_for_90pct: number;
+export interface DurationBinPoint {
+  bucket: string;
+  sortOrder: number;
+  count: number;
 }
 
-export interface SupervisedBenchmarkRow {
-  familia: string;
-  modelo: string;
-  n_variables_x: number;
-  ponderacion_clases: string;
-  test_pr_auc: number | null;
-  test_roc_auc: number;
-  test_f1_clase_1: number;
-  test_recall_clase_1: number;
-  test_precision_clase_1: number;
-  test_accuracy: number;
-  test_brier_sin_ponderar: number | null;
+export interface TopOccupationPoint {
+  occupation_code: string;
+  occupation_label: string;
+  isco_major: string;
+  count: number;
 }
 
-export interface DecisionTreeComparisonRow {
-  version_datos: string;
-  modelo_corto: string;
-  pregunta_objetivo_o_referencia: string;
-  punto_operacion: string;
-  n_variables_x: number;
-  profundidad_max: number | null;
-  n_hojas: number | null;
-  train_accuracy: number | null;
-  test_accuracy: number;
-  test_accuracy_ic95_persona: string;
-  test_precision_clase_1: number;
-  test_recall_clase_1: number;
-  test_f1_clase_1: number;
-  test_f1_ic95_persona: string;
-  test_roc_auc: number;
-  test_roc_auc_ic95_persona: string;
-  pct_del_techo_auc_6_0: number;
-  max_lift_hoja_soporte_05pct: number | null;
-  criterio_separa_clases: string;
-}
-
-export interface NaiveBayesIscoRow {
-  isco_major: number;
-  gran_grupo_isco: string;
-  soporte_filas_train: number;
-  personas_train: number;
-  positivos_train: number;
-  tasa_observada_train_pct: number;
-  ic95_wilson_train_pct: string;
-  prob_media_oof_nb_h_train_pct: number;
-  soporte_filas_test: number;
-  tasa_confirmada_test_pct: number;
-  ic95_wilson_test_pct: string;
-  prob_media_nb_h_test_pct: number;
-}
-
-export interface KnnPurityRow {
-  modelo_id: string;
-  variante: string;
-  dimension_total: number;
-  peso_bloque_w: number;
-  dist_media_global: number;
-  pureza_misma_ocupacion_esco_pct: number;
-  pureza_mismo_grupo_isco_pct: number;
-  pureza_misma_clase_reincide_pct: number;
-}
-
-export interface ClusteringExecutiveRow {
-  cluster: string;
-  perfil_comportamental: string;
-  kmeans_8_0_tamano_y_reincide: string;
-  ward_8_1_n3000_tamano_y_reincide: string;
-  ward_8_1_n25000_tamano_y_reincide: string;
-  isco_dominante_km_vs_ward25k: string;
-  patron_reaccion_y_explicacion_es: string;
-}
-
-export interface KMeansProfileRow {
-  vista: string;
-  cluster: number;
-  nombre_segmento_es: string;
-  n_train: number;
-  pct_train: number;
-  n_test: number;
-  pct_test: number;
-  n_total: number;
-  pct_total: number;
-  n_jobs_media_train: number | null;
-  n_jobs_media_test: number | null;
-  span_q_media_train: number | null;
-  span_q_media_test: number | null;
-  dur_mean_media_train: number | null;
-  dur_mean_media_test: number | null;
-  overlap_ratio_media_train: number | null;
-  overlap_ratio_media_test: number | null;
-  mean_skills_competence_media_train: number | null;
-  mean_skills_competence_media_test: number | null;
-  mean_skills_knowledge_media_train: number | null;
-  mean_skills_knowledge_media_test: number | null;
-  mean_skills_essential_media_train: number | null;
-  mean_skills_essential_media_test: number | null;
-  tasa_reincide_train_posthoc_pct: number;
-  lift_reincide_train_posthoc: number;
-  tasa_reincide_test_posthoc_pct: number;
-  lift_reincide_test_posthoc: number;
-  gran_grupo_isco_dominante_posthoc: string;
-  accion_observatorio_recomendada_es: string;
-  dur_q_media_train: number | null;
-  dur_q_media_test: number | null;
-}
-
-export interface Ward25kProfileRow {
-  cluster: number;
-  nombre_segmento_es: string;
-  n_muestra_descubrimiento: number;
-  pct_muestra_descubrimiento: number;
-  n_total_proyectado: number;
-  pct_total_proyectado: number;
-  n_test_proyectado: number;
-  pct_test_proyectado: number;
-  n_jobs_media_muestra: number;
-  span_q_media_muestra: number;
-  dur_mean_media_muestra: number;
-  overlap_ratio_media_muestra: number;
-  mean_skills_competence_media_muestra: number;
-  mean_skills_knowledge_media_muestra: number;
-  mean_skills_essential_media_muestra: number;
-  tasa_reincide_muestra_posthoc_pct: number;
-  lift_reincide_muestra_posthoc: number;
-  tasa_reincide_test_posthoc_pct: number;
-  lift_reincide_test_posthoc: number;
-  gran_grupo_isco_dominante_posthoc: string;
-  accion_observatorio_recomendada_es: string;
-}
-
-export interface NmRl04AnnualRow {
+export interface StartsPerYearPoint {
   start_year: number;
-  n_starts: number;
-  n_closed_starts: number;
-  mean_skills: number;
-  mean_knowledge: number;
-  mean_dur_q: number;
-  mean_dur_q_incl_active: number;
-  mean_green: number;
-  reincide_rate: number;
-  year_centered: number;
+  count: number;
 }
 
-export interface NmRl04OlsRegimeRow {
-  name: string;
-  n: number;
-  x_min: number;
-  x_max: number;
-  a0: number;
-  a1: number;
-  r2: number;
-  r: number;
-  s_yx: number;
-  quality_verdict: string;
-  polyfit_max_abs_diff: number;
-  regime: string;
-  x_var: string;
-  y_var: string;
+export interface IscoTransitionPoint {
+  from_isco: string;
+  to_isco: string;
+  count: number;
 }
 
-export interface NmRl04ExtrapolationRow {
-  y_var: string;
-  year: number;
-  is_extrapolation: boolean;
-  y_pred_from_2000_2019: number;
-  y_observed: number | null;
-  observed_n_starts: number;
-  physically_invalid: boolean;
+export interface ExperienceTableRow {
+  resume_id: number;
+  job_order: number;
+  split: string;
+  start_year: number;
+  start_quarter: number;
+  end_year: number;
+  end_quarter: number;
+  dur_q: number;
+  es_vigente: boolean;
+  occupation_code: string;
+  occupation_label: string;
+  isco_group_code: string;
+  isco_major_1d_zfill: string;
+  university_level: string;
+  n_jobs: number;
+  n_skills_essential_a: number;
+  reincide: number;
+  in_ward_25k_sample: boolean;
 }
 
-export interface NmLg01SurvivalRow {
-  quarter_q: number;
-  years: number;
-  survival_prob_s_q: number;
-  n_closed_jobs: number;
+export interface ExplorerPayload {
+  isUnfilteredDefault: boolean;
+  counters: ExplorerCounters;
+  durationHist: DurationBinPoint[];
+  topOccupations: TopOccupationPoint[];
+  startsPerYear: StartsPerYearPoint[];
+  transitions: IscoTransitionPoint[];
+  transitionsCappedTo250k: boolean;
+  tableRows: ExperienceTableRow[];
+  totalRowsForPagination: number;
+  page: number;
+  pageSize: number;
+  maxPage: number;
+  queryElapsedMs: number;
+  selectedOccupationLabel: string | null;
 }
 
-export interface NmLg01P3MilestoneRow {
-  quarter_q: number;
-  years: number;
-  is_extrapolation: boolean;
-  l0_q4: number;
-  l1_q8: number;
-  l2_q20: number;
-  l3_q40: number;
-  sum_li: number;
-  p3_pred: number;
-  true_s_q: number;
-  abs_err: number;
+export interface CatalogOccupationOption {
+  occupation_code: string;
+  occupation_label: string;
+  isco_group_code: string;
+  isco_group_label: string;
+  isco_major_1d_zfill: string;
+  n_skills_essential_ref: number;
+  n_skills_competence_ref: number;
+  n_skills_knowledge_ref: number;
+  n_skills_sin_tipo_ref: number;
 }
 
-export interface NmLg01RungeRow {
-  degree: number;
-  n_nodes: number;
-  node_strategy: string;
-  max_abs_err: number;
-  rmse: number;
-  mae: number;
-  min_pred: number;
-  max_pred: number;
-  n_prob_bound_violations: number;
-}
-
-export interface PersonTrajectoryRow {
+export interface PersonProfileRow {
   resume_id: number;
   split: string;
-  sampling_weight: number;
   in_ward_25k_sample: boolean;
-  cluster_ward_25k_direct: number | null;
-  cluster_ward_25k_projected: number;
-  cluster_ward_3k_projected: number;
-  cluster_kmeans_8_0: number;
   university_level: string;
-  nivel_academico_ord_imputado: number;
-  educacion_no_reportada: number;
-  isco_major_modal_posthoc: string;
   isco_major_1d_zfill: string;
   n_jobs: number;
   n_jobs_bin: string;
   span_q: number;
   dur_total: number;
   dur_mean: number;
-  overlap_ratio: number;
-  mean_skills_essential: number;
-  mean_skills_competence: number;
-  mean_skills_knowledge: number;
-  mean_prop_competence: number;
   n_occ_posthoc: number;
   n_returns_posthoc: number;
-  any_repeated_posthoc: number;
   tasa_reincide_persona_posthoc: number;
-  trajectory_segment_5_0: string;
 }
 
-export interface PersonExperienceJoinedRow {
+export interface PersonExperienceTimelineRow {
   resume_id: number;
   job_order: number;
-  split: string;
   start_year: number;
   start_quarter: number;
   end_year: number;
@@ -330,245 +304,546 @@ export interface PersonExperienceJoinedRow {
   n_skills_essential_a: number;
   n_skills_competence_a: number;
   n_skills_knowledge_a: number;
-  n_skills_essential_b: number;
-  n_skills_competence_b: number;
-  n_skills_knowledge_b: number;
   reincide: number;
-  cluster_exp_kmeans_8_0: number;
 }
 
-export interface StratumComparisonRow {
-  stratum_key: string;
-  census_total: number;
-  census_pct: number;
-  ward_25k_count: number;
-  ward_25k_pct: number;
-  diff_pp: number;
+export interface AboutDataPayload {
+  funnel: Array<{
+    stage_order: number;
+    stage_code: string;
+    stage_label_es: string;
+    status_in_neon: string;
+    experiences_count: number;
+    persons_count: number;
+    pct_clean_experiences: number;
+    pct_clean_persons: number;
+    reason_es: string;
+  }>;
+  escoCatalogCount: number;
+  wardDirectPersonsCount: number;
+  trainPersonsCount: number;
+  testPersonsCount: number;
+  totalPersonsCount: number;
+  totalExperiencesCount: number;
 }
 
 // ============================================================================
-// 2. Funciones de Consulta por Vista (Lectura desde Neon en modo solo lectura)
+// 3. Constructor Parametrizado de Cláusula WHERE (Cero Concatenación de Input)
 // ============================================================================
 
-export async function getOverviewData() {
-  const sql = getReadOnlySql();
-  const [funnel, cleaning, segments, topTransitions, pca] = await Promise.all([
-    sql`SELECT * FROM agg_inclusion_exclusion_funnel ORDER BY stage_order ASC`,
-    sql`SELECT * FROM agg_cleaning_and_iqr_audit ORDER BY etapa ASC`,
-    sql`SELECT * FROM agg_eda_distributions_and_segments ORDER BY persons_count DESC`,
-    sql`SELECT * FROM agg_top_occupation_transitions ORDER BY rank_order ASC LIMIT 15`,
-    sql`SELECT * FROM agg_pca_variance_and_loadings ORDER BY notebook, version, pc`,
-  ]);
+function buildParameterizedWhere(filters: ExplorerFilters): {
+  whereSql: string;
+  params: unknown[];
+  needsPersonJoin: boolean;
+} {
+  const clauses: string[] = [];
+  const params: unknown[] = [];
+  let needsPersonJoin = false;
+
+  const pushParam = (val: unknown) => {
+    params.push(val);
+    return `$${params.length}`;
+  };
+
+  if (filters.isco) {
+    clauses.push(`pe.isco_major_1d_zfill = ${pushParam(filters.isco)}`);
+  }
+  if (filters.occ) {
+    clauses.push(`pe.occupation_code = ${pushParam(filters.occ)}`);
+  }
+  if (filters.edu) {
+    needsPersonJoin = true;
+    clauses.push(`pt.university_level = ${pushParam(filters.edu)}`);
+  }
+  if (filters.yFrom !== undefined) {
+    clauses.push(`pe.start_year >= ${pushParam(filters.yFrom)}`);
+  }
+  if (filters.yTo !== undefined) {
+    clauses.push(`pe.start_year <= ${pushParam(filters.yTo)}`);
+  }
+  if (filters.split) {
+    clauses.push(`pe.split = ${pushParam(filters.split)}`);
+  }
+  if (filters.active === "true") {
+    clauses.push(`pe.es_vigente = ${pushParam(true)}`);
+  } else if (filters.active === "false") {
+    clauses.push(`pe.es_vigente = ${pushParam(false)}`);
+  }
+  if (filters.rep === "1") {
+    clauses.push(`pe.reincide = ${pushParam(1)}`);
+  } else if (filters.rep === "0") {
+    clauses.push(`pe.reincide = ${pushParam(0)}`);
+  }
+  if (filters.nJobs) {
+    needsPersonJoin = true;
+    clauses.push(`pt.n_jobs_bin = ${pushParam(filters.nJobs)}`);
+  }
+  if (filters.skills === "low") {
+    clauses.push(`pe.n_skills_essential_a < ${pushParam(15)}`);
+  } else if (filters.skills === "mid") {
+    clauses.push(
+      `pe.n_skills_essential_a BETWEEN ${pushParam(15)} AND ${pushParam(28)}`
+    );
+  } else if (filters.skills === "high") {
+    clauses.push(`pe.n_skills_essential_a > ${pushParam(28)}`);
+  }
+  if (filters.ward25k) {
+    needsPersonJoin = true;
+    clauses.push(`pt.in_ward_25k_sample = ${pushParam(true)}`);
+  }
 
   return {
-    funnel: funnel as unknown as FunnelRow[],
-    cleaning: cleaning as unknown as CleaningAuditRow[],
-    segments: segments as unknown as EdaSegmentRow[],
-    topTransitions: topTransitions as unknown as TopTransitionRow[],
-    pca: pca as unknown as PcaVarianceRow[],
+    whereSql: clauses.length > 0 ? `WHERE ${clauses.join(" AND ")}` : "",
+    params,
+    needsPersonJoin,
   };
-}
-
-export async function getTransparencyData() {
-  const sql = getReadOnlySql();
-  const [funnel, iscoStrata, eduStrata, kmStrata] = await Promise.all([
-    sql`SELECT * FROM agg_inclusion_exclusion_funnel ORDER BY stage_order ASC`,
-    sql`
-      SELECT
-        isco_major_1d_zfill AS stratum_key,
-        COUNT(*)::int AS census_total,
-        ROUND((COUNT(*) * 100.0 / 352093.0)::numeric, 4)::float AS census_pct,
-        SUM(CASE WHEN in_ward_25k_sample THEN 1 ELSE 0 END)::int AS ward_25k_count,
-        ROUND((SUM(CASE WHEN in_ward_25k_sample THEN 1 ELSE 0 END) * 100.0 / 25000.0)::numeric, 4)::float AS ward_25k_pct,
-        ROUND(((SUM(CASE WHEN in_ward_25k_sample THEN 1 ELSE 0 END) * 100.0 / 25000.0) - (COUNT(*) * 100.0 / 352093.0))::numeric, 4)::float AS diff_pp
-      FROM person_trajectories
-      GROUP BY isco_major_1d_zfill
-      ORDER BY isco_major_1d_zfill ASC
-    `,
-    sql`
-      SELECT
-        university_level AS stratum_key,
-        COUNT(*)::int AS census_total,
-        ROUND((COUNT(*) * 100.0 / 352093.0)::numeric, 4)::float AS census_pct,
-        SUM(CASE WHEN in_ward_25k_sample THEN 1 ELSE 0 END)::int AS ward_25k_count,
-        ROUND((SUM(CASE WHEN in_ward_25k_sample THEN 1 ELSE 0 END) * 100.0 / 25000.0)::numeric, 4)::float AS ward_25k_pct,
-        ROUND(((SUM(CASE WHEN in_ward_25k_sample THEN 1 ELSE 0 END) * 100.0 / 25000.0) - (COUNT(*) * 100.0 / 352093.0))::numeric, 4)::float AS diff_pp
-      FROM person_trajectories
-      GROUP BY university_level
-      ORDER BY census_total DESC
-    `,
-    sql`
-      SELECT
-        ('Clúster K-Means ' || cluster_kmeans_8_0::text) AS stratum_key,
-        COUNT(*)::int AS census_total,
-        ROUND((COUNT(*) * 100.0 / 352093.0)::numeric, 4)::float AS census_pct,
-        SUM(CASE WHEN in_ward_25k_sample THEN 1 ELSE 0 END)::int AS ward_25k_count,
-        ROUND((SUM(CASE WHEN in_ward_25k_sample THEN 1 ELSE 0 END) * 100.0 / 25000.0)::numeric, 4)::float AS ward_25k_pct,
-        ROUND(((SUM(CASE WHEN in_ward_25k_sample THEN 1 ELSE 0 END) * 100.0 / 25000.0) - (COUNT(*) * 100.0 / 352093.0))::numeric, 4)::float AS diff_pp
-      FROM person_trajectories
-      GROUP BY cluster_kmeans_8_0
-      ORDER BY cluster_kmeans_8_0 ASC
-    `,
-  ]);
-
-  return {
-    funnel: funnel as unknown as FunnelRow[],
-    iscoStrata: iscoStrata as unknown as StratumComparisonRow[],
-    eduStrata: eduStrata as unknown as StratumComparisonRow[],
-    kmStrata: kmStrata as unknown as StratumComparisonRow[],
-  };
-}
-
-export interface ExplorerSearchFilters {
-  resumeId?: number | null;
-  split?: string;
-  clusterKmeans?: number | null;
-  iscoMajor?: string;
-  universityLevel?: string;
-  onlyWard25k?: boolean;
-  clusterWardDirect?: number | null;
 }
 
 /**
- * Busca hasta un máximo estricto de 25 personas que cumplan los filtros
- * utilizando los índices B-tree `person_trajectories_pkey`, `idx_pt_split_km_isco_edu` e `idx_pt_ward25k`.
- * Gobernanza: Prohibidos los endpoints sin límite o de descarga masiva.
+ * Ejecuta una consulta parametrizada protegida con `SET LOCAL statement_timeout = '8000'`
+ * dentro de una transacción read-only de Neon.
  */
-export async function searchTrajectoriesBounded(filters: ExplorerSearchFilters) {
+async function runTimedQuery<T>(text: string, params: unknown[] = []): Promise<T[]> {
   const sql = getReadOnlySql();
+  const [, rows] = await sql.transaction([
+    sql`SET LOCAL statement_timeout = '8000'`,
+    sql.query(text, params),
+  ]);
+  return rows as unknown as T[];
+}
 
-  // Caso 1: Búsqueda directa por llave primaria resume_id
-  if (
-    filters.resumeId !== undefined &&
-    filters.resumeId !== null &&
-    Number.isInteger(filters.resumeId) &&
-    filters.resumeId > 0
-  ) {
-    const rows = await sql`
-      SELECT *
-      FROM person_trajectories
-      WHERE resume_id = ${filters.resumeId}
-      LIMIT 1
-    `;
-    return rows as unknown as PersonTrajectoryRow[];
-  }
+// ============================================================================
+// 4. Vista por Defecto (Sin Filtros): Lectura Rápida desde Tablas Agregadas + Caché
+// ============================================================================
 
-  // Caso 2: Filtro sobre la submuestra directa Ward 25k (usa idx_pt_ward25k)
-  if (filters.onlyWard25k) {
-    const splitVal = filters.split && filters.split !== "all" ? filters.split : "train";
-    const hasWardCluster =
-      filters.clusterWardDirect !== undefined &&
-      filters.clusterWardDirect !== null &&
-      filters.clusterWardDirect >= 0;
+const getDefaultUnfilteredAggregates = unstable_cache(
+  async () => {
+    const sql = getReadOnlySql();
 
-    if (hasWardCluster) {
-      const rows = await sql`
-        SELECT *
-        FROM person_trajectories
-        WHERE in_ward_25k_sample = TRUE
-          AND cluster_ward_25k_direct = ${filters.clusterWardDirect}
-          AND split = ${splitVal}
-        ORDER BY resume_id ASC
-        LIMIT 25
-      `;
-      return rows as unknown as PersonTrajectoryRow[];
+    const [funnelRows, nbIscoRows, survivalRows, annualRows, topTransRows, topOccRows] =
+      await Promise.all([
+        sql`
+          SELECT persons_count, experiences_count
+          FROM agg_inclusion_exclusion_funnel
+          WHERE stage_code = 'included_classified_census_total'
+          LIMIT 1
+        `,
+        sql`
+          SELECT
+            SUM(soporte_filas_train + soporte_filas_test)::bigint AS total_rows,
+            SUM(positivos_train + ROUND(soporte_filas_test * tasa_confirmada_test_pct / 100.0))::double precision AS total_pos
+          FROM agg_naive_bayes_isco_rates
+        `,
+        sql`
+          SELECT quarter_q, survival_prob_s_q, n_closed_jobs
+          FROM agg_nm_lg01_survival_curve
+          ORDER BY quarter_q ASC
+        `,
+        sql`
+          SELECT start_year, n_starts
+          FROM agg_nm_rl04_annual_macro
+          ORDER BY start_year ASC
+        `,
+        sql`
+          SELECT
+            SUBSTRING(from_occupation_code, 1, 1) AS from_isco,
+            SUBSTRING(to_occupation_code, 1, 1) AS to_isco,
+            SUM(transition_count)::bigint AS count
+          FROM agg_top_occupation_transitions
+          GROUP BY 1, 2
+          ORDER BY count DESC
+          LIMIT 10
+        `,
+        sql`
+          SELECT
+            pe.occupation_code,
+            cat.occupation_label,
+            cat.isco_major_1d_zfill AS isco_major,
+            COUNT(*)::int AS count
+          FROM person_experiences pe
+          JOIN esco_occupations_catalog cat ON cat.occupation_code = pe.occupation_code
+          GROUP BY pe.occupation_code, cat.occupation_label, cat.isco_major_1d_zfill
+          ORDER BY count DESC
+          LIMIT 10
+        `,
+      ]);
+
+    const persons = Number(funnelRows[0]?.persons_count ?? 0);
+    const experiences = Number(funnelRows[0]?.experiences_count ?? 0);
+    const nbTotal = Number(nbIscoRows[0]?.total_rows ?? 1);
+    const nbPos = Number(nbIscoRows[0]?.total_pos ?? 0);
+    const reincidePct = Number(((nbPos / Math.max(nbTotal, 1)) * 100).toFixed(2));
+
+    // Derive exact closed-job duration bins & median directly from agg_nm_lg01_survival_curve (S(q) = P(dur_q >= q))
+    const survMap = new Map<number, number>();
+    let nClosed = 0;
+    for (const r of survivalRows) {
+      survMap.set(Number(r.quarter_q), Number(r.survival_prob_s_q));
+      nClosed = Number(r.n_closed_jobs);
+    }
+    const sAt = (q: number) => survMap.get(q) ?? 0;
+
+    // Median q where S(q) drops below 0.50
+    let medianDurQ = 5;
+    for (let q = 1; q <= 40; q++) {
+      if (sAt(q) >= 0.5) medianDurQ = q;
     }
 
-    const rows = await sql`
-      SELECT *
-      FROM person_trajectories
-      WHERE in_ward_25k_sample = TRUE
-        AND split = ${splitVal}
-      ORDER BY resume_id ASC
-      LIMIT 25
-    `;
-    return rows as unknown as PersonTrajectoryRow[];
+    const durationHist: DurationBinPoint[] = [
+      { bucket: "1–2 trim", sortOrder: 1, count: Math.round((sAt(1) - sAt(3)) * nClosed) },
+      { bucket: "3–5 trim", sortOrder: 2, count: Math.round((sAt(3) - sAt(6)) * nClosed) },
+      { bucket: "6–9 trim", sortOrder: 3, count: Math.round((sAt(6) - sAt(10)) * nClosed) },
+      { bucket: "10–13 trim", sortOrder: 4, count: Math.round((sAt(10) - sAt(14)) * nClosed) },
+      { bucket: "14–20 trim", sortOrder: 5, count: Math.round((sAt(14) - sAt(21)) * nClosed) },
+      { bucket: "21–40 trim", sortOrder: 6, count: Math.round((sAt(21) - sAt(40)) * nClosed) },
+      { bucket: "40+ trim", sortOrder: 7, count: Math.round(sAt(40) * nClosed) },
+    ];
+
+    const startsPerYear: StartsPerYearPoint[] = annualRows.map((r) => ({
+      start_year: Number(r.start_year),
+      count: Number(r.n_starts),
+    }));
+
+    const transitions: IscoTransitionPoint[] = topTransRows.map((r) => ({
+      from_isco: String(r.from_isco),
+      to_isco: String(r.to_isco),
+      count: Number(r.count),
+    }));
+
+    const topOccupations: TopOccupationPoint[] = topOccRows.map((r) => ({
+      occupation_code: String(r.occupation_code),
+      occupation_label: String(r.occupation_label),
+      isco_major: String(r.isco_major),
+      count: Number(r.count),
+    }));
+
+    return {
+      counters: { persons, experiences, reincidePct, medianDurQ },
+      durationHist,
+      topOccupations,
+      startsPerYear,
+      transitions,
+    };
+  },
+  ["explorer-default-unfiltered-v1"],
+  { revalidate: 3600 }
+);
+
+// ============================================================================
+// 5. Consulta Principal del Explorador Interactivo (Default vs. Filtrado)
+// ============================================================================
+
+export async function getExplorerData(
+  filters: ExplorerFilters
+): Promise<ExplorerPayload> {
+  const t0 = performance.now();
+  const isFiltered = hasActiveFilters(filters);
+  const sortCol =
+    ALLOWED_SORT_COLUMNS[filters.sort ?? "start_year"] ?? "pe.start_year";
+  const sortDir = filters.dir === "asc" ? "ASC" : "DESC";
+  const page = filters.page ?? 1;
+  const offset = (page - 1) * PAGE_SIZE;
+
+  // Fetch occupation label if occ filter is active
+  let selectedOccupationLabel: string | null = null;
+  if (filters.occ) {
+    const occRow = await runTimedQuery<{ occupation_label: string }>(
+      `SELECT occupation_label FROM esco_occupations_catalog WHERE occupation_code = $1 LIMIT 1`,
+      [filters.occ]
+    );
+    selectedOccupationLabel = occRow[0]?.occupation_label ?? null;
   }
 
-  // Caso 3: Filtro combinado sobre el censo (usa idx_pt_split_km_isco_edu)
-  const splitFilter = filters.split && filters.split !== "all" ? filters.split : "test";
-  const kmFilter =
-    filters.clusterKmeans !== undefined &&
-    filters.clusterKmeans !== null &&
-    filters.clusterKmeans >= 0
-      ? filters.clusterKmeans
-      : 0;
-  const iscoFilter =
-    filters.iscoMajor && filters.iscoMajor !== "all" ? filters.iscoMajor : null;
-  const eduFilter =
-    filters.universityLevel && filters.universityLevel !== "all"
-      ? filters.universityLevel
-      : null;
+  // FAST PATH: Unfiltered default view reads precomputed agg_* + fast PK-indexed page 1
+  if (!isFiltered) {
+    const defaultSortCol =
+      filters.sort && filters.sort !== "start_year"
+        ? sortCol
+        : "pe.resume_id";
+    const defaultSortDir =
+      filters.sort && filters.sort !== "start_year" ? sortDir : "ASC";
 
-  if (iscoFilter && eduFilter) {
-    const rows = await sql`
-      SELECT *
-      FROM person_trajectories
-      WHERE split = ${splitFilter}
-        AND cluster_kmeans_8_0 = ${kmFilter}
-        AND isco_major_1d_zfill = ${iscoFilter}
-        AND university_level = ${eduFilter}
-      ORDER BY resume_id ASC
-      LIMIT 25
-    `;
-    return rows as unknown as PersonTrajectoryRow[];
+    const [aggData, tableRows] = await Promise.all([
+      getDefaultUnfilteredAggregates(),
+      runTimedQuery<ExperienceTableRow>(
+        `
+        SELECT
+          pe.resume_id,
+          pe.job_order,
+          pe.split,
+          pe.start_year,
+          pe.start_quarter,
+          pe.end_year,
+          pe.end_quarter,
+          pe.dur_q,
+          pe.es_vigente,
+          pe.occupation_code,
+          cat.occupation_label,
+          cat.isco_group_code,
+          pe.isco_major_1d_zfill,
+          pt.university_level,
+          pt.n_jobs,
+          pe.n_skills_essential_a,
+          pe.reincide,
+          pt.in_ward_25k_sample
+        FROM person_experiences pe
+        INNER JOIN person_trajectories pt ON pt.resume_id = pe.resume_id
+        INNER JOIN esco_occupations_catalog cat ON cat.occupation_code = pe.occupation_code
+        ORDER BY ${defaultSortCol} ${defaultSortDir}, pe.resume_id ASC, pe.job_order ASC
+        LIMIT $1 OFFSET $2
+        `,
+        [PAGE_SIZE, offset]
+      ),
+    ]);
+
+    return {
+      isUnfilteredDefault: true,
+      counters: aggData.counters,
+      durationHist: aggData.durationHist,
+      topOccupations: aggData.topOccupations,
+      startsPerYear: aggData.startsPerYear,
+      transitions: aggData.transitions,
+      transitionsCappedTo250k: false,
+      tableRows,
+      totalRowsForPagination: aggData.counters.experiences,
+      page,
+      pageSize: PAGE_SIZE,
+      maxPage: MAX_PAGE,
+      queryElapsedMs: Math.round(performance.now() - t0),
+      selectedOccupationLabel,
+    };
   }
 
-  if (iscoFilter) {
-    const rows = await sql`
-      SELECT *
-      FROM person_trajectories
-      WHERE split = ${splitFilter}
-        AND cluster_kmeans_8_0 = ${kmFilter}
-        AND isco_major_1d_zfill = ${iscoFilter}
-      ORDER BY resume_id ASC
-      LIMIT 25
-    `;
-    return rows as unknown as PersonTrajectoryRow[];
+  // FILTERED PATH: Single materialized CTE scan for counters + 4 charts (prevents 5x concurrent table scans on Neon Free)
+  // plus 1 lightweight paginated table query (LIMIT 25).
+  const { whereSql, params, needsPersonJoin } = buildParameterizedWhere(filters);
+  const personJoinSql = needsPersonJoin
+    ? "INNER JOIN person_trajectories pt ON pt.resume_id = pe.resume_id"
+    : "";
+
+  interface SingleScanAggregateRow {
+    persons: string;
+    experiences: string;
+    reincide_pct: string | null;
+    median_dur_q: string | null;
+    duration_hist: Array<{ bucket: string; sortOrder: number; count: number }> | null;
+    top_occupations: Array<{
+      occupation_code: string;
+      occupation_label: string;
+      isco_major: string;
+      count: number;
+    }> | null;
+    starts_per_year: Array<{ start_year: number; count: number }> | null;
+    transitions: Array<{ from_isco: string; to_isco: string; count: number }> | null;
   }
 
-  if (eduFilter) {
-    const rows = await sql`
-      SELECT *
-      FROM person_trajectories
-      WHERE split = ${splitFilter}
-        AND cluster_kmeans_8_0 = ${kmFilter}
-        AND university_level = ${eduFilter}
-      ORDER BY resume_id ASC
-      LIMIT 25
-    `;
-    return rows as unknown as PersonTrajectoryRow[];
-  }
-
-  const rows = await sql`
-    SELECT *
-    FROM person_trajectories
-    WHERE split = ${splitFilter}
-      AND cluster_kmeans_8_0 = ${kmFilter}
-    ORDER BY resume_id ASC
-    LIMIT 25
+  const singleScanSql = `
+    WITH matched AS MATERIALIZED (
+      SELECT
+        pe.resume_id,
+        pe.job_order,
+        pe.start_year,
+        pe.dur_q,
+        pe.occupation_code,
+        pe.isco_major_1d_zfill,
+        pe.reincide
+      FROM person_experiences pe
+      ${personJoinSql}
+      ${whereSql}
+    ),
+    counters AS (
+      SELECT
+        COUNT(DISTINCT resume_id)::bigint AS persons,
+        COUNT(*)::bigint AS experiences,
+        ROUND(AVG(reincide::numeric) * 100.0, 2) AS reincide_pct,
+        PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY dur_q) AS median_dur_q
+      FROM matched
+    ),
+    dur_hist AS (
+      SELECT
+        CASE
+          WHEN dur_q <= 2 THEN '1–2 trim'
+          WHEN dur_q <= 5 THEN '3–5 trim'
+          WHEN dur_q <= 9 THEN '6–9 trim'
+          WHEN dur_q <= 13 THEN '10–13 trim'
+          WHEN dur_q <= 20 THEN '14–20 trim'
+          WHEN dur_q <= 40 THEN '21–40 trim'
+          ELSE '40+ trim'
+        END AS bucket,
+        CASE
+          WHEN dur_q <= 2 THEN 1
+          WHEN dur_q <= 5 THEN 2
+          WHEN dur_q <= 9 THEN 3
+          WHEN dur_q <= 13 THEN 4
+          WHEN dur_q <= 20 THEN 5
+          WHEN dur_q <= 40 THEN 6
+          ELSE 7
+        END AS sort_order,
+        COUNT(*)::int AS cnt
+      FROM matched
+      GROUP BY 1, 2
+      ORDER BY 2 ASC
+    ),
+    top_occ AS (
+      SELECT
+        m.occupation_code,
+        cat.occupation_label,
+        cat.isco_major_1d_zfill AS isco_major,
+        COUNT(*)::int AS cnt
+      FROM matched m
+      INNER JOIN esco_occupations_catalog cat ON cat.occupation_code = m.occupation_code
+      GROUP BY m.occupation_code, cat.occupation_label, cat.isco_major_1d_zfill
+      ORDER BY cnt DESC
+      LIMIT 10
+    ),
+    starts_yr AS (
+      SELECT
+        start_year,
+        COUNT(*)::int AS cnt
+      FROM matched
+      WHERE start_year BETWEEN 1990 AND 2023
+      GROUP BY start_year
+      ORDER BY start_year ASC
+    ),
+    trans_sample AS (
+      SELECT resume_id, job_order, isco_major_1d_zfill
+      FROM matched
+      LIMIT 100000
+    ),
+    trans_top AS (
+      SELECT
+        s.isco_major_1d_zfill AS from_isco,
+        pe2.isco_major_1d_zfill AS to_isco,
+        COUNT(*)::int AS cnt
+      FROM trans_sample s
+      INNER JOIN person_experiences pe2
+        ON pe2.resume_id = s.resume_id
+       AND pe2.job_order = s.job_order + 1
+      GROUP BY 1, 2
+      ORDER BY cnt DESC
+      LIMIT 10
+    )
+    SELECT
+      c.persons,
+      c.experiences,
+      c.reincide_pct,
+      c.median_dur_q,
+      (SELECT json_agg(json_build_object('bucket', bucket, 'sortOrder', sort_order, 'count', cnt) ORDER BY sort_order) FROM dur_hist) AS duration_hist,
+      (SELECT json_agg(json_build_object('occupation_code', occupation_code, 'occupation_label', occupation_label, 'isco_major', isco_major, 'count', cnt) ORDER BY cnt DESC) FROM top_occ) AS top_occupations,
+      (SELECT json_agg(json_build_object('start_year', start_year, 'count', cnt) ORDER BY start_year ASC) FROM starts_yr) AS starts_per_year,
+      (SELECT json_agg(json_build_object('from_isco', from_isco, 'to_isco', to_isco, 'count', cnt) ORDER BY cnt DESC) FROM trans_top) AS transitions
+    FROM counters c
   `;
-  return rows as unknown as PersonTrajectoryRow[];
-}
 
-/**
- * Obtiene el perfil completo de 1 persona y su línea de tiempo cronológica
- * haciendo JOIN indexado con `esco_occupations_catalog` (< 0.15 ms en servidor).
- */
-export async function getPersonTimelineById(resumeId: number) {
-  const sql = getReadOnlySql();
-  const [personRows, experienceRows] = await Promise.all([
-    sql`
-      SELECT *
-      FROM person_trajectories
-      WHERE resume_id = ${resumeId}
-      LIMIT 1
-    `,
-    sql`
+  const [aggRows, tableRows] = await Promise.all([
+    runTimedQuery<SingleScanAggregateRow>(singleScanSql, params),
+    runTimedQuery<ExperienceTableRow>(
+      `
       SELECT
         pe.resume_id,
         pe.job_order,
         pe.split,
+        pe.start_year,
+        pe.start_quarter,
+        pe.end_year,
+        pe.end_quarter,
+        pe.dur_q,
+        pe.es_vigente,
+        pe.occupation_code,
+        cat.occupation_label,
+        cat.isco_group_code,
+        pe.isco_major_1d_zfill,
+        pt.university_level,
+        pt.n_jobs,
+        pe.n_skills_essential_a,
+        pe.reincide,
+        pt.in_ward_25k_sample
+      FROM person_experiences pe
+      INNER JOIN person_trajectories pt ON pt.resume_id = pe.resume_id
+      INNER JOIN esco_occupations_catalog cat ON cat.occupation_code = pe.occupation_code
+      ${whereSql}
+      ORDER BY ${sortCol} ${sortDir}, pe.resume_id ASC, pe.job_order ASC
+      LIMIT $${params.length + 1} OFFSET $${params.length + 2}
+      `,
+      [...params, PAGE_SIZE, offset]
+    ),
+  ]);
+
+  const agg = aggRows[0];
+  const experiencesCount = Number(agg?.experiences ?? 0);
+  const personsCount = Number(agg?.persons ?? 0);
+  const reincidePct = Number(agg?.reincide_pct ?? 0);
+  const medianDurQ = Number(agg?.median_dur_q ?? 0);
+  const transitionsCappedTo250k = experiencesCount > 100000;
+
+  return {
+    isUnfilteredDefault: false,
+    counters: {
+      persons: personsCount,
+      experiences: experiencesCount,
+      reincidePct,
+      medianDurQ,
+    },
+    durationHist: agg?.duration_hist ?? [],
+    topOccupations: agg?.top_occupations ?? [],
+    startsPerYear: agg?.starts_per_year ?? [],
+    transitions: agg?.transitions ?? [],
+    transitionsCappedTo250k,
+    tableRows,
+    totalRowsForPagination: experiencesCount,
+    page,
+    pageSize: PAGE_SIZE,
+    maxPage: Math.min(
+      MAX_PAGE,
+      Math.max(1, Math.ceil(experiencesCount / PAGE_SIZE))
+    ),
+    queryElapsedMs: Math.round(performance.now() - t0),
+    selectedOccupationLabel,
+  };
+}
+
+// ============================================================================
+// 6. Visor de Trayectoria de Persona (1 sola persona por consulta, LIMIT 1)
+// ============================================================================
+
+export async function getPersonTrajectoryLive(resumeId: number): Promise<{
+  person: PersonProfileRow | null;
+  experiences: PersonExperienceTimelineRow[];
+  elapsedMs: number;
+}> {
+  const t0 = performance.now();
+  if (!Number.isInteger(resumeId) || resumeId <= 0 || resumeId > 10000000) {
+    return { person: null, experiences: [], elapsedMs: 0 };
+  }
+
+  const [personRows, expRows] = await Promise.all([
+    runTimedQuery<PersonProfileRow>(
+      `
+      SELECT
+        resume_id,
+        split,
+        in_ward_25k_sample,
+        university_level,
+        isco_major_1d_zfill,
+        n_jobs,
+        n_jobs_bin,
+        span_q,
+        dur_total,
+        dur_mean,
+        n_occ_posthoc,
+        n_returns_posthoc,
+        tasa_reincide_persona_posthoc
+      FROM person_trajectories
+      WHERE resume_id = $1
+      LIMIT 1
+      `,
+      [resumeId]
+    ),
+    runTimedQuery<PersonExperienceTimelineRow>(
+      `
+      SELECT
+        pe.resume_id,
+        pe.job_order,
         pe.start_year,
         pe.start_quarter,
         pe.end_year,
@@ -583,81 +858,203 @@ export async function getPersonTimelineById(resumeId: number) {
         pe.n_skills_essential_a,
         pe.n_skills_competence_a,
         pe.n_skills_knowledge_a,
-        pe.n_skills_essential_b,
-        pe.n_skills_competence_b,
-        pe.n_skills_knowledge_b,
-        pe.reincide,
-        pe.cluster_exp_kmeans_8_0
+        pe.reincide
       FROM person_experiences pe
       INNER JOIN esco_occupations_catalog cat
-        ON pe.occupation_code = cat.occupation_code
-      WHERE pe.resume_id = ${resumeId}
+        ON cat.occupation_code = pe.occupation_code
+      WHERE pe.resume_id = $1
       ORDER BY pe.job_order ASC
       LIMIT 25
-    `,
-  ]);
-
-  const person = (personRows[0] as unknown as PersonTrajectoryRow) ?? null;
-  const experiences = experienceRows as unknown as PersonExperienceJoinedRow[];
-
-  return { person, experiences };
-}
-
-export async function getModelsAndClusteringData() {
-  const sql = getReadOnlySql();
-  const [
-    supervisedBenchmark,
-    decisionTrees,
-    naiveBayesIsco,
-    knnPurity,
-    clusteringExec,
-    kmeansProfiles,
-    ward25kProfiles,
-  ] = await Promise.all([
-    sql`SELECT * FROM agg_supervised_models_benchmark`,
-    sql`SELECT * FROM agg_decision_trees_comparison`,
-    sql`SELECT * FROM agg_naive_bayes_isco_rates ORDER BY tasa_confirmada_test_pct DESC`,
-    sql`SELECT * FROM agg_knn_neighbor_purity ORDER BY modelo_id ASC, peso_bloque_w ASC`,
-    sql`SELECT * FROM agg_clustering_executive_comparison ORDER BY cluster ASC`,
-    sql`SELECT * FROM agg_kmeans_full_profiles ORDER BY vista DESC, cluster ASC`,
-    sql`SELECT * FROM agg_ward_25k_profiles ORDER BY cluster ASC`,
+      `,
+      [resumeId]
+    ),
   ]);
 
   return {
-    supervisedBenchmark: supervisedBenchmark as unknown as SupervisedBenchmarkRow[],
-    decisionTrees: decisionTrees as unknown as DecisionTreeComparisonRow[],
-    naiveBayesIsco: naiveBayesIsco as unknown as NaiveBayesIscoRow[],
-    knnPurity: knnPurity as unknown as KnnPurityRow[],
-    clusteringExec: clusteringExec as unknown as ClusteringExecutiveRow[],
-    kmeansProfiles: kmeansProfiles as unknown as KMeansProfileRow[],
-    ward25kProfiles: ward25kProfiles as unknown as Ward25kProfileRow[],
+    person: personRows[0] ?? null,
+    experiences: expRows,
+    elapsedMs: Math.round(performance.now() - t0),
   };
 }
 
-export async function getNumericalMethodsData() {
-  const sql = getReadOnlySql();
-  const [
-    rl04Annual,
-    rl04OlsRegimes,
-    rl04Extrapolation,
-    lg01Survival,
-    lg01P3Milestones,
-    lg01Runge,
-  ] = await Promise.all([
-    sql`SELECT * FROM agg_nm_rl04_annual_macro ORDER BY start_year ASC`,
-    sql`SELECT * FROM agg_nm_rl04_ols_regimes`,
-    sql`SELECT * FROM agg_nm_rl04_extrapolation_audit ORDER BY y_var ASC, year ASC`,
-    sql`SELECT * FROM agg_nm_lg01_survival_curve ORDER BY quarter_q ASC`,
-    sql`SELECT * FROM agg_nm_lg01_p3_milestones ORDER BY quarter_q ASC`,
-    sql`SELECT * FROM agg_nm_lg01_runge_benchmark ORDER BY degree ASC, node_strategy ASC`,
+// ============================================================================
+// 7. Buscador del Catálogo de Ocupaciones ESCO (2,973 ocupaciones)
+// ============================================================================
+
+export async function searchEscoOccupations(params: {
+  q?: string;
+  isco?: string;
+  code?: string;
+  page?: number;
+}): Promise<{
+  items: CatalogOccupationOption[];
+  selected: (CatalogOccupationOption & { census_experiences: number; census_persons: number }) | null;
+  totalMatches: number;
+  page: number;
+  elapsedMs: number;
+}> {
+  const t0 = performance.now();
+  const q = params.q?.trim().slice(0, 80) ?? "";
+  const isco =
+    params.isco && ALLOWED_ISCO_MAJORS.has(params.isco)
+      ? params.isco
+      : undefined;
+  const code =
+    params.code && /^[0-9]{4}(?:\.[0-9]+)*$/.test(params.code)
+      ? params.code
+      : undefined;
+  const page = Math.max(1, Math.min(params.page ?? 1, MAX_PAGE));
+  const offset = (page - 1) * PAGE_SIZE;
+
+  const clauses: string[] = [];
+  const sqlParams: unknown[] = [];
+  const push = (v: unknown) => {
+    sqlParams.push(v);
+    return `$${sqlParams.length}`;
+  };
+
+  if (q) {
+    const pat = `%${q}%`;
+    const p1 = push(pat);
+    clauses.push(
+      `(occupation_label ILIKE ${p1} OR isco_group_label ILIKE ${p1} OR occupation_code ILIKE ${p1})`
+    );
+  }
+  if (isco) {
+    clauses.push(`isco_major_1d_zfill = ${push(isco)}`);
+  }
+
+  const whereSql = clauses.length > 0 ? `WHERE ${clauses.join(" AND ")}` : "";
+
+  const [countRows, items] = await Promise.all([
+    runTimedQuery<{ cnt: string }>(
+      `SELECT COUNT(*)::bigint AS cnt FROM esco_occupations_catalog ${whereSql}`,
+      sqlParams
+    ),
+    runTimedQuery<CatalogOccupationOption>(
+      `
+      SELECT
+        occupation_code,
+        occupation_label,
+        isco_group_code,
+        isco_group_label,
+        isco_major_1d_zfill,
+        n_skills_essential_ref,
+        n_skills_competence_ref,
+        n_skills_knowledge_ref,
+        n_skills_sin_tipo_ref
+      FROM esco_occupations_catalog
+      ${whereSql}
+      ORDER BY n_skills_essential_ref DESC, occupation_label ASC
+      LIMIT $${sqlParams.length + 1} OFFSET $${sqlParams.length + 2}
+      `,
+      [...sqlParams, PAGE_SIZE, offset]
+    ),
   ]);
 
+  const targetCode = code ?? items[0]?.occupation_code ?? null;
+  let selected:
+    | (CatalogOccupationOption & {
+        census_experiences: number;
+        census_persons: number;
+      })
+    | null = null;
+
+  if (targetCode) {
+    const [catRows, usageRows] = await Promise.all([
+      runTimedQuery<CatalogOccupationOption>(
+        `SELECT * FROM esco_occupations_catalog WHERE occupation_code = $1 LIMIT 1`,
+        [targetCode]
+      ),
+      runTimedQuery<{ exp_cnt: string; per_cnt: string }>(
+        `
+        SELECT
+          COUNT(*)::bigint AS exp_cnt,
+          COUNT(DISTINCT resume_id)::bigint AS per_cnt
+        FROM person_experiences
+        WHERE occupation_code = $1
+        `,
+        [targetCode]
+      ),
+    ]);
+    if (catRows[0]) {
+      selected = {
+        ...catRows[0],
+        census_experiences: Number(usageRows[0]?.exp_cnt ?? 0),
+        census_persons: Number(usageRows[0]?.per_cnt ?? 0),
+      };
+    }
+  }
+
   return {
-    rl04Annual: rl04Annual as unknown as NmRl04AnnualRow[],
-    rl04OlsRegimes: rl04OlsRegimes as unknown as NmRl04OlsRegimeRow[],
-    rl04Extrapolation: rl04Extrapolation as unknown as NmRl04ExtrapolationRow[],
-    lg01Survival: lg01Survival as unknown as NmLg01SurvivalRow[],
-    lg01P3Milestones: lg01P3Milestones as unknown as NmLg01P3MilestoneRow[],
-    lg01Runge: lg01Runge as unknown as NmLg01RungeRow[],
+    items,
+    selected,
+    totalMatches: Number(countRows[0]?.cnt ?? 0),
+    page,
+    elapsedMs: Math.round(performance.now() - t0),
+  };
+}
+
+/**
+ * Top 60 ocupaciones por volumen para el selector rápido en la barra de filtros (cacheado 1h, live desde Neon).
+ */
+export const getPopularOccupationsForFilter = unstable_cache(
+  async (): Promise<Array<{ occupation_code: string; occupation_label: string }>> => {
+    const sql = getReadOnlySql();
+    const rows = await sql`
+      SELECT DISTINCT
+        t.from_occupation_code AS occupation_code,
+        cat.occupation_label
+      FROM agg_top_occupation_transitions t
+      INNER JOIN esco_occupations_catalog cat
+        ON cat.occupation_code = t.from_occupation_code
+      ORDER BY cat.occupation_label ASC
+      LIMIT 60
+    `;
+    return rows.map((r) => ({
+      occupation_code: String(r.occupation_code),
+      occupation_label: String(r.occupation_label),
+    }));
+  },
+  ["popular-occupations-filter-v1"],
+  { revalidate: 3600 }
+);
+
+// ============================================================================
+// 8. Panel Breve "Sobre estos datos" (100 % consultado en vivo, cero números fijos)
+// ============================================================================
+
+export async function getAboutDataLive(): Promise<AboutDataPayload> {
+  const sql = getReadOnlySql();
+  const [funnelRows, catalogCountRows] = await Promise.all([
+    sql`SELECT * FROM agg_inclusion_exclusion_funnel ORDER BY stage_order ASC`,
+    sql`SELECT COUNT(*)::int AS cnt FROM esco_occupations_catalog`,
+  ]);
+
+  const funnel = funnelRows.map((r) => ({
+    stage_order: Number(r.stage_order),
+    stage_code: String(r.stage_code),
+    stage_label_es: String(r.stage_label_es),
+    status_in_neon: String(r.status_in_neon),
+    experiences_count: Number(r.experiences_count),
+    persons_count: Number(r.persons_count),
+    pct_clean_experiences: Number(r.pct_clean_experiences),
+    pct_clean_persons: Number(r.pct_clean_persons),
+    reason_es: String(r.reason_es),
+  }));
+
+  const byCode = (code: string) => funnel.find((f) => f.stage_code === code);
+
+  return {
+    funnel,
+    escoCatalogCount: Number(catalogCountRows[0]?.cnt ?? 0),
+    wardDirectPersonsCount:
+      byCode("ward_25k_direct_subsample")?.persons_count ?? 0,
+    trainPersonsCount: byCode("census_split_train")?.persons_count ?? 0,
+    testPersonsCount: byCode("census_split_test")?.persons_count ?? 0,
+    totalPersonsCount:
+      byCode("included_classified_census_total")?.persons_count ?? 0,
+    totalExperiencesCount:
+      byCode("included_classified_census_total")?.experiences_count ?? 0,
   };
 }

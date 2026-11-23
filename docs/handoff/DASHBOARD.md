@@ -114,3 +114,131 @@ Se inició el servidor de producción compilado (`next start -p 3199`) conectado
 cd c:\Users\User\Documents\JobPath\MineriaProtect\dashboard
 vercel deploy . --target preview --yes
 ```
+
+
+---
+
+## 4. Design system (Fuente Única de Verdad — Reutilizable por la Presentación Fase 4)
+
+> **Propósito:** Esta sección documenta de forma completa y lista para copiar el sistema visual exacto usado por el dashboard (`dashboard/`), para que la presentación Reveal.js de la Fase 4 luzca como el mismo producto sin inventar una estética nueva.
+
+### 4.1 Stack Visual y Configuración de Tailwind CSS (`dashboard/tailwind.config.ts`)
+
+- **Framework CSS:** `Tailwind CSS 3.4.17` (`postcss 8.5.0`, `autoprefixer 10.4.20`).
+- **Librería de Gráficos:** `Recharts 2.15.4` (disponible también como bundle UMD de navegador en `recharts@2.15.4/umd/Recharts.js`).
+- **Iconografía:** `lucide-react 0.475.0` (trazo `strokeWidth={2}`, tamaños `14px`–`24px`).
+
+```ts
+// dashboard/tailwind.config.ts (copia exacta)
+const themeExtend = {
+  colors: {
+    brand: {
+      50: "#eff6ff",
+      100: "#dbeafe",
+      500: "#3b82f6",
+      600: "#2563eb",
+      700: "#1d4ed8", // Acento primario (botones activos, encabezados de énfasis, serie principal)
+      800: "#1e40af",
+      900: "#1e3a8a",
+    },
+  },
+};
+```
+
+### 4.2 Paleta Exacta de Colores (Hex) y Significado Semántico (Accesible / Okabe-Ito)
+
+| Token / Uso Semántico | Clase Tailwind | Hex Exacto | Significado en Dashboard y Presentación |
+|---|---|---|---|
+| **Canvas de página** | `bg-slate-50` (`--bg-canvas`) | `#f8fafc` | Fondo limpio general (alto contraste en sala iluminada) |
+| **Superficie de tarjeta** | `bg-white` | `#ffffff` | Contenedores de gráficos, filtros, contadores y tablas |
+| **Borde estándar** | `border-slate-200` | `#e2e8f0` | Separadores suaves y grillas de gráficos |
+| **Banner superior oscuro** | `bg-slate-900` | `#0f172a` | Barra superior fija (`"Demo interactivo de datos"`) y badges de ID |
+| **Texto primario** | `text-slate-900` (`--text-primary`) | `#0f172a` | Títulos, cifras KPI grandes y texto principal |
+| **Texto secundario** | `text-slate-600` / `text-slate-700` | `#475569` / `#334155` | Subtítulos, descripciones `"¿Qué estoy viendo?"`, ejes de gráficos |
+| **Texto auxiliar** | `text-slate-500` | `#64748b` | Notas al pie, metadatos y **opciones rechazadas / neutras** |
+| **Acento Primario / Censo / Serie 1** | `bg-blue-700` / `text-blue-700` | `#1d4ed8` | Acción principal, navegación activa, distribución principal |
+| **Opción Elegida / Positivo / Serie 2** | `bg-emerald-600` / `bg-emerald-50` | `#059669` / `#ecfdf5` | **Resaltado estándar de opción elegida**, ocupaciones/conocimientos, estado `PASS` |
+| **Serie Temporal / Competencias Prácticas** | `text-sky-600` | `#0284c7` | Serie temporal `AreaChart` (`Inicios por año`) y habilidades prácticas (`C`) |
+| **Énfasis / Repite / Advertencia / Serie 3** | `text-amber-600` / `bg-amber-50` | `#d97706` / `#fffbeb` | Reincidencia ocupacional, cambios entre grupos ISCO, aviso de alcance (`Ward 25k`) |
+| **Permanencia / Grupo Secundario** | `text-purple-700` | `#7c3aed` | Permanencia en mismo grupo ISCO, submuestra Ward, polinomio $P_3$ |
+| **Alerta / Límite / Extrapolación Inválida** | `text-red-600` / `bg-rose-50` | `#dc2626` / `#fff1f2` | Frontera física inválida (`dur_q < 0`, `S(q) < 0`, Runge equiespaciado) |
+
+### 4.3 Tipografía, Espaciados y Radios
+
+- **Familia Sans-Serif (cuerpo y encabezados):** Pila del sistema Tailwind (`ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"`) con `font-feature-settings: "cv02", "cv03", "cv04", "cv11"` y `-webkit-font-smoothing: antialiased` (`src/app/globals.css`).
+- **Familia Monoespaciada (números de tabla, `resume_id`, códigos ESCO/ISCO e IDs `F-xxx`):** `ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace` (`font-mono`).
+- **Jerarquía de tamaños y legibilidad desde el fondo del aula:**
+  - Contadores KPI grandes: `text-3xl font-extrabold tracking-tight` (`30px`, line-height `36px`).
+  - Títulos de sección / vista: `text-2xl font-extrabold` (`24px`).
+  - Títulos de tarjeta / gráfico: `text-base sm:text-lg font-bold` (`16px`–`18px`).
+  - Etiquetas de filtros y cuerpo legible: `text-sm font-bold` (`14px`) / en proyección Reveal.js `1280×720` escalar proporcionalmente (`>= 18px` cuerpo, `>= 30px` títulos, `>= 14px` etiquetas de gráfico).
+- **Contenedor, espaciados y radios:**
+  - Ancho máximo centrado: `max-w-7xl mx-auto px-4 sm:px-6` (`1280px`).
+  - Espaciado vertical entre secciones: `space-y-6` (`24px`).
+  - Rejillas: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4` (contadores) y `lg:grid-cols-2 gap-6` (gráficos).
+  - Radios: `rounded-2xl` (`16px`) en paneles maestros (`FilterBar`, encabezados); `rounded-xl` (`12px`) en `<ChartCard />` y KPIs; `rounded-lg` (`8px`) en botones, inputs y cajas `"¿Qué estoy viendo?"`; `rounded-full` (`9999px`) en píldoras/badges.
+
+### 4.4 Estilos Exactos de Componentes (Banner, Tarjetas, Filtros y Tablas)
+
+- **Banner superior fijo (`Navbar.tsx`):** `bg-slate-900 px-4 py-2 text-xs text-slate-100` con píldora `rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[11px] font-bold uppercase text-emerald-300 ring-1 ring-inset ring-emerald-400/40`.
+- **Tarjeta de gráfico (`ChartCard.tsx`):** `rounded-xl border border-slate-200 bg-white p-5 shadow-sm`, caja interna `"¿Qué estoy viendo?"`: `rounded-lg bg-slate-50 px-3 py-2 text-xs sm:text-sm text-slate-700 ring-1 ring-inset ring-slate-200/80`.
+- **Barra de filtros (`FilterBar.tsx`):** `rounded-2xl border border-slate-200 bg-white p-5 shadow-sm`; controles `rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-600 focus:ring-2 focus:ring-blue-200`; presets `"Prueba esto"` en `rounded-lg border border-blue-200 bg-blue-50/70 px-3 py-1.5 text-xs sm:text-sm font-bold text-blue-900 hover:bg-blue-100`.
+- **Tablas (`ExperiencesTable.tsx`):** Cabecera `border-b border-slate-200 bg-slate-50 text-[11px] font-bold uppercase text-slate-600`; filas `divide-y divide-slate-200 hover:bg-blue-50/40`; celdas `px-3 py-2.5`.
+- **Resaltado de Opción Elegida vs. Opciones Rechazadas (regla compartida con Fase 4):**
+  - **Opción elegida:** Fila o tarjeta con fondo `#ecfdf5` (`bg-emerald-50`), borde `#6ee7b7` (`border-emerald-300`), texto principal `#064e3b` (`text-emerald-950`) y badge sólido `bg-emerald-600 text-white` (`#059669`).
+  - **Opciones rechazadas / alternativas:** Fondo `#ffffff` o `#f8fafc` (`bg-slate-50`), borde `#e2e8f0` (`border-slate-200`), texto `#475569` (`text-slate-600`) y barra neutra `#94a3b8` / `#64748b`.
+
+### 4.5 Estilo Estándar de Gráficos (`Recharts 2.15.4`)
+
+- **Grilla (`CartesianGrid`):** `strokeDasharray="3 3" stroke="#e2e8f0"`.
+- **Ejes (`XAxis` / `YAxis`):** `tick={{ fontSize: 12, fill: "#0f172a", fontWeight: 600 }}` en eje categórico y `fill: "#334155"` en eje numérico; abreviación `k` para miles (`>= 1000`).
+- **Tooltip (`Tooltip`):** `contentStyle={{ fontSize: "12px", borderRadius: "8px", borderColor: "#cbd5e1", backgroundColor: "#ffffff" }}`.
+- **Barras (`Bar`):** Esquinas redondeadas `radius={[6, 6, 0, 0]}` (vertical) o `radius={[0, 6, 6, 0]}` (horizontal).
+- **Área temporal (`Area`):** Trazo `#0284c7`, grosor `strokeWidth={2.5}`, degradado vertical `0.35 → 0.04`.
+- **Colores por serie:** Duración `#1d4ed8` (Azul Cobalto), Top Ocupaciones `#059669` (Esmeralda), Inicios por año `#0284c7` (Cian), Transiciones mismo grupo `#7c3aed` (Púrpura) vs. cambio de grupo `#d97706` (Ámbar), Reincidente `#d97706` vs. Único `#1d4ed8`.
+
+---
+
+## 5. Modification log (`2026-11-22` · Refactorización a Explorador Interactivo de Datos)
+
+> **Copia de seguridad previa al cambio:** Rama Git `backup/dashboard-v1-report` (commit `4efb23e`) y etiqueta anotada `safety/dashboard-v1-report`. Trabajo ejecutado en la rama `feat/interactive-data-explorer` sin alterar ninguna tabla ni índice en Neon (`276.68 MiB` = `27.02 %` de `1 GiB`).
+
+### 5.1 Qué se Eliminó (y Por Qué)
+1. **Vista de Resumen Ejecutivo y Hallazgos (`src/app/page.tsx` v1 + `src/components/OverviewCharts.tsx`):** Eliminados porque presentaban el Top 10 de hallazgos de `FACTS.md`, viaje de datos, PCA y narrativa de informe; ese contenido pertenece a la presentación (Fase 4).
+2. **Vista Extensa de Transparencia Muestral (`src/app/transparencia/page.tsx` + `src/components/TransparencyCharts.tsx`):** Eliminados y sustituidos por el panel breve y factual `/sobre-datos`.
+3. **Vista de Resultados de Modelos y Clustering (`src/app/modelos/page.tsx` + `src/components/ModelsCharts.tsx`):** Eliminados para cumplir la regla de cero resultados de modelos supervisados (`6.0–7.2`) ni clustering (`8.0–8.1`) en el explorador.
+4. **Vista de Métodos Numéricos (`src/app/metodos-numericos/page.tsx` + `src/components/NumericalMethodsCharts.tsx`):** Eliminados porque MCO (`RL-04`) y Lagrange (`LG-01`) pertenecen exclusivamente a las diapositivas 10–11 de la presentación.
+5. **Vista Extensa de Metodología (`src/app/metodologia/page.tsx`) y archivo temporal `dashboard/-w`:** Eliminados; los metadatos esenciales de fuente, inclusiones/exclusiones, nota `resume_id` y licencias se consolidaron en `/sobre-datos`.
+
+### 5.2 Qué se Reemplazó y Qué se Agregó
+1. **Nueva Pantalla Principal — Explorador Interactivo de Datos (`src/app/page.tsx` + `src/components/FilterBar.tsx` + `src/components/ExplorerCharts.tsx` + `src/components/ExperiencesTable.tsx`):**
+   - Barra de filtros siempre visible con estado 100 % sincronizado en la URL (`isco`, `occ`, `edu`, `yFrom`, `yTo`, `split`, `active`, `rep`, `nJobs`, `skills`, `ward25k`, `sort`, `dir`, `page`).
+   - Tres escenarios guiados de 1 clic (`"Prueba esto"`) como consultas ejemplo neutras.
+   - Contadores reactivos legibles desde el fondo de la sala (`Personas`, `Experiencias`, `% que repite ocupación`, `Duración mediana`) + frase en lenguaje llano (`"Estás viendo..."`).
+   - Cuatro gráficos descriptivos reactivos (`Recharts`) con título neutral y una oración `"¿Qué estoy viendo?"`: distribución de duración, Top 10 ocupaciones (nombres visibles, códigos en hover/tooltip), inicios por año y transiciones más frecuentes entre grupos ISCO.
+   - Tabla paginada y ordenable de experiencias (`25` filas por página, máx. `40` páginas, ordenamiento por *whitelist* en servidor, cero exportación masiva) y estados de carga (`src/app/loading.tsx`) y vacío (`"Ningún resultado con estos filtros"`).
+2. **Nueva Capa SQL Segura (`src/lib/db.ts`):**
+   - Consultas 100 % parametrizadas (`$1, $2, ...`), *whitelists* estrictas de filtros y ordenamiento, `SET LOCAL statement_timeout = '6000'`, rol `jobpath_readonly` exclusivamente en servidor (`import "server-only"`), ruta rápida sobre `agg_*` + `unstable_cache` para la vista por defecto sin filtros y tope defensivo de `250,000` filas origen en el *self-join* de transiciones cuando una selección es ultra-amplia para garantizar `< 2 s`.
+3. **Visor de Trayectoria por Persona Evolucionado (`src/app/explorador/page.tsx` + `src/components/PersonTimelineChart.tsx`):**
+   - Eliminadas todas las insignias/narrativas de clústeres K-Means y Ward; ahora muestra empleos, períodos, educación, grupos ocupacionales y competencias ESCO con la nota obligatoria de que describen la ocupación y no a la persona.
+4. **Nuevo Buscador de Ocupaciones ESCO (`src/app/ocupaciones/page.tsx`):**
+   - Permite buscar en las `2,973` ocupaciones del catálogo `esco_occupations_catalog`, ver su grupo ISCO, sus competencias esenciales (`Prácticas` y `Conocimientos`), el conteo vivo en el censo y saltar al explorador filtrado por esa ocupación.
+5. **Nuevo Panel Breve `"Sobre estos datos"` (`src/app/sobre-datos/page.tsx`):**
+   - 100 % consultado en vivo desde Neon (`agg_inclusion_exclusion_funnel` y `esco_occupations_catalog`), cero números fijos en código y cero conclusiones de proyecto.
+
+### 5.3 Verificación en Vivo del Preview Refactorizado (`https://jobpath-dashboard-erhm1806w-sgemd.vercel.app`)
+
+- **Despliegue Preview (`READY`, `dpl_D2emKo3UBMpKoQBtX95EjohAvGug`):** `https://jobpath-dashboard-erhm1806w-sgemd.vercel.app` (Panel de inspección: `https://vercel.com/sgemd/jobpath-dashboard/D2emKo3UBMpKoQBtX95EjohAvGug`).
+- **Cambios en el esquema de Neon:** **Ninguno** (`0` tablas modificadas, `0` índices adicionales necesarios gracias a la consolidación en `WITH matched AS MATERIALIZED`; huella total mantenida en `276.68 MiB` = `27.02 %` de `1 GiB`).
+- **Auditoría de secretos en bundle cliente:** `CLIENT_BUNDLE_CREDENTIAL_LEAKS = 0`.
+- **Latencias end-to-end medidas en vivo con `vercel curl` (Vercel `iad1` ↔ Neon `aws-us-east-1`, rol `jobpath_readonly`):**
+  - Default sin filtros (1.ª llamada / 2.ª llamada caché): **`1.26 s` / `0.46 s`** (`HTTP 200`).
+  - Escenario 1 (`ISCO 5 + Secundaria + 2010–2019`): **`1.29 s`** (`HTTP 200`).
+  - Escenario 2 (`ISCO 2 + Maestría + cerrados`): **`1.39 s`** (`HTTP 200`).
+  - Escenario 3 (`Test + 9+ empleos + skills > 28`): **`1.02 s`** (`HTTP 200`).
+  - Ocupación única (`3343.1`): **`0.85 s`** (`HTTP 200`).
+  - Muestra Ward 25k (`ward25k=1`): **`1.16 s`** (`HTTP 200`).
+  - Filtro ultra-amplio (`rep=1`, `~521k` filas): **`2.05 s`** (`HTTP 200`, transiciones acotadas a `100k` filas origen con aviso visible).
+  - Estado vacío (`isco=0&edu=PhD&yFrom=2022&yTo=2023`): **`0.52 s`** (`HTTP 200`).
+  - Trayectoria de persona (`#47`), Catálogo ESCO (`q=assistant`) y Panel `"Sobre estos datos"`: **`0.41 s` / `0.41 s` / `0.35 s`** (`HTTP 200`).
+  - Rutas antiguas de reporte eliminadas (`/modelos`, `/metodos-numericos`): **`HTTP 404`**.

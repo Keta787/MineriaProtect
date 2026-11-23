@@ -1,0 +1,2318 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JobPath · Trayectorias Laborales, Decisiones de Modelos y Métodos Numéricos</title>
+
+  <!--
+    OFFLINE + PINNED CDN MANIFEST (Exact Versions)
+    - Reveal.js 5.1.0:       https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css | reveal.js | plugin/notes/notes.js
+                             Local vendor: ./vendor/reveal/
+    - Tailwind CSS 3.4.17:   https://cdn.tailwindcss.com/3.4.17
+                             Local vendor: ./vendor/tailwind/tailwindcss-3.4.17.js
+    - React 18.3.1 UMD:      https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js
+                             Local vendor: ./vendor/react/react.production.min.js
+    - ReactDOM 18.3.1 UMD:   https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js
+                             Local vendor: ./vendor/react/react-dom.production.min.js
+    - PropTypes 15.8.1 UMD:  https://cdn.jsdelivr.net/npm/prop-types@15.8.1/prop-types.min.js
+                             Local vendor: ./vendor/react/prop-types.min.js
+    - Recharts 2.15.4 UMD:   https://cdn.jsdelivr.net/npm/recharts@2.15.4/umd/Recharts.js
+                             Local vendor: ./vendor/recharts/Recharts.js
+    - KaTeX 0.16.11 (MIT):   https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css | katex.min.js | contrib/auto-render.min.js
+                             Local vendor: ./vendor/katex/ (reused from numerical_methods_presentation/assets/katex/, MIT License)
+  -->
+
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css"
+    onerror="this.onerror=null;this.href='./vendor/reveal/reveal.css';"
+  />
+  <link rel="stylesheet" href="./vendor/reveal/reveal.css" />
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
+    onerror="this.onerror=null;this.href='./vendor/katex/katex.min.css';"
+  />
+  <link rel="stylesheet" href="./vendor/katex/katex.min.css" />
+
+  <style>
+    /* =========================================================================
+       PALETA VERDE RETRO VINTAGE (Solicitada por el usuario · Regla 60–30–10)
+       - #FEFAE0 · Crema Marfil     (60 % — Lienzo cálido de auditorio)
+       - #283618 · Verde Bosque     (Tinta principal, títulos, barra superior — 12.8:1 AAA)
+       - #606C38 · Verde Oliva      (30 % — Identidad primaria, opción elegida, solución válida)
+       - #DDA15E · Ocre Dorado      (Acento secundario cálido, avisos suaves, contexto)
+       - #BC6C25 · Terracota Cobre  (10 % — Foco reincidencia y alertas / fallos físicos)
+       ========================================================================= */
+    :root {
+      --olive: #606c38;
+      --olive-soft: #eef1e3;
+      --olive-border: #a5b17e;
+      --forest: #283618;
+      --cream: #fefae0;
+      --surface: #ffffff;
+      --line: #e4ddbe;
+      --ink-soft: #4a5539;
+      --ink-muted: #6c7559;
+      --neutral-bar: #d4ceb4;
+      --ochre: #dda15e;
+      --ochre-soft: #fbf1e2;
+      --copper: #bc6c25;
+      --copper-soft: #fae9d7;
+      --copper-ink: #6e3b0f;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--cream);
+      color: var(--forest);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .reveal {
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 400;
+      color: var(--forest);
+      background-color: var(--cream);
+    }
+
+    .reveal .slides {
+      text-align: left;
+    }
+
+    .reveal .slides > section {
+      width: 1280px;
+      height: 720px;
+      padding: 0 !important;
+      margin: 0 !important;
+      box-sizing: border-box;
+      display: flex !important;
+      flex-direction: column;
+      background-color: var(--cream);
+      overflow: hidden;
+    }
+
+    .reveal h1, .reveal h2, .reveal h3, .reveal p, .reveal ul, .reveal li {
+      margin: 0;
+      padding: 0;
+      text-transform: none;
+      letter-spacing: normal;
+      font-family: inherit;
+    }
+
+    .reveal table {
+      border-collapse: collapse;
+      border-spacing: 0;
+      margin: 0;
+      width: 100%;
+    }
+
+    .reveal table th, .reveal table td {
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    .reveal a {
+      color: var(--olive);
+      text-decoration: none;
+    }
+
+    /* Quiet forest header bar (40px) with warm ochre accent */
+    .jp-header {
+      height: 40px;
+      padding: 0 46px;
+      background: var(--forest);
+      color: #e6e2c8;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      font-size: 12.5px;
+      font-weight: 600;
+    }
+
+    .jp-brand-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 9999px;
+      background: var(--ochre);
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    /* Generous auditorium whitespace canvas */
+    .jp-stage {
+      flex: 1;
+      padding: 24px 46px 38px 46px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      overflow: hidden;
+    }
+
+    /* Level 1: Bold Takeaway Title readable at 15 meters */
+    .jp-kicker {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: var(--olive);
+      margin-bottom: 4px;
+    }
+    .jp-kicker.copper { color: var(--copper); }
+
+    .jp-h1 {
+      font-size: 30.5px;
+      line-height: 1.15;
+      font-weight: 800;
+      color: var(--forest);
+      letter-spacing: -0.022em;
+      max-width: 1130px;
+    }
+
+    .jp-lead {
+      font-size: 16px;
+      line-height: 1.38;
+      color: var(--ink-soft);
+      margin-top: 6px;
+      max-width: 1080px;
+    }
+
+    /* Level 2: Clean Hero Stat Cards */
+    .jp-stat {
+      padding: 14px 18px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: 0 2px 8px rgba(40, 54, 24, 0.045);
+    }
+
+    .jp-stat.olive-tint {
+      background: var(--olive-soft);
+      border-color: var(--olive-border);
+    }
+
+    .jp-stat.copper-tint {
+      background: var(--copper-soft);
+      border-color: var(--ochre);
+    }
+
+    .jp-stat-num {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 34px;
+      line-height: 1.08;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--forest);
+    }
+
+    .jp-stat-num.olive { color: var(--olive); }
+    .jp-stat-num.copper { color: var(--copper); }
+
+    .jp-stat-lbl {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--forest);
+      margin-top: 4px;
+    }
+
+    .jp-stat-sub {
+      font-size: 13px;
+      color: var(--ink-muted);
+      margin-top: 2px;
+    }
+
+    /* Clean Visual Container */
+    .jp-visual {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px 22px;
+      box-shadow: 0 2px 10px rgba(40, 54, 24, 0.05);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .jp-visual-head {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--forest);
+      line-height: 1.25;
+    }
+
+    .jp-visual-sub {
+      font-size: 13.8px;
+      color: var(--ink-muted);
+      margin-top: 3px;
+    }
+
+    /* Clean aligned bullet lists (overrides Reveal ul/li margin & padding reset) */
+    .reveal .jp-list {
+      list-style: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .reveal .jp-li {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      margin: 0 !important;
+      padding: 0 !important;
+      font-size: 13.4px;
+      line-height: 1.38;
+      color: var(--ink-soft);
+    }
+
+    .jp-dot {
+      width: 6.5px;
+      height: 6.5px;
+      border-radius: 9999px;
+      background: var(--olive);
+      margin-top: 6px;
+      flex-shrink: 0;
+    }
+    .jp-dot.copper { background: var(--copper); }
+    .jp-dot.ochre  { background: var(--ochre); }
+    .jp-dot.forest { background: var(--forest); }
+
+    /* Slide 7 real trajectory mini-timeline */
+    .jp-tl-card {
+      background: var(--cream);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 7px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .jp-tl-card.repeat {
+      background: var(--copper-soft);
+      border: 1.5px solid var(--copper);
+    }
+
+    /* Slide 9 Observatory Laboral action footer inside cluster stat cards */
+    .jp-action-tag {
+      margin-top: 6px;
+      padding-top: 5px;
+      border-top: 1px dashed rgba(40, 54, 24, 0.22);
+      font-size: 11.4px;
+      line-height: 1.28;
+      color: var(--forest);
+      cursor: help;
+    }
+
+    /* Interactive simulator controls (Slides 10 & 11 · Vintage Palette) */
+    .jp-ctrl-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      background: #faf6e6;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 5px 8px;
+    }
+    .jp-ctrl-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .jp-pill-btn {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: #ffffff;
+      color: var(--forest);
+      font-family: inherit;
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 3.5px 8.5px;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+      line-height: 1.2;
+    }
+    .jp-pill-btn:hover {
+      background: var(--olive-soft);
+      border-color: var(--olive-border);
+    }
+    .jp-pill-btn.active {
+      background: var(--forest);
+      border-color: var(--forest);
+      color: var(--cream);
+    }
+    .jp-pill-btn.active-olive {
+      background: var(--olive);
+      border-color: var(--olive);
+      color: var(--cream);
+    }
+    .jp-pill-btn.active-copper {
+      background: var(--copper);
+      border-color: var(--copper);
+      color: var(--cream);
+    }
+    .jp-pill-btn.subtle {
+      opacity: 0.55;
+    }
+    .jp-slider {
+      width: 100%;
+      height: 6px;
+      accent-color: var(--olive);
+      cursor: pointer;
+    }
+    .jp-slider.copper {
+      accent-color: var(--copper);
+    }
+    .jp-live-cell {
+      background: var(--cream);
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      padding: 6px 8px;
+      text-align: center;
+    }
+    .jp-live-cell.olive {
+      background: var(--olive-soft);
+      border-color: var(--olive-border);
+    }
+    .jp-live-cell.copper {
+      background: var(--copper-soft);
+      border-color: var(--copper);
+    }
+
+    /* Level 3: Clean Single-Line Takeaway Banner */
+    .jp-takeaway {
+      background: var(--olive-soft);
+      border: 1px solid var(--olive-border);
+      border-left: 5px solid var(--olive);
+      border-radius: 10px;
+      padding: 12px 18px;
+      color: var(--forest);
+      font-size: 15.5px;
+      line-height: 1.38;
+      flex-shrink: 0;
+    }
+
+    .jp-takeaway.copper {
+      background: var(--copper-soft);
+      border-color: var(--ochre);
+      border-left-color: var(--copper);
+      color: var(--copper-ink);
+    }
+
+    .jp-takeaway.forest {
+      background: var(--forest);
+      border-color: var(--forest);
+      border-left-color: var(--ochre);
+      color: var(--cream);
+    }
+
+    /* Decision Table Highlights (100 % Vintage Palette) */
+    tr.row-chosen {
+      background-color: var(--olive-soft) !important;
+      color: var(--forest) !important;
+    }
+    tr.row-chosen td {
+      border-top: 2px solid var(--olive) !important;
+      border-bottom: 2px solid var(--olive) !important;
+      color: var(--forest) !important;
+    }
+    tr.row-muted {
+      background-color: #ffffff;
+      color: var(--ink-soft);
+    }
+    tr.row-base {
+      background-color: #faf8ed;
+      color: var(--ink-muted);
+    }
+
+    .pill-chosen {
+      display: inline-block;
+      background: var(--olive);
+      color: var(--cream);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 2px 9px;
+      border-radius: 9999px;
+    }
+
+    .pill-muted {
+      display: inline-block;
+      background: #ece8d6;
+      color: var(--ink-soft);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 9px;
+      border-radius: 9999px;
+    }
+
+    .pill-warn {
+      display: inline-block;
+      background: var(--ochre-soft);
+      color: var(--copper-ink);
+      border: 1px solid var(--ochre);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 2px 10px;
+      border-radius: 9999px;
+    }
+
+    /* KaTeX Clean Strip */
+    .jp-math {
+      background: var(--cream);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px 12px;
+      text-align: center;
+      color: var(--forest);
+    }
+
+    .jp-math.olive {
+      background: var(--olive-soft);
+      border-color: var(--olive-border);
+      color: var(--forest);
+    }
+
+    .jp-math.copper {
+      background: var(--copper-soft);
+      border-color: var(--ochre);
+      color: var(--copper-ink);
+    }
+
+    .jp-math .katex-display { margin: 0.1em 0 !important; }
+    .jp-math .katex { font-size: 1.12em; color: inherit; }
+
+    .jp-chart-mount {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+    }
+    .jp-chart-mount .recharts-wrapper { margin: 0 auto; }
+
+    /* CTA button in Slide 12 */
+    .jp-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--forest);
+      color: var(--cream) !important;
+      padding: 9px 16px;
+      border-radius: 10px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 13.5px;
+      font-weight: 700;
+      text-decoration: none !important;
+      border: 1.5px solid var(--forest);
+    }
+    .jp-cta:hover {
+      background: var(--olive);
+      border-color: var(--olive);
+    }
+
+    .jp-appendix-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 9999px;
+      border: 1.5px solid var(--olive-border);
+      background: #ffffff;
+      padding: 4px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--forest) !important;
+      text-decoration: none !important;
+    }
+    .jp-appendix-link:hover {
+      background: var(--olive-soft);
+    }
+
+    /* Reveal chrome in bottom 32px lane */
+    .reveal .progress { height: 4px; color: var(--olive); background: var(--line); }
+    .reveal .controls {
+      color: var(--olive);
+      bottom: 4px;
+      right: 20px;
+      transform: scale(0.55);
+      transform-origin: bottom right;
+    }
+    .reveal .slide-number { display: none !important; }
+
+    .jp-hud {
+      position: fixed;
+      left: 46px;
+      bottom: 7px;
+      z-index: 40;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--ink-muted);
+      pointer-events: auto;
+    }
+    .jp-hud kbd {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 0 4px;
+      color: var(--forest);
+      font-size: 10.5px;
+    }
+    @media print { .jp-hud { display: none !important; } }
+  </style>
+
+  <!-- Sequential Asset Loader: Pinned CDN over HTTP(S), instant ./vendor/ offline -->
+  <script>
+    (function () {
+      var preferLocal = !navigator.onLine || window.location.protocol === "file:";
+      var manifest = [
+        {
+          cdn: "https://cdn.tailwindcss.com/3.4.17",
+          local: "./vendor/tailwind/tailwindcss-3.4.17.js",
+          check: function () { return typeof window.tailwind !== "undefined"; },
+          afterLoad: function () {
+            if (window.tailwind) {
+              window.tailwind.config = {
+                theme: {
+                  extend: {
+                    colors: {
+                      olive: "#606c38",
+                      forest: "#283618",
+                      cream: "#fefae0",
+                      ochre: "#dda15e",
+                      copper: "#bc6c25"
+                    }
+                  }
+                }
+              };
+            }
+          }
+        },
+        { cdn: "https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js", local: "./vendor/react/react.production.min.js", check: function () { return typeof window.React !== "undefined"; } },
+        { cdn: "https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js", local: "./vendor/react/react-dom.production.min.js", check: function () { return typeof window.ReactDOM !== "undefined"; } },
+        { cdn: "https://cdn.jsdelivr.net/npm/prop-types@15.8.1/prop-types.min.js", local: "./vendor/react/prop-types.min.js", check: function () { return typeof window.PropTypes !== "undefined"; } },
+        { cdn: "https://cdn.jsdelivr.net/npm/recharts@2.15.4/umd/Recharts.js", local: "./vendor/recharts/Recharts.js", check: function () { return typeof window.Recharts !== "undefined"; } },
+        { cdn: "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js", local: "./vendor/katex/katex.min.js", check: function () { return typeof window.katex !== "undefined"; } },
+        { cdn: "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js", local: "./vendor/katex/contrib/auto-render.min.js", check: function () { return typeof window.renderMathInElement === "function"; } },
+        { cdn: "https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js", local: "./vendor/reveal/reveal.js", check: function () { return typeof window.Reveal !== "undefined"; } },
+        { cdn: "https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js", local: "./vendor/reveal/notes.js", check: function () { return typeof window.RevealNotes !== "undefined"; } }
+      ];
+
+      function injectScript(src, timeoutMs) {
+        return new Promise(function (resolve, reject) {
+          var s = document.createElement("script");
+          var done = false;
+          var timer = setTimeout(function () { if (!done) { done = true; s.remove(); reject(new Error("Timeout")); } }, timeoutMs);
+          s.src = src; s.async = false;
+          s.onload = function () { if (!done) { done = true; clearTimeout(timer); resolve(); } };
+          s.onerror = function () { if (!done) { done = true; clearTimeout(timer); s.remove(); reject(new Error("Error")); } };
+          document.head.appendChild(s);
+        });
+      }
+
+      window.__jobpathBootReady = (async function () {
+        for (var i = 0; i < manifest.length; i++) {
+          var item = manifest[i];
+          if (item.check()) { if (item.afterLoad) item.afterLoad(); continue; }
+          var loaded = false;
+          if (!preferLocal) {
+            try { await injectScript(item.cdn, 2000); loaded = item.check(); } catch (e) { loaded = false; }
+          }
+          if (!loaded) { await injectScript(item.local, 8000); }
+          if (item.afterLoad) item.afterLoad();
+        }
+      })();
+    })();
+  </script>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- ===================================================================
+           SLIDE 1: PROBLEMA Y OBJETIVO
+           =================================================================== -->
+      <section>
+        <div class="jp-header">
+          <span><span class="jp-brand-dot"></span><strong style="color:#fefae0">JobPath</strong> &nbsp;·&nbsp; Análisis de Trayectorias Laborales (UNIMINUTO Ibagué)</span>
+          <span class="font-mono" style="color:#dda15e">01 / 12</span>
+        </div>
+
+        <div class="jp-stage justify-between">
+          <div>
+            <div class="jp-kicker">El problema</div>
+            <h1 class="jp-h1">Casi 1 de cada 2 trabajadores (45.3 %) repite un mismo oficio a lo largo de su carrera</h1>
+            <p class="jp-lead"><strong>Reincidencia ocupacional</strong> significa volver a ejercer exactamente la misma ocupación en otro contrato o empleo. Analizamos 1.74 millones de empleos reales para entender quién repite y por qué.</p>
+          </div>
+
+          <div class="grid grid-cols-12 gap-6 items-stretch flex-1 min-h-0">
+            <div class="col-span-5 flex flex-col justify-between gap-4">
+              <div class="jp-stat copper-tint flex-1 flex flex-col justify-center">
+                <div class="jp-stat-num copper" style="font-size: 42px;">45.3 %</div>
+                <div class="jp-stat-lbl text-[16px]">de las personas repiten oficio</div>
+                <div class="jp-stat-sub">160,943 trabajadores con 1 o más retornos</div>
+              </div>
+              <div class="grid grid-cols-2 gap-4 flex-1">
+                <div class="jp-stat flex flex-col justify-center">
+                  <div class="jp-stat-num olive" style="font-size: 30px;">355 mil</div>
+                  <div class="jp-stat-lbl">Personas reales</div>
+                  <div class="jp-stat-sub">5.3 empleos promedio</div>
+                </div>
+                <div class="jp-stat flex flex-col justify-center">
+                  <div class="jp-stat-num" style="font-size: 30px;">1.74 M</div>
+                  <div class="jp-stat-lbl">Empleos analizados</div>
+                  <div class="jp-stat-sub">30.0 % son reincidentes</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-span-7 jp-visual">
+              <div>
+                <div class="jp-visual-head">¿Cuántas veces vuelve una persona a un oficio que ya ejerció?</div>
+                <div class="jp-visual-sub">Distribución real sobre las 355,308 trayectorias laborales del estudio.</div>
+              </div>
+              <div id="chart-s1" class="jp-chart-mount"></div>
+            </div>
+          </div>
+
+          <div class="jp-takeaway">
+            <strong>Objetivo y límite honesto:</strong> JobPath descubre <strong>patrones observables</strong> en carreras laborales reales —qué oficios repiten más y qué perfiles existen— sin afirmar causas personales ni garantías futuras.
+          </div>
+        </div>
+
+        <aside class="notes">
+          BLOQUE 1 · EXPOSITOR 1 · DIAPOSITIVA 1 (00:00 – 01:15 · 75 s)
+          ---
+          GUION:
+          "Buenas tardes al jurado. Solemos imaginar una carrera laboral como una escalera donde cada trabajo nos lleva a un oficio nuevo. Sin embargo, al analizar 355,308 trayectorias reales en JobPath encontramos que casi la mitad de las personas —el 45.3 %, más de 160 mil trabajadores— vuelve al menos una vez exactamente al mismo oficio con otro empleador, y el 30 % de todos los empleos analizados son reincidentes.
+          Nuestro objetivo en este proyecto es responder tres preguntas concretas sobre 1.74 millones de empleos: qué información permite predecir si alguien repetirá oficio, qué perfiles naturales de carrera existen en el mercado laboral y qué límites tienen las fórmulas matemáticas clásicas al proyectar la duración del empleo.
+          Desde el inicio fijamos una postura clara: describimos patrones reales en hojas de vida históricas sin hacer afirmaciones causales."
+          ---
+          HECHOS VERIFICADOS: F-003 (355,315 iniciales), F-011 (355,308 limpias), F-015 (1,738,738 clasificadas), F-017 (30.01 % Train / 29.97 % Test), F-023 (5.266 empleos medios; 54.70 % 0 retornos = 194,365; 23.91 % 1 retorno = 84,967; 21.38 % 2+ retornos = 75,976; 45.30 % = 160,943), F-028, DEC-01.
+        </aside>
+      </section>
+
+      <!-- ===================================================================
+           SLIDE 2: DATOS Y FUENTES
+           =================================================================== -->
+      <section>
+        <div class="jp-header">
+          <span><span class="jp-brand-dot"></span><strong style="color:#fefae0">JobPath</strong> &nbsp;·&nbsp; Datos y Fuentes Públicas</span>
+          <span class="font-mono" style="color:#dda15e">02 / 12</span>
+        </div>
+
+        <div class="jp-stage justify-between">
+          <div>
+            <div class="jp-kicker">Qué datos analizamos</div>
+            <h2 class="jp-h1">Cruzamos 1.99 millones de empleos reales con el catálogo europeo de 2,973 oficios</h2>
+            <p class="jp-lead"><strong>ESCO</strong> es el diccionario oficial europeo que dice qué habilidades exige cada ocupación; <strong>ISCO</strong> agrupa los oficios en 10 grandes sectores.</p>
+          </div>
+
+          <div class="grid grid-cols-12 gap-6 items-stretch flex-1 min-h-0">
+            <div class="col-span-7 jp-visual">
+              <div>
+                <div class="jp-visual-head">93 de cada 100 empleos limpios emparejaron con un oficio oficial ESCO</div>
+                <div class="jp-visual-sub">Cobertura sobre los 1,871,014 empleos limpios tras cruzar JobHop v2 con ESCO.</div>
+              </div>
+              <div id="chart-s2" class="jp-chart-mount"></div>
+            </div>
+
+            <div class="col-span-5 flex flex-col justify-between gap-3.5">
+              <div class="jp-stat flex-1 flex flex-col justify-center">
+                <div class="jp-stat-num" style="font-size: 30px;">1,993,291</div>
+                <div class="jp-stat-lbl">Experiencias reales (JobHop v2 · Flandes)</div>
+                <div class="jp-stat-sub">Elegido sobre el OLE de Colombia porque incluye historiales completos por persona (CC BY 4.0)</div>
+              </div>
+              <div class="jp-stat olive-tint flex-1 flex flex-col justify-center">
+                <div class="jp-stat-num olive" style="font-size: 30px;">2,973 oficios</div>
+                <div class="jp-stat-lbl">Enriquecidos con 126,051 habilidades ESCO</div>
+                <div class="jp-stat-sub">Rescatamos <strong>9,293</strong> filas por oficio padre y dejamos vacíos explícitos (nunca 0) si falta el oficio</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="jp-takeaway">
+            <strong>Decisión y por qué:</strong> Enriquecer cada empleo con el catálogo ESCO permite medir la exigencia de cada oficio, declarando siempre que <strong>las habilidades describen el cargo estándar y no a la persona</strong>.
+          </div>
+        </div>
+
+        <aside class="notes">
+          BLOQUE 1 · EXPOSITOR 1 · DIAPOSITIVA 2 (01:15 – 02:30 · 75 s)
+          ---
+          GUION:
+          "Para construir este análisis unimos dos fuentes públicas abiertas con licencia CC BY 4.0. La primera es JobHop v2, publicada por el servicio de empleo de Flandes y la Universidad de Gante: casi dos millones de empleos reales en hojas de vida completamente anonimizadas, donde cada persona tiene solo un identificador numérico sin nombres ni datos privados.
+          Como esos registros originales solo traían fechas, educación y un código de cargo, los cruzamos con el catálogo europeo ESCO versión 1.2.1, que aporta 2,973 oficios concretos y 126,051 relaciones de habilidades prácticas y conocimientos.
+          El gráfico confirma que el 92.93 % de las experiencias limpias emparejaron con un oficio completo, dejando solo un 7 % fuera. Y declaramos una regla clave de honestidad: esas competencias provienen del catálogo oficial del oficio, no de un examen aplicado al trabajador."
+          ---
+          HECHOS VERIFICADOS: F-001 (1,993,291 filas crudas: train 1,594,827; val 199,587; test 198,877), F-002 (3,043 oficios, 619 ISCO, 126,051 relaciones, 13,960 skills), F-003 (355,315 personas), F-012 (1,738,738 = 92.93 % clasificados, 128,981 = 6.89 % unknown, 3,295 = 0.18 % rescatados), F-046 (0 solapamiento crudo), DEC-01.
+        </aside>
+      </section>
+
+      <!-- ===================================================================
+           SLIDE 3: METODOLOGÍA Y REGLA ANTI-FUGA
+           =================================================================== -->
+      <section>
+        <div class="jp-header">
+          <span><span class="jp-brand-dot"></span><strong style="color:#fefae0">JobPath</strong> &nbsp;·&nbsp; Cómo Garantizamos Resultados Confiables</span>
+          <span class="font-mono" style="color:#dda15e">03 / 12</span>
+        </div>
+
+        <div class="jp-stage justify-between">
+          <div>
+            <div class="jp-kicker">Rigor del estudio</div>
+            <h2 class="jp-h1">Evaluamos solo en personas nunca vistas y eliminamos pistas que hacían "trampa"</h2>
+            <p class="jp-lead"><strong>Fuga de información</strong> ocurre cuando una columna ya contiene la respuesta oculta; separando por persona completa evitamos que el modelo memorice a alguien.</p>
+          </div>
+
+          <div class="grid grid-cols-12 gap-6 items-stretch flex-1 min-h-0">
+            <div class="col-span-7 jp-visual">
+              <div>
+                <div class="jp-visual-head">Quitar las 2 pistas con fuga baja un acierto ficticio (1.00) a la señal real (0.51)</div>
+                <div class="jp-visual-sub">Capacidad de detectar repetidores sin falsas alarmas (calidad real vs. trampa).</div>
+              </div>
+              <div id="chart-s3" class="jp-chart-mount"></div>
+            </div>
+
+            <div class="col-span-5 flex flex-col justify-between gap-4">
+              <div class="jp-stat olive-tint flex-1 flex flex-col justify-center">
+                <div class="jp-stat-num olive" style="font-size: 38px;">0</div>
+                <div class="jp-stat-lbl">Personas mezcladas entre práctica y examen</div>
+                <div class="jp-stat-sub">80 % entrenamiento (282 mil) · 20 % prueba nueva (70 mil)</div>
+              </div>
+              <div class="jp-stat copper-tint flex-1 flex flex-col justify-center">
+                <div class="jp-stat-num copper" style="font-size: 36px;">2 pistas</div>
+                <div class="jp-stat-lbl">Retiradas por copiar la respuesta al 100 %</div>
+                <div class="jp-stat-sub">Contaban cuántas veces se ejerció ese mismo oficio</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="jp-takeaway">
+            <strong>Decisión y por qué:</strong> Todo el equipo trabajó bajo las <strong>6 fases CRISP-DM</strong> con una única partición congelada por persona y una auditoría anti-fuga para que todos los modelos compitieran con reglas limpias.
+          </div>
+        </div>
+
+        <aside class="notes">
+          BLOQUE 1 · EXPOSITOR 1 · DIAPOSITIVA 3 (02:30 – 03:45 · 75 s)
+          ---
+          GUION:
+          "Antes de entrenar modelos pusimos dos candados para garantizar que nuestros resultados fueran genuinos.
+          Primero, dividimos las 352,093 personas clasificadas en 80 % para aprender —281,674 personas— y 20 % reservado como examen final —70,419 personas completamente nuevas—, verificando que cero personas aparecieran en ambos grupos. Así garantizamos que el modelo no memoriza historiales.
+          Segundo, auditamos cada variable y detectamos dos columnas que hacían trampa porque contaban cuántas veces la persona había repetido el oficio. Como ven en la barra cobre, dejarlas arrojaba una calificación perfecta ficticia de 1.00. Al retirarlas y eliminar además dos columnas repetidas, obtuvimos la señal real de 0.51 frente a 0.30 del azar.
+          Todo se organizó bajo el estándar CRISP-DM y el cuaderno 6.0 fijó la Regresión Logística como techo de referencia común. Le doy paso al segundo expositor."
+          ---
+          DETALLE TÉCNICO (solo notas): GroupShuffleSplit(80/20, seed=42) por resume_id [F-017, F-046]; Train = 1,391,018 filas (30.01 % pos), Test = 347,720 filas (29.97 % pos); fuga 100 % en veces_ese_oficio_rob y veces_ese_oficio_bin [F-028]; ablación 5-fold StratifiedGroupKFold en 6.0 [F-029]: PR-AUC 1.0000 (2,985 cols) → 0.5111 (2,983) → 0.5113 (2,981, sin colinealidad); Baseline Prior PR-AUC = 0.2997 y Techo 6.0 Logística ROC-AUC = 0.7133 [F-030].
+        </aside>
+      </section>
+
+      <!-- ===================================================================
+           SLIDE 4: LIMPIEZA DE DATOS (2.0)
+           =================================================================== -->
+      <section>
+        <div class="jp-header">
+          <span><span class="jp-brand-dot"></span><strong style="color:#fefae0">JobPath</strong> &nbsp;·&nbsp; Preparación y Limpieza de Datos</span>
+          <span class="font-mono" style="color:#dda15e">04 / 12</span>
+        </div>
+
+        <div class="jp-stage justify-between">
+          <div>
+            <div class="jp-kicker">Limpieza responsable</div>
+            <h2 class="jp-h1">Depuramos el 6.1 % de registros inválidos sin borrar carreras largas ni personas sin educación reportada</h2>
+            <p class="jp-lead">Quitamos únicamente filas sin fechas, fechas futuras o duplicadas; conservamos empleos activos, pluriempleo real y al 11.5 % que omitió su nivel educativo.</p>
+          </div>
+
+          <div class="grid grid-cols-12 gap-6 items-stretch flex-1 min-h-0">
+            <div class="col-span-7 jp-visual">
+              <div>
+                <div class="jp-visual-head">Embudo real: de 1.99 millones de filas crudas a 1.74 millones listas para modelar</div>
+                <div class="jp-visual-sub">Cada pérdida está contabilizada y justificada en la bitácora de limpieza.</div>
+              </div>
+              <div id="chart-s4" class="jp-chart-mount"></div>
+            </div>
+
+            <div class="col-span-5 flex flex-col justify-between gap-3">
+              <div class="jp-stat copper-tint py-3 px-4">
+                <div class="jp-stat-num copper" style="font-size: 28px;">-6.13 % (122.3k filas)</div>
+                <div class="jp-stat-lbl text-[14px]">Solo errores reales retirados (0 % pérdida accidental)</div>
+                <div class="jp-stat-sub">72,726 sin fechas · 49,540 duplicados/cierres · 11 fechas &gt;2026</div>
+              </div>
+              <div class="jp-visual py-4 px-5 flex-1 justify-center gap-3">
+                <div class="jp-visual-head text-[15px]">Decisiones clave para no distorsionar carreras</div>
+                <ul class="jp-list">
+                  <li class="jp-li"><span class="jp-dot"></span><span><strong style="color:#283618">Banderas sin inventar datos:</strong> 95,136 empleos vigentes, 92,099 de pluriempleo y 215,600 sin educación (<em>No reportado</em>).</span></li>
+                  <li class="jp-li"><span class="jp-dot"></span><span><strong style="color:#283618">Rescate jerárquico:</strong> recuperamos 9,293 empleos (de 12,588) heredando su oficio padre ESCO.</span></li>
+                  <li class="jp-li"><span class="jp-dot copper"></span><span><strong style="color:#283618">Versiones A y B (tope IQR):</strong> 193.6k filas acotadas sin borrar a nadie, <strong>protegiendo duraciones largas</strong> (&gt;7.4 años intactos).</span></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="jp-takeaway">
+            <strong>Decisión y por qué:</strong> Mantuvimos la <strong>Versión A</strong> para predecir (respetando los conteos exactos de habilidades) y la <strong>Versión B</strong> con topes para agrupar (evitando que extremos distorsionen los grupos).
+          </div>
+        </div>
+
+        <aside class="notes">
+          BLOQUE 2 · EXPOSITOR 2 · DIAPOSITIVA 4 (03:45 – 05:00 · 75 s)
+          ---
+          GUION:
+          "Limpiar casi dos millones de registros sin destruir información valiosa fue uno de los pasos más delicados. Eliminamos exactamente 122,277 filas —el 6.13 %—: 72,726 que no tenían ninguna fecha, 49,540 duplicadas y 11 con fechas futuras posteriores a 2026.
+          Al mismo tiempo protegimos tres realidades del mercado laboral: conservamos 95 mil empleos todavía vigentes, 92 mil casos reales de personas con dos trabajos simultáneos y 215 mil registros donde el candidato no reportó su educación, creando una etiqueta propia en lugar de borrarlos.
+          También construimos dos versiones del dataset limpio: la Versión A con los valores reales y la Versión B con topes suaves sobre valores extremos sin eliminar una sola fila. Comprobamos que esos topes alteraban la suma de habilidades en un 6.5 %, por lo que elegimos Versión A para los modelos predictivos y Versión B únicamente para agrupar perfiles, manteniendo intacta la duración real de carreras largas."
+          ---
+          DETALLE TÉCNICO (solo notas): Cuaderno 2.0; -72,726 sin fechas [F-004], -11 año >2026 [F-005], 95,136 vigentes [F-006], -37,553 dup exactos [F-007], -11,987 cierres parciales [F-008], total limpio = 1,871,014 filas y 355,308 personas [F-011], universo ESCO = 1,738,738 filas y 352,093 personas [F-015]; 215,600 (11.52 %) sin educación MNAR [F-010]; 92,099 (4.92 %) pluriempleo [F-022]; Versión B winsorización IQR k=1.5 acota 193,596 filas (0 borradas) [F-014], rompe E=C+K en 113,531 filas (6.53 %) [F-032]; dur_q > 29.5 (207,131 filas = 11.07 %) no se recorta [F-021, DEC-06].
+        </aside>
+      </section>
+
+      <!-- ===================================================================
+           SLIDE 5: TRANSFORMACIÓN — QUÉ SEÑAL IMPORTA DE VERDAD
+           =================================================================== -->
+      <section>
+        <div class="jp-header">
+          <span><span class="jp-brand-dot"></span><strong style="color:#fefae0">JobPath</strong> &nbsp;·&nbsp; Qué Información Explica la Reincidencia</span>
+          <span class="font-mono" style="color:#dda15e">05 / 12</span>
+        </div>
+
+        <div class="jp-stage justify-between">
+          <div>
+            <div class="jp-kicker">Hallazgo clave en las variables</div>
+            <h2 class="jp-h1">El oficio específico pesa 10 veces más que la duración o los estudios para anticipar si alguien repite</h2>
+            <p class="jp-lead">Convertimos cada empleo en variables medibles —duración, momento de la carrera, educación y ocupación exacta— y probamos cuánto pierde el modelo al quitar cada bloque.</p>
+          </div>
+
+          <div class="grid grid-cols-12 gap-6 items-stretch flex-1 min-h-0">
+            <div class="col-span-7 jp-visual">
+              <div>
+                <div class="jp-visual-head">Al retirar los 2,967 oficios específicos el rendimiento se desploma (-0.125)</div>
+                <div class="jp-visual-sub">Calidad predictiva del modelo al quitar un grupo de información a la vez.</div>
+              </div>
+              <div id="chart-s5" class="jp-chart-mount"></div>
+            </div>
+
+            <div class="col-span-5 flex flex-col justify-between gap-3">
+              <div class="jp-stat olive-tint py-3 px-4">
+                <div class="jp-stat-num olive" style="font-size: 28px;">10× más señal</div>
+                <div class="jp-stat-lbl text-[14px]">Los 2,967 oficios dominan sobre el resto</div>
+                <div class="jp-stat-sub">Retirar los oficios cae -0.125 vs. -0.011 de duración</div>
+              </div>
+              <div class="jp-visual py-4 px-5 flex-1 justify-center gap-3">
+                <div class="jp-visual-head text-[15px]">Escalamiento y enriquecimiento (solo sobre Train)</div>
+                <ul class="jp-list">
+                  <li class="jp-li"><span class="jp-dot"></span><span><strong style="color:#283618">10 variables nuevas:</strong> duración en trimestres, orden del cargo, tramos por cuantiles y objetivo <code class="font-mono text-xs">reincide</code>.</span></li>
+                  <li class="jp-li"><span class="jp-dot"></span><span><strong style="color:#283618">Escalamiento robusto (RobustScaler):</strong> usa mediana para resistir empleos largos (preserva distancias <code class="font-mono text-xs">r=0.76</code>) y escala 0–1 en educación.</span></li>
+                  <li class="jp-li"><span class="jp-dot ochre"></span><span><strong style="color:#283618">Oficios compactos (CSR):</strong> 2,967 columnas en solo <strong>118.2 MB</strong> de matriz Train (vs. &gt;16 GB densa).</span></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="jp-takeaway">
+            <strong>Decisión y por qué:</strong> Conservar los <strong>2,967 oficios específicos</strong> en formato compacto ahorró más de 16 GB de memoria y preservó la señal más fuerte de todo el proyecto.
+          </div>
+        </div>
+
+        <aside class="notes">
+          BLOQUE 2 · EXPOSITOR 2 · DIAPOSITIVA 5 (05:00 – 06:15 · 75 s)
+          ---
+          GUION:
+          "En la fase de transformación creamos variables medibles para cada empleo: su duración en trimestres, el orden dentro de la carrera, el nivel educativo separado de la bandera de no reportado, y una marca individual para cada uno de los 2,967 oficios ESCO presentes en entrenamiento.
+          ¿Y cuál fue el descubrimiento más revelador? Lo vemos en la gráfica de la izquierda: probamos qué pasaba cuando le quitábamos al modelo un tipo de información a la vez. Al retirar las competencias resumidas el resultado casi no cambia; al retirar la duración y etapa de carrera baja apenas 0.011 puntos; pero al retirar los 2,967 oficios específicos, la capacidad predictiva se desploma diez veces más, en 0.125 puntos.
+          En palabras simples: saber exactamente qué oficio desempeña una persona dice mucho más sobre si volverá a él que saber solo sus años de estudio o la duración aislada del contrato. Por eso decidimos conservar todos los oficios en formato disperso ligero, ocupando apenas 118 megabytes."
+          ---
+          DETALLE TÉCNICO (solo notas): Cuaderno 3.0; 10 variables derivadas (dur_q, job_order, reincide, etc.), matriz 2,985 → 2,981 cols sin fuga/colinealidad [F-016, F-029]; RobustScaler + OneHotEncoder ajustados solo en Train, preservación distancias r = 0.7628 [F-018]; matriz dispersa CSR = 118.19 MB vs >16 GB densa [F-036]; ablación P7 en NB-H (PR-AUC CV base 0.4981): sin Ocupación OHE = 0.3735 (-0.1246), sin Duración/carrera = 0.4868 (-0.0114), sin Competencias = 0.5022 (+0.0040) [F-038]; DEC-05 y DEC-07.
+        </aside>
+      </section>
+
+      <!-- ===================================================================
+           SLIDE 6: REDUCCIÓN DE VARIABLES (PCA 4.0 y 4.1)
+           =================================================================== -->
+      <section>
+        <div class="jp-header">
+          <span><span class="jp-brand-dot"></span><strong style="color:#fefae0">JobPath</strong> &nbsp;·&nbsp; Síntesis de Variables Numéricas</span>
+          <span class="font-mono" style="color:#dda15e">06 / 12</span>
+        </div>
+
+        <div class="jp-stage justify-between">
+          <div>
+            <div class="jp-kicker">Simplificación sin perder detalle</div>
+            <h2 class="jp-h1">Solo 3 a 4 dimensiones resumen más del 80 % de los datos numéricos y revelan variables repetidas</h2>
+            <p class="jp-lead"><strong>Reducción de dimensión (PCA)</strong> agrupa columnas que miden casi lo mismo en pocos ejes independientes para diagnosticar qué información sobra.</p>
+          </div>
+
+          <div class="grid grid-cols-12 gap-6 items-stretch flex-1 min-h-0">
+            <div class="col-span-7 jp-visual">
+              <div>
+                <div class="jp-visual-head">4 ejes en Versión A (87.8&nbsp;%) y 3 en Versión B (80.6&nbsp;%) superan el 80&nbsp;%</div>
+                <div class="jp-visual-sub">Varianza explicada sobre 50,000 empleos y 11 variables escaladas (PCA 4.1).</div>
+              </div>
+              <div id="chart-s6" class="jp-chart-mount"></div>
+            </div>
+
+            <div class="col-span-5 flex flex-col justify-between gap-3">
+              <div class="jp-visual py-3.5 px-5 flex-1 justify-center gap-2.5">
+                <div class="jp-visual-head text-[15px]">¿Qué representa cada eje? (cargas reales en 4.1)</div>
+                <ul class="jp-list" style="gap: 7.5px;">
+                  <li class="jp-li" style="font-size: 13px;"><span class="jp-dot forest"></span><span><strong style="color:#283618">Eje 1 (PC1 · 32.9 % A / 39.7 % B):</strong> <strong>duración y antigüedad</strong> del puesto (<code class="font-mono text-[11.5px]">dur_q +0.86</code> vs. inicio <code class="font-mono text-[11.5px]">-0.33</code>).</span></li>
+                  <li class="jp-li" style="font-size: 13px;"><span class="jp-dot"></span><span><strong style="color:#283618">Eje 2 (PC2 · 22.4 % A / 26.2 % B):</strong> en A mide <strong>habilidades ESCO</strong> (<code class="font-mono text-[11.5px]">+0.55</code>); en B pasa a ser la <strong>época del contrato</strong> (<code class="font-mono text-[11.5px]">end_ord +0.63</code>).</span></li>
+                  <li class="jp-li" style="font-size: 13px;"><span class="jp-dot ochre"></span><span><strong style="color:#283618">Eje 3 (PC3 · 21.2 % A / 14.7 % B):</strong> en A mide <strong>época del contrato</strong> (<code class="font-mono text-[11.5px]">+0.52</code>); en B aísla <strong>habilidades ESCO</strong> (<code class="font-mono text-[11.5px]">+0.67</code>).</span></li>
+                  <li class="jp-li" style="font-size: 13px;"><span class="jp-dot copper"></span><span><strong style="color:#283618">Eje 4 (PC4 · 11.2 % A / 8.5 % B):</strong> eje residual que cierra el <strong>87.8 %</strong> en A (<em>4.1 detalla cargas hasta PC3</em>).</span></li>
+                </ul>
+              </div>
+              <div class="jp-stat copper-tint py-2.5 px-4">
+                <div class="flex items-baseline justify-between gap-2">
+                  <div class="jp-stat-num copper" style="font-size: 24px;">r = 1.00 y 0.95</div>
+                  <span class="text-[12px] font-bold" style="color:#6e3b0f">2 pares redundantes</span>
+                </div>
+                <div class="jp-stat-sub" style="margin-top:2px;">Fecha vs. año (1.000) y habilidades totales vs. prácticas (0.952)</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="jp-takeaway">
+            <strong>Decisión y por qué:</strong> Usamos este diagnóstico para <strong>retirar las 2 columnas duplicadas</strong>, pero <strong>no comprimimos los oficios</strong> porque perderíamos el nombre entendible de cada ocupación.
+          </div>
+        </div>
+
+        <aside class="notes">
+          BLOQUE 2 · EXPOSITOR 2 · DIAPOSITIVA 6 (06:15 – 07:30 · 75 s)
+          ---
+          GUION:
+          "Antes de construir los modelos verificamos cuántas ideas distintas contenían realmente nuestras once variables numéricas aplicando Análisis de Componentes Principales sobre 50,000 registros —confirmando además que coincide con la muestra de 10,000 a menos de una décima de punto—.
+          La gráfica muestra que apenas tres o cuatro ejes resumen más del 80 % de toda la variabilidad numérica: el Eje 1 (PC1) representa la duración y antigüedad del puesto (carga +0.86 en dur_q frente a -0.33 en fecha de inicio); el Eje 2 y el Eje 3 separan la exigencia de habilidades ESCO (+0.55 en Versión A y +0.67 en B) de la época calendario del contrato (+0.52 en A y +0.63 en B, intercambiando su orden al acotar outliers); y el Eje 4 completa el 87.8 % de varianza en Versión A.
+          ¿Por qué se comprime tanto? Porque descubrimos dos pares de variables casi duplicadas: la fecha ordinal y el año tenían correlación perfecta de 1.00, y las habilidades totales y prácticas correlacionaban en 0.95.
+          Nuestra decisión fue muy pragmática: aprovechamos el diagnóstico para eliminar esas dos columnas redundantes y evitar que sesgaran los modelos, pero nos negamos a comprimir los 2,967 oficios en ejes matemáticos abstractos que destruirían la claridad para el usuario. Paso la palabra al tercer expositor."
+          ---
+          DETALLE TÉCNICO (solo notas): Cuadernos 4.0 (10k filas) [F-019] y 4.1 (50k filas, 11 vars escaladas, seed=42) [F-020]: Versión A PC1=32.91 %, PC2=22.45 % (55.36 %), PC3=21.23 % (76.59 %), PC4=11.17 % (87.76 %), PC5=6.31 % (94.07 %); Versión B PC1=39.68 %, PC2=26.21 % (65.89 %), PC3=14.69 % (80.58 %), PC4=8.50 % (89.09 %), PC5=6.27 % (95.36 %); colinealidad start_ord vs start_year Pearson=1.000, n_skills_essential vs competence Pearson=0.952 [F-026]; DEC-08.
+        </aside>
+      </section>
+
+      <!-- ===================================================================
+           SLIDE 7: HALLAZGOS EXPLORATORIOS (5.0 · EDA)
+           =================================================================== -->
+      <section>
+        <div class="jp-header">
+          <span><span class="jp-brand-dot"></span><strong style="color:#fefae0">JobPath</strong> &nbsp;·&nbsp; Qué Encontramos al Explorar las Carreras</span>
+          <span class="font-mono" style="color:#dda15e">07 / 12</span>
+        </div>
+
+        <div class="jp-stage justify-between">
+          <div>
+            <div class="jp-kicker">Patrones reales del mercado</div>
+            <h2 class="jp-h1">Los empleos suelen durar poco (mediana 5 trimestres) y la repetición cambia 26 puntos según el sector</h2>
+            <p class="jp-lead">La mitad de los empleos dura 1 año y cuarto o menos, el 59.5 % empalma con el trabajo anterior, y los oficios operativos repiten mucho más que los cargos directivos o posgrados.</p>
+          </div>
+
+          <div class="grid grid-cols-12 gap-6 items-stretch flex-1 min-h-0">
+            <div class="col-span-7 jp-visual">
+              <div>
+                <div class="jp-visual-head">Servicios, técnicos y oficios elementales superan el 33 % de repetición</div>
+                <div class="jp-visual-sub">Porcentaje de empleos reincidentes por gran sector (Test) frente al promedio general (30 %).</div>
+              </div>
+              <div id="chart-s7" class="jp-chart-mount"></div>
+            </div>
+
+            <div class="col-span-5 flex flex-col justify-between gap-3">
+              <div class="grid grid-cols-3 gap-2.5">
+                <div class="jp-stat py-2.5 px-3">
+                  <div class="jp-stat-num" style="font-size: 21px;">5 trim.</div>
+                  <div class="jp-stat-lbl text-[12px]">Mediana empleo</div>
+                  <div class="jp-stat-sub text-[11px]">Cortos 33.6% vs 23.5%</div>
+                </div>
+                <div class="jp-stat copper-tint py-2.5 px-3">
+                  <div class="jp-stat-num copper" style="font-size: 21px;">59.5 %</div>
+                  <div class="jp-stat-lbl text-[12px]">Solapamiento</div>
+                  <div class="jp-stat-sub text-[11px]">Empalma al cambiar</div>
+                </div>
+                <div class="jp-stat olive-tint py-2.5 px-3">
+                  <div class="jp-stat-num olive" style="font-size: 21px;">31&rarr;23%</div>
+                  <div class="jp-stat-lbl text-[12px]">Con posgrado</div>
+                  <div class="jp-stat-sub text-[11px]">Secund. vs Doctorado</div>
+                </div>
+              </div>
+
+              <div class="jp-visual py-3.5 px-4 flex-1 justify-between gap-2">
+                <div>
+                  <div class="flex items-center justify-between gap-2">
+                    <div class="jp-visual-head text-[14.8px]">Ejemplo real del censo · Persona #630</div>
+                    <span class="pill-warn" style="font-size:10.5px; padding:1.5px 8px;">Secundaria · Clúster 0</span>
+                  </div>
+                  <div class="jp-visual-sub text-[12.2px]">4 empleos reales (duraciones 5, 2, 5 y 5 trim.) con retorno al mismo oficio:</div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                  <div class="jp-tl-card">
+                    <div class="flex items-center justify-between font-mono text-[10.8px]" style="color:#6c7559"><span>1 · 2008–09</span><span>5 trim.</span></div>
+                    <div class="text-[12.8px] font-extrabold" style="color:#283618">Asistente admin.</div>
+                    <div class="text-[11px]" style="color:#6c7559">ESCO 3343.1 · Técnicos (3)</div>
+                  </div>
+                  <div class="jp-tl-card">
+                    <div class="flex items-center justify-between font-mono text-[10.8px]" style="color:#6c7559"><span>2 · 2009</span><span>2 trim.</span></div>
+                    <div class="text-[12.8px] font-extrabold" style="color:#283618">Recepcionista</div>
+                    <div class="text-[11px]" style="color:#6c7559">ESCO 4226.1 · Apoyo (4)</div>
+                  </div>
+                  <div class="jp-tl-card">
+                    <div class="flex items-center justify-between font-mono text-[10.8px]" style="color:#6c7559"><span>3 · 2010–11</span><span>5 trim.</span></div>
+                    <div class="text-[12.8px] font-extrabold" style="color:#283618">Asistente ventas</div>
+                    <div class="text-[11px]" style="color:#6c7559">ESCO 5223.4 · Servicios (5)</div>
+                  </div>
+                  <div class="jp-tl-card repeat">
+                    <div class="flex items-center justify-between font-mono text-[10.8px] font-bold" style="color:#bc6c25"><span>4 · 2013–14</span><span>REPITE · 5t</span></div>
+                    <div class="text-[12.8px] font-extrabold" style="color:#6e3b0f">Asistente admin.</div>
+                    <div class="text-[11px] font-semibold" style="color:#6e3b0f">Vuelve a 3343.1 (reincide)</div>
+                  </div>
+                </div>
+
+                <div class="text-[11.5px] leading-snug" style="color:#6c7559">
+                  Incluye la transición real #1 del censo (<strong style="color:#283618">ventas &rarr; admin.</strong>, 2,404 casos) · Consultable en vivo por <code class="font-mono">ID 630</code> en Vercel.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="jp-takeaway">
+            <strong>Decisión y por qué:</strong> Aunque el gran sector y los estudios muestran diferencias claras, <strong>no alcanzan por sí solos para predecir a una persona</strong>; necesitamos modelos que miren el oficio concreto.
+          </div>
+        </div>
+
+        <aside class="notes">
+          BLOQUE 3 · EXPOSITOR 3 · DIAPOSITIVA 7 (07:30 – 08:45 · 75 s)
+          ---
+          GUION:
+          "Antes de comparar algoritmos, el análisis exploratorio nos mostró cómo se mueven realmente los trabajadores.
+          Primero, la duración típica es corta: la mediana es de apenas 5 trimestres —un año y tres meses— y más de la mitad de los registros se concentra en 2 o 5 trimestres exactos; además, en casi seis de cada diez cambios de empleo el nuevo puesto comienza en el mismo trimestre o antes de que termine el anterior.
+          Segundo, el gráfico revela una brecha de 26 puntos porcentuales entre sectores en el conjunto de prueba: en servicios y ventas, técnicos y oficios elementales uno de cada tres empleos repite oficio —arriba del 33 %—, mientras que en dirección y gerencia cae al 21.4 % y en ocupaciones militares al 7.6 %.
+          Algo similar ocurre con la duración y la formación: los trabajos cortos y los niveles de secundaria o pregrado repiten cerca de un tercio de las veces, mientras que en maestría y doctorado baja al 23–25 %. Para verlo en carne y hueso, a la derecha tienen a la persona real #630 del censo (secundaria, Clúster 0): cuatro empleos de 5 y 2 trimestres que pasan por asistente administrativo, recepcionista, asistente de ventas y vuelven a asistente administrativo —y podrán buscar ese mismo ID 630 en vivo en nuestro explorador de Vercel—. Con este panorama pasamos a nuestras dos decisiones centrales de modelado."
+          ---
+          DETALLE TÉCNICO (solo notas): Cuaderno 5.0; dur_q media = 12.537, mediana = 5.000, moda = 2.000, 2+5 trim = 53.67 % [F-021]; 1,386,645 transiciones, 59.47 % solapamiento gap<=0, 11.95 % autolazos, 10.31 % retornos no adyacentes, top transición sales assistant → administrative assistant = 2,404 [F-024]; persona real verificada resume_id=630 (4 empleos totales en censo completo, Secondary school, K-Means Clúster 0, dur_mean=4.25 trim, 100 % clasificado ESCO); educación: Secondary 31.09 %, No reportado 30.80 %, Bachelor 30.75 %, Master 24.93 %, PhD 22.83 % [F-027]; tasas Test ISCO-08 (10 grupos completos) [F-038].
+        </aside>
+      </section>
+
+      <!-- ===================================================================
+           SLIDE 8: DECISIÓN SUPERVISADOS
+           =================================================================== -->
+      <section>
+        <div class="jp-header">
+          <span><span class="jp-brand-dot"></span><strong style="color:#fefae0">JobPath</strong> &nbsp;·&nbsp; Decisión 1: Modelo Predictivo</span>
+          <span class="font-mono" style="color:#dda15e">08 / 12</span>
+        </div>
+
+        <div class="jp-stage justify-between" style="gap: 14px;">
+          <div>
+            <div class="jp-kicker">Decisión supervisada · Evaluada solo en 70,419 personas nuevas (Test)</div>
+            <h2 class="jp-h1" style="font-size: 28px;">Elegimos Naive Bayes Híbrido porque detecta a 73 de cada 100 repetidores en 0.24 segundos</h2>
+            <p class="jp-lead" style="font-size: 15px;">Decir siempre <em>"nadie repite"</em> parece acertar 70 %, pero <strong>detecta a 0 de cada 100 repetidores</strong>. Puntuamos cada opción con reglas previas: Acierto (35 %), Practicidad (25 %), Explicabilidad (20 %) y Ajuste (10 %).</p>
+          </div>
+
+          <div class="jp-visual py-3.5 px-5">
+            <div class="flex items-center justify-between mb-2">
+              <div class="jp-visual-head text-[16px]">Comparación real en personas nunca vistas (347,720 empleos · sin fuga)</div>
+              <span class="pill-warn">Comparación no homogénea: el Árbol (7.0) solo vio 7 variables sin oficios</span>
+            </div>
+
+            <table class="text-[14.5px] leading-snug">
+              <thead>
+                <tr style="background:#f6f2df; color:#4a5539;" class="text-[12px] font-bold uppercase">
+                  <th class="py-2 px-3">Opción evaluada</th>
+                  <th class="py-2 px-3">Repetidores detectados en Test</th>
+                  <th class="py-2 px-3">Tiempo en clasificar Test</th>
+                  <th class="py-2 px-3">Cómo se explica en 1 frase</th>
+                  <th class="py-2 px-3 text-right">Nota (de 5)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="row-chosen">
+                  <td class="py-3 px-3 font-extrabold">
+                    Naive Bayes Híbrido <span class="pill-chosen ml-1.5">Elegido</span>
+                  </td>
+                  <td class="py-3 px-3">
+                    <strong>72.8 de cada 100</strong> <span class="text-xs opacity-80">(AUC 0.71 · F1 0.53)</span>
+                  </td>
+                  <td class="py-3 px-3 font-bold">
+                    0.24 segundos <div class="text-[11.5px] font-normal opacity-85">Matriz 118.2 MB · RSS 1.54 GB</div>
+                  </td>
+                  <td class="py-3 px-3">Suma probabilidades según el oficio y la carrera</td>
+                  <td class="py-3 px-3 text-right font-mono font-extrabold text-lg">4.39</td>
+                </tr>
+
+                <tr class="row-muted">
+                  <td class="py-2.5 px-3 font-bold" style="color:#283618">
+                    Vecinos Cercanos (KNN-W) <span class="pill-muted ml-1">Descartado</span>
+                  </td>
+                  <td class="py-2.5 px-3">
+                    <strong>70.8 de cada 100</strong> <span class="text-xs font-bold" style="color:#606c38">(Mejor precisión: AUC 0.72)</span>
+                  </td>
+                  <td class="py-2.5 px-3">
+                    <strong style="color:#bc6c25">8.10 horas</strong> <span class="text-[11.5px]" style="color:#6c7559">(120,941× más lento)</span>
+                    <div class="text-[11.5px]" style="color:#6c7559">Matriz 121.5 MB · RSS 1.93 GB</div>
+                  </td>
+                  <td class="py-2.5 px-3">Busca los 101 empleos históricos más parecidos</td>
+                  <td class="py-2.5 px-3 text-right font-mono font-bold text-base">3.44</td>
+                </tr>
+
+                <tr class="row-muted">
+                  <td class="py-2.5 px-3 font-bold" style="color:#283618">
+                    Árbol de Decisión (7.0) <span class="pill-muted ml-1">Descartado</span>
+                  </td>
+                  <td class="py-2.5 px-3">
+                    <strong>54.2 de cada 100</strong> <span class="text-xs" style="color:#6c7559">(AUC 0.62 · PR-AUC/Brier no calc.)</span>
+                  </td>
+                  <td class="py-2.5 px-3" style="color:#6c7559">
+                    <em>No medido en 1.39M</em> <span class="text-xs">(35 ms en 5 mil)</span>
+                  </td>
+                  <td class="py-2.5 px-3">13 reglas visuales de "sí / no" (sin los 2,967 oficios)</td>
+                  <td class="py-2.5 px-3 text-right font-mono font-bold text-base">3.38–3.83</td>
+                </tr>
+
+                <tr class="row-base">
+                  <td class="py-1.5 px-3 text-xs font-semibold">Referencia trivial ("nadie repite")</td>
+                  <td class="py-1.5 px-3 text-xs"><strong>0 de cada 100</strong> repetidores (exactitud engañosa de 70.0 %)</td>
+                  <td class="py-1.5 px-3 text-xs">Instantáneo</td>
+                  <td class="py-1.5 px-3 text-xs">Árboles solo de sector o educación descartados en filtro inicial</td>
+                  <td class="py-1.5 px-3 text-right font-mono text-xs">—</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="grid grid-cols-12 gap-4 items-stretch">
+            <div class="col-span-7 bg-white rounded-xl px-4 py-3 text-[14px] leading-snug" style="border:1px solid #e4ddbe; color:#4a5539;">
+              <p><strong style="color:#283618">Por qué no KNN-W:</strong> Ganó en precisión pura (+1.9 puntos de AUC), pero esperar <strong style="color:#bc6c25">8.1 horas</strong> para clasificar impide usarlo de forma práctica.</p>
+              <p class="mt-1.5"><strong style="color:#283618">Por qué no el Árbol (7.0):</strong> Vio mucha menos información (solo 7 variables sin oficios; su menor puntaje no es solo culpa del método) y su mejor regla depende de un único cargo.</p>
+            </div>
+            <div class="col-span-5 jp-takeaway flex flex-col justify-center text-[14px]">
+              <p><strong>Qué sacrificamos y qué ganamos:</strong> Cedemos 1.9 puntos de precisión frente a KNN a cambio de responder en <strong>menos de 1 segundo</strong>, con el ganador firme en los 4 escenarios de pesos.</p>
+            </div>
+          </div>
+        </div>
+
+        <aside class="notes">
+          BLOQUE 3 · EXPOSITOR 3 · DIAPOSITIVA 8 (08:45 – 10:00 · 75 s)
+          ---
+          GUION:
+          "En nuestra primera decisión elegimos el modelo predictivo evaluando exclusivamente sobre 70,419 personas nuevas del conjunto Test. Primero descartamos cualquier opción que no superara al truco de responder siempre 'nadie repite', que parece acertar el 70 % pero detecta a cero de cada cien repetidores.
+          Entre los candidatos que pasan, elegimos Naive Bayes Híbrido con nota de 4.39 sobre 5 por tres razones con evidencia: primero, detecta a 72.8 de cada 100 repetidores (ROC-AUC 0.706 y F1 0.534); segundo, clasifica las 347,720 experiencias de prueba en apenas 0.24 segundos usando 118.2 megabytes de matriz y 1.54 gigabytes de RSS —memoria comparable a los 121.5 MB y 1.93 GB de KNN, pero 120,941 veces más rápido—; y tercero, aprovecha los 2,967 oficios específicos con gran estabilidad.
+          Decimos con total franqueza lo que sacrificamos: Vecinos Cercanos (KNN-W) obtuvo la mejor precisión pura con 1.9 puntos más de ROC-AUC, pero tardó 8.1 horas en responder. El Árbol de Decisión es muy visual, pero en nuestra ejecución solo vio 7 variables sin oficios —comparación no homogénea— y no calculó PR-AUC ni Brier. Además, Naive Bayes sigue ganando bajo los cuatro esquemas de pesos que probamos."
+          ---
+          3 RAZONES VERIFICADAS CON IDs:
+          1. Detecta 72.8 / 100 repetidores en Test (Recall 0.7279, 75,861/104,225), F1 0.5337, ROC-AUC 0.7058 (97.4 % de KNN-W y 96.5 % de Logística 6.0), Brier 0.1871 [F-030, F-037, F-040].
+          2. Practicidad: fit 0.560 s (0.634 s en 7.1), predict Test 0.241 s (0.283 s en 7.1), Matriz Train 118.19 MB y RSS proceso 1,539.3 MB (1.54 GB en 7.1 Celda 15) — 120,941× más rápido que KNN-W (29,146.83 s = 8.10 h, Matriz Train 121.54 MB y RSS pico 1,931.7 MB = 1.93 GB) [F-036, F-037, F-040].
+          3. Aprovecha los 2,967 oficios (+0.1246 PR-AUC en ablación P7) con estabilidad |ΔROC-AUC| = 0.0009 entre Versiones A y B [F-038].
+          ---
+          FORTALEZAS DE DESCARTADOS Y SENSIBILIDAD (MODEL_SELECTION.md §4.3 & §6.1):
+          - KNN-W (7.2): Mejor en todas las métricas puras en Test (ROC-AUC 0.7245, PR-AUC 0.5247, F1 0.5471, Brier 0.1817; 76.0 % recall a igual tasa de alerta) [F-040].
+          - Árbol 3 (7.0): 13 reglas visuales, Hoja 16 con 52.94 % reincidencia (Lift 1.766x), pero 86.2 % es oficio 3343.1 y cae a 0.5422 agrupando por ocupación [F-035]. Árboles 1 y 2 descartados en Paso 1 [F-033, F-034].
+          - Ref. 6.0 Regresión Logística OHE: ROC-AUC 0.7133, PR-AUC 0.5109, 4.01 s [F-030].
+          - Sensibilidad: NB-H gana en Base (4.39 vs 3.44), Iguales (4.50 vs 3.50), C1=50 % (4.32 vs 3.79), C2=10 % (4.23 vs 3.95). Solo cambia a KNN-W si C1 >= 72 % y C2 <= 5 %.
+          ---
+          PREGUNTAS DEL JURADO:
+          P1: ¿Por qué no elegir KNN-W si sacó mejor AUC? → R1: +1.87 pp costaron 8.10 horas; NB-H da el 97.4 % de la señal en 0.24 s.
+          P2: ¿No daña a Naive Bayes suponer independencia? → R2: En nuestros datos r=0.952 entre skills [F-026], pero la ablación P7 [F-038] muestra un impacto mínimo de 0.0040 de PR-AUC y lo compensamos con umbral OOF 0.265.
+          P3: ¿Cuánto tomaría re-correr 7.0 con los 2,981 atributos? → R3: Estimación analítica: 5–9 minutos y 0.6–1.2 GB RAM en matriz dispersa CSR.
+        </aside>
+      </section>
+
+      <!-- ===================================================================
+           SLIDE 9: DECISIÓN CLUSTERING
+           =================================================================== -->
+      <section>
+        <div class="jp-header">
+          <span><span class="jp-brand-dot"></span><strong style="color:#fefae0">JobPath</strong> &nbsp;·&nbsp; Decisión 2: Perfiles de Carrera</span>
+          <span class="font-mono" style="color:#dda15e">09 / 12</span>
+        </div>
+
+        <div class="jp-stage justify-between" style="gap: 11px;">
+          <div>
+            <div class="jp-kicker">Decisión de agrupación · Sin usar la respuesta objetivo</div>
+            <h2 class="jp-h1" style="font-size: 27.5px;">Elegimos K-Means++ porque agrupa a las 352,093 personas en 1.8 segundos (Ward exige 496 GB de RAM)</h2>
+            <p class="jp-lead" style="font-size: 14.5px; margin-top:4px;"><strong>Agrupación no supervisada</strong> descubre 4 perfiles naturales de carrera y orienta <strong>acciones concretas del Observatorio Laboral</strong> (pase el cursor por cada acción para ver el programa completo).</p>
+          </div>
+
+          <div class="grid grid-cols-4 gap-3">
+            <div class="jp-stat py-2 px-3 copper-tint flex flex-col justify-between">
+              <div>
+                <div class="flex items-baseline justify-between"><div class="jp-stat-num copper" style="font-size: 22px;">43.9 %</div><span class="text-[11px] font-bold" style="color:#6e3b0f">47.8 % rep.</span></div>
+                <div class="jp-stat-lbl text-[13px]" style="margin-top:2px;">Operativos tempranos</div>
+                <div class="jp-stat-sub text-[11.5px]">Carreras cortas · mayor repetición</div>
+              </div>
+              <div class="jp-action-tag" title="Programa Puente al Primer Empleo: orientación vocacional temprana, certificación de competencias prácticas base y acompañamiento en el primer año post-egreso.">
+                <strong style="color:#bc6c25">Acción:</strong> Puente al Primer Empleo (orientación y certif. base)
+              </div>
+            </div>
+            <div class="jp-stat py-2 px-3 olive-tint flex flex-col justify-between">
+              <div>
+                <div class="flex items-baseline justify-between"><div class="jp-stat-num olive" style="font-size: 22px;">28.0 %</div><span class="text-[11px] font-bold" style="color:#283618">42.8 % rep.</span></div>
+                <div class="jp-stat-lbl text-[13px]" style="margin-top:2px;">Profesionales cognitivos</div>
+                <div class="jp-stat-sub text-[11.5px]">Alto conocimiento · menor repetición</div>
+              </div>
+              <div class="jp-action-tag" title="Vinculación I+D y Posgrados Aplicados: articulación con maestrías, liderazgo técnico y transferencia tecnológica universidad-empresa.">
+                <strong style="color:#606c38">Acción:</strong> Vinculación I+D y Posgrados (transferencia técnica)
+              </div>
+            </div>
+            <div class="jp-stat py-2 px-3 flex flex-col justify-between">
+              <div>
+                <div class="flex items-baseline justify-between"><div class="jp-stat-num" style="font-size: 22px;">16.4 %</div><span class="text-[11px] font-bold" style="color:#4a5539">45.6 % rep.</span></div>
+                <div class="jp-stat-lbl text-[13px]" style="margin-top:2px;">Carreras consolidadas</div>
+                <div class="jp-stat-sub text-[11.5px]">Muy largas (~28 años) y pluriempleo</div>
+              </div>
+              <div class="jp-action-tag" title="Programa de Estabilización y Consolidación de Portafolio Laboral: acompañamiento para capitalizar la experiencia acumulada y reducir la rotación fragmentada.">
+                <strong style="color:#283618">Acción:</strong> Consolidación de Portafolio (capitalizar experiencia)
+              </div>
+            </div>
+            <div class="jp-stat py-2 px-3 flex flex-col justify-between">
+              <div>
+                <div class="flex items-baseline justify-between"><div class="jp-stat-num" style="font-size: 22px; color:#6c7559">11.7 %</div><span class="text-[11px] font-bold" style="color:#6c7559">45.0 % rep.</span></div>
+                <div class="jp-stat-lbl text-[13px]" style="margin-top:2px;">Educación no reportada</div>
+                <div class="jp-stat-sub text-[11.5px]">Perfil operativo estable (14 trim.)</div>
+              </div>
+              <div class="jp-action-tag" title="Certificación de Competencias por Saberes Previos: validación formal de habilidades empíricas para trabajadores sin título reportado.">
+                <strong style="color:#4a5539">Acción:</strong> Certif. por Saberes Previos (validar sin título)
+              </div>
+            </div>
+          </div>
+
+          <div class="jp-visual py-2.5 px-5">
+            <div class="flex items-center justify-between mb-1.5">
+              <div class="jp-visual-head text-[15.5px]">Comparación K-Means++ vs. Agrupación Jerárquica Ward (4 perfiles)</div>
+              <span class="pill-warn" style="font-size:11.5px;">Comparación no homogénea: Ward solo corrió en 25,000 personas (7.1 %) por RAM</span>
+            </div>
+
+            <table class="text-[14px] leading-snug">
+              <thead>
+                <tr style="background:#f6f2df; color:#4a5539;" class="text-[11.5px] font-bold uppercase">
+                  <th class="py-1.5 px-3">Método evaluado</th>
+                  <th class="py-1.5 px-3">Cobertura y separación</th>
+                  <th class="py-1.5 px-3">Tiempo y memoria</th>
+                  <th class="py-1.5 px-3">Cómo se explica en 1 frase</th>
+                  <th class="py-1.5 px-3 text-right">Nota (de 5)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="row-chosen">
+                  <td class="py-2 px-3 font-extrabold">
+                    K-Means++ <span class="pill-chosen ml-1.5">Elegido</span>
+                  </td>
+                  <td class="py-2 px-3">
+                    <strong>100 % del censo</strong> (352,093 personas) · Silueta 0.20 / 0.25
+                  </td>
+                  <td class="py-2 px-3 font-bold">
+                    1.80 segundos <div class="text-[11px] font-normal opacity-85">Matriz Train 20.3 MB (sin pares)</div>
+                  </td>
+                  <td class="py-2 px-3">Asigna a cada persona al perfil promedio más cercano</td>
+                  <td class="py-2 px-3 text-right font-mono font-extrabold text-lg">4.39</td>
+                </tr>
+
+                <tr class="row-muted">
+                  <td class="py-2 px-3 font-bold" style="color:#283618">
+                    Jerárquico Ward <span class="pill-muted ml-1">Validador</span>
+                  </td>
+                  <td class="py-2 px-3">
+                    <strong>Solo 7.1 % directo</strong> (25,000 pers.) · confirma los 4 grupos
+                  </td>
+                  <td class="py-2 px-3">
+                    <strong style="color:#bc6c25">317.4 GB</strong> Train · <strong style="color:#bc6c25">495.9 GB</strong> censo
+                    <div class="text-[11px]" style="color:#6c7559">En 25k: 2.50 GB matriz (~8 GB pico) · 146.1 s</div>
+                  </td>
+                  <td class="py-2 px-3">Árbol visual que une personas paso a paso (-85.8 % tras 4 grupos)</td>
+                  <td class="py-2 px-3 text-right font-mono font-bold text-base">3.33</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="grid grid-cols-12 gap-4 items-stretch">
+            <div class="col-span-7 bg-white rounded-xl px-4 py-2.5 text-[14px] leading-snug" style="border:1px solid #e4ddbe; color:#4a5539;">
+              <p><strong style="color:#283618">Por qué no Ward como principal:</strong> Comparar cada persona contra todas exige <strong style="color:#bc6c25">496 GB de RAM</strong>, dejando al 92.9 % sin agrupación directa. <strong style="color:#283618">Qué sacrificamos:</strong> el árbol visual global y fronteras rígidas (las carreras son un continuo).</p>
+            </div>
+            <div class="col-span-5 jp-takeaway flex flex-col justify-center text-[14px]">
+              <p><strong>Qué significa para el proyecto:</strong> Usamos <strong>Ward</strong> para demostrar que existen 4 grupos y <strong>K-Means++</strong> para clasificar al 100 % de las personas en 1.8 s. Gana bajo cualquier peso.</p>
+            </div>
+          </div>
+        </div>
+
+        <aside class="notes">
+          BLOQUE 3 · EXPOSITOR 3 · DIAPOSITIVA 9 (10:00 – 11:15 · 75 s)
+          ---
+          GUION:
+          "En nuestra segunda decisión buscamos descubrir perfiles naturales de trayectoria sin mirar la etiqueta objetivo. Elegimos K-Means++ con 4.39 sobre 5 frente a 3.33 de Ward Jerárquico —una decisión que no cambia bajo ningún peso de criterios—.
+          "La razón es contundente: K-Means++ agrupa al 100 % del censo —las 352,093 personas— en 1.8 segundos usando solo su matriz de entrenamiento de 20.3 megabytes (sin matriz de distancias por pares; el RSS de proceso no se registró en 8.0), entregando cuatro perfiles claros con acciones directas del Observatorio Laboral: Puente al Primer Empleo para Operativos tempranos (44 %), Vinculación I+D y Posgrados para Profesionales cognitivos (28 %), Consolidación de Portafolio para Carreras consolidadas (16 %) y Certificación por Saberes Previos para Trabajadores sin educación reportada (12 %).
+          En cambio, Ward necesita medir todas las parejas posibles, lo que exigiría 317.4 gigabytes en entrenamiento y 495.9 gigabytes en el censo —imposible en nuestro equipo—, por lo que solo pudo ejecutarse en 25,000 personas (2.50 GB de matriz y 146.1 segundos, una comparación no homogénea que declaramos abiertamente). Lejos de desechar a Ward, lo usamos como validador independiente: su árbol confirmó que el corte natural está exactamente en 4 grupos, con una caída del 85.8 % en el salto de fusión. Cedo la palabra al cuarto expositor."
+          ---
+          3 RAZONES VERIFICADAS CON IDs:
+          1. Escalabilidad al 100 % (352,093 personas / 1,738,738 experiencias) en 1.80 s y matriz V_PERSON Train de 20.28 MB (25.35 MB censo; sin matriz O(n^2); RSS proceso no medido en 8.0) frente a 317.36 GB Train / 495.88 GB censo (7,739.72 GB Experiencias) en Ward (2.50 GB matriz / ~8 GB pico / 146.11 s en muestra n=25,000) [F-041, F-043].
+          2. Mejor cohesión y separación (Silhouette 0.1948 Personas / 0.2465 Experiencias; Calinski-Harabasz 46,780.83; DBI 1.6298 vs Ward proyectado 0.1167 / 3,134.5) y paridad Train/Test < 0.21 pp [F-043].
+          3. Alta estabilidad Versión B vs A (ARI 0.8633) y concordancia con Ward 25k (ARI 0.6502, NMI 0.7296) [F-044].
+          ---
+          FORTALEZAS DE WARD Y PREGUNTAS DEL JURADO:
+          - Ward valida k*=4 sin fijarlo a priori (caída -85.8 % tras k=4) [F-042] y en el núcleo puro n=3,000 logró brecha post-hoc de 19.83 pp (34.34 % vs 54.17 %) [F-044]. Enlaces single/average/complete descartados en Paso 1 por encadenamiento (90–99.9 %) [F-042].
+          - P1: ¿Silueta de 0.20 no es baja? → R1: Las trayectorias forman un continuo real sin vacíos; lo clave es la convergencia entre dos métodos distintos (NMI 0.73) y perfiles accionables.
+          - P2: ¿Hubo fuga en las tasas 47.8 % vs 42.8 %? → R2: Ninguna; se midieron post-hoc sobre Test sin usar ninguna columna de reincidencia al agrupar [F-041, F-043].
+        </aside>
+      </section>
+
+      <!-- ===================================================================
+           SLIDE 10: MÉTODOS NUMÉRICOS I — CASO 1 EN NUESTRA BASE JOBPATH (MCO)
+           =================================================================== -->
+      <section>
+        <div class="jp-header">
+          <span><span class="jp-brand-dot"></span><strong style="color:#fefae0">JobPath</strong> &nbsp;·&nbsp; Métodos Numéricos I: Caso 1 (MCO) sobre Nuestra Base</span>
+          <span class="font-mono" style="color:#dda15e">10 / 12</span>
+        </div>
+
+        <div class="jp-stage justify-between" style="gap: 14px;">
+          <div>
+            <div class="jp-kicker copper">Caso 1 interactivo (MCO · Deriva 2000–2023 sobre 1.51 millones de empleos reales de JobPath)</div>
+            <h2 class="jp-h1" style="font-size: 28px;">En JobPath los oficios exigen más habilidades (+0.10/año), pero la censura post-2019 rompe la predicción lineal</h2>
+            <p class="jp-lead" style="font-size: 14.5px; margin-top:4px;"><strong>Interactivo en vivo:</strong> cambie la variable real de JobPath, active la cola censurada 2020–2023 o mueva el año objetivo para comparar la recta <strong>MCO</strong> contra los valores observados.</p>
+          </div>
+
+          <div id="interactive-s10" class="flex-1 min-h-0 flex flex-col"></div>
+
+          <div class="jp-takeaway copper" style="padding: 10px 16px; font-size: 14.8px;">
+            <strong>Conexión con el proyecto:</strong> MCO validó que nuestra base JobPath es consistente entre particiones y captó la mayor exigencia de oficios, pero demostró que <strong>predecir duración requiere modelos de supervivencia, no rectas extrapoladas</strong>.
+          </div>
+        </div>
+
+        <aside class="notes">
+          BLOQUE 4 · EXPOSITOR 4 · DIAPOSITIVA 10 (11:15 – 12:30 · 75 s)
+          ---
+          GUION:
+          "En Métodos Numéricos aplicamos dos técnicas directamente sobre nuestra base JobPath para auditar su comportamiento temporal y probar hasta dónde sirven fórmulas clásicas para predecir en nuestros datos.
+          En el Caso 1 —Regresión Lineal MCO— analizamos dos décadas de JobPath, de 2000 a 2019, con 1.51 millones de empleos. Esto nos dio tres hallazgos directos sobre nuestra base: primero, las tres particiones originales (train, test y val) muestran exactamente la misma pendiente temporal de +0.18 % por año, confirmando que no hay sesgo temporal en el muestreo; segundo, la exigencia promedio de habilidades ESCO crece +0.097 competencias por año (R cuadrado de 74.8 %) y la reincidencia se mantiene estable entre 28 % y 32 % —pero incluir los apenas 66 registros censurados de 2020 a 2023 voltea el signo de la recta y destruye el R cuadrado a 8.3 %—.
+          Tercero, al mirar la duración en empleos cerrados —excluyendo los 95,136 empleos vigentes marcados en limpieza— vemos un R cuadrado de 97.3 %. Sin embargo, si usamos esa recta para predecir a 2027 arroja menos 4.96 trimestres: una duración imposible porque los empleos recientes fueron recortados por el calendario de cierre. Centrar el año mejoró la precisión numérica 4,672 veces, pero dejó clara la conclusión para JobPath: MCO sirve para auditar tendencias históricas, nunca para predecir duración laboral futura."
+          ---
+          SECUENCIA INTERACTIVA EN VIVO (opcional, 15 s):
+          1. Estado inicial: Duración cerrados (2000–2019, Año 2027 = -4.96 trim. IMPOSIBLE).
+          2. Clic en "Habilidades ESCO" (R² = 74.8 %, +0.097/año) → luego clic en "+ Cola 2020–23" para mostrar en vivo cómo 66 empleos invierten la recta (-0.101/año, R² = 8.3 %).
+          3. Clic en "↺" para reiniciar si hace falta.
+          ---
+          DETALLE TÉCNICO (solo notas): Caso 1 IDEA-RL-04 [F-048]: empleos cerrados ~es_vigente (MR-09) sobre data/03_processed/empleos_unificado_limpio.csv + greenShareOcc_en_limpio.csv + 01_raw (1.99M filas). mean_skills 2000–2019: a1=+0.0967, R²=0.7475 vs 2000–2023 (n=59,3,3,1): a1=-0.1011, R²=0.0826 (rechazado MR-06). reincide_rate 2000–2019: 28.2 % a 31.6 %, a1=+0.0012/año, R²=0.4313 vs cola R²=0.1870. mean_dur_q centrado t=año-2000: a0=16.4417, a1=-0.7926, R²=0.9729, error vs polyfit 3.55e-15 (4,672× menor); cruce 0 en 2020.74, 2027=-4.9585 trim. Paridad 01_raw: train +0.1855 %/año, test +0.1808 %/año, val +0.1848 %/año. Crédito KaTeX 0.16.11 (MIT).
+        </aside>
+      </section>
+
+      <!-- ===================================================================
+           SLIDE 11: MÉTODOS NUMÉRICOS II — CASO 2 EN NUESTRA BASE JOBPATH (LAGRANGE)
+           =================================================================== -->
+      <section>
+        <div class="jp-header">
+          <span><span class="jp-brand-dot"></span><strong style="color:#fefae0">JobPath</strong> &nbsp;·&nbsp; Métodos Numéricos II: Caso 2 (Lagrange) y Supervivencia Laboral</span>
+          <span class="font-mono" style="color:#dda15e">11 / 12</span>
+        </div>
+
+        <div class="jp-stage justify-between" style="gap: 14px;">
+          <div>
+            <div class="jp-kicker">Caso 2 interactivo (Lagrange · Probabilidad real S(q) en 1,643,772 empleos cerrados de JobPath)</div>
+            <h2 class="jp-h1" style="font-size: 28px;">Predecir cuánto dura un empleo en JobPath desde 4 hitos exige nodos Chebyshev para bajar el error 19.4×</h2>
+            <p class="jp-lead" style="font-size: 14.5px; margin-top:4px;"><strong>Interactivo en vivo:</strong> alterne entre <strong>4 hitos (P₃)</strong>, <strong>Equiespaciado (Runge)</strong>, <strong>Chebyshev-Lobatto</strong> y <strong>Local P₂</strong>, ajuste el grado y deslice el horizonte para comparar contra la curva real de JobPath.</p>
+          </div>
+
+          <div id="interactive-s11" class="flex-1 min-h-0 flex flex-col"></div>
+
+          <div class="jp-takeaway" style="padding: 10px 16px; font-size: 14.8px;">
+            <strong>Síntesis MCO vs. Lagrange en JobPath:</strong> <strong>MCO</strong> audita tendencias históricas (2000–2019); <strong>Chebyshev / P₂</strong> reconstruye permanencia laboral dentro de 1–10 años sin probabilidades negativas; y <strong>Naive Bayes</strong> predice reincidencia por oficio.
+          </div>
+        </div>
+
+        <aside class="notes">
+          BLOQUE 4 · EXPOSITOR 4 · DIAPOSITIVA 11 (12:30 – 13:45 · 75 s)
+          ---
+          GUION:
+          "El Caso 2 responde una pregunta predictiva directa sobre nuestros 1,643,772 empleos cerrados: si alguien inicia un trabajo en JobPath, ¿cuál es la probabilidad real S(q) de que permanezca al menos 1, 2, 3, 5 o 10 años?
+          Los datos muestran una caída en forma de L que ninguna línea recta logra ajustar bien (R cuadrado de apenas 69 %): el 66.1 % supera el primer año, el 37.1 % llega a dos años, el 13.6 % a cinco y solo el 4.3 % alcanza diez años. Con solo esos cuatro hitos, el polinomio cúbico de Lagrange estima los 3 años en 20.7 % frente al 25.2 % real sin tener que consultar 1.64 millones de filas —aunque fuera del rango, en 12 años, falla con menos 59.8 %—.
+          Además descubrimos una propiedad propia de nuestras hojas de vida: como las personas redondean fechas a años redondos, la supervivencia cae en escalones cada cuatro trimestres. Si intentamos capturarla con un polinomio de grado 16 usando puntos igualmente espaciados, aparece el Fenómeno de Runge disparando el error a 2.53 y prediciendo menos 248 %. Al pulsar Chebyshev-Lobatto o Tramos locales P2, el error se reduce 19.4 veces a 0.130 con cero probabilidades imposibles. Así cerramos el puente completo: MCO audita tendencias históricas, Chebyshev reconstruye permanencia acotada y Naive Bayes predice reincidencia oficio por oficio. En la esquina derecha queda el enlace a los simuladores interactivos."
+          ---
+          SECUENCIA INTERACTIVA EN VIVO (opcional, 15 s):
+          1. Estado inicial: "4 hitos (P3)" en 3a (20.7 % vs 25.2 % real) → clic en "12a" para ver la caída a -59.8 %.
+          2. Clic en "Equiespaciado" (Grado 16 activo) y "q39" para ver en vivo la explosión de Runge (-248.3 %, E∞ = 2.526, 2 violaciones).
+          3. Clic en "Chebyshev" para mostrar al instante cómo el error baja 19.4× (E∞ = 0.130, 0 violaciones). Clic en "↺" para reiniciar.
+          ---
+          DETALLE TÉCNICO (solo notas): Caso 2 IDEA-LG-01 [F-049]: 1,643,772 empleos cerrados clasificados (~es_vigente, saber_skills=='ok'); hitos S(4)=66.09 %, S(8)=37.05 %, S(12)=25.19 %, S(20)=13.58 %, S(40)=4.30 %, S(48)=2.92 %; P3(12)=20.65 % (err 4.55 pp), rebote P3(28)=20.58 % vs real 8.04 %, extrap P3(48)=-59.84 %; recta MCO sobre S(q) solo logra R²=0.69. Benchmark Runge grados 3,5,8,12,16 en [1,40]: Equiespaciado g16 E∞=2.5262 (min -248.3 %, 2 viol.); Chebyshev-Lobatto g16 (15 nodos deduplicados MR-04): E∞=0.1301 (RMSE 0.0327, 19.42× menor, 0 viol. en todos los grados); Local P2 g12 E∞=0.1196 (0 viol.). Annual heaping en q=3,6,10,14... impone piso natural E∞ ≈ 0.12–0.18.
+        </aside>
+      </section>
+
+      <!-- ===================================================================
+           SLIDE 12: COBERTURA, DEMO EN VIVO, CONCLUSIONES Y LÍMITES
+           =================================================================== -->
+      <section>
+        <div class="jp-header">
+          <span><span class="jp-brand-dot"></span><strong style="color:#fefae0">JobPath</strong> &nbsp;·&nbsp; Cierre, Conclusiones y Explorador en Vivo</span>
+          <span class="font-mono" style="color:#dda15e">12 / 12</span>
+        </div>
+
+        <div class="jp-stage justify-between">
+          <div>
+            <div class="jp-kicker">Producto entregable y transparencia</div>
+            <h2 class="jp-h1">Las 352,093 trayectorias viven en un explorador web gratuito y listo para consultar en vivo</h2>
+            <p class="jp-lead">Cargamos el <strong>censo completo clasificado (99.1 % de las personas)</strong> en PostgreSQL (Neon) con acceso de solo lectura, conectado en vivo a Vercel.</p>
+          </div>
+
+          <div class="grid grid-cols-12 gap-6 items-stretch flex-1 min-h-0">
+            <div class="col-span-6 jp-visual">
+              <div>
+                <div class="jp-visual-head">Resumen del censo: los 4 perfiles de carrera y su repetición real</div>
+                <div class="jp-visual-sub">Distribución de las 352,093 personas y porcentaje que repite oficio en Test.</div>
+              </div>
+              <div id="chart-s12" class="jp-chart-mount"></div>
+            </div>
+
+            <div class="col-span-6 flex flex-col justify-between gap-4">
+              <div class="rounded-2xl p-5" style="background:#eef1e3; border:2px solid #606c38;">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-extrabold uppercase tracking-wider" style="color:#283618">Explorador Interactivo en Vivo</span>
+                  <span class="pill-chosen">En línea · 0.4–1.4 s</span>
+                </div>
+                <p class="mt-2 text-[14.5px] leading-snug" style="color:#283618">Consulte en vivo cualquier sector, oficio, nivel educativo o carrera individual sobre 1.74 millones de empleos (277 MiB en Neon · costo $0):</p>
+                <a
+                  href="https://jobpath-dashboard-erhm1806w-sgemd.vercel.app"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="jp-cta mt-3"
+                >
+                  jobpath-dashboard-erhm1806w-sgemd.vercel.app ↗
+                </a>
+              </div>
+
+              <div class="jp-visual py-4 px-5 flex-1 justify-center gap-3">
+                <div class="jp-visual-head text-[15.5px]">Tres límites que declaramos con transparencia</div>
+                <ul class="jp-list">
+                  <li class="jp-li"><span class="jp-dot"></span><span><strong style="color:#283618">Sin causalidad:</strong> mostramos patrones en hojas de vida públicas (CC BY 4.0); las habilidades son del oficio ESCO, no del individuo.</span></li>
+                  <li class="jp-li"><span class="jp-dot ochre"></span><span><strong style="color:#283618">Comparaciones honestas:</strong> el Árbol (7.0) vio 7 variables sin oficios y Ward solo corrió en 25,000 personas por memoria.</span></li>
+                  <li class="jp-li"><span class="jp-dot copper"></span><span><strong style="color:#283618">Cobertura exacta:</strong> 3,215 personas (0.9 %) sin oficio ESCO quedan fuera y documentadas en el panel del explorador.</span></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="jp-takeaway forest">
+            <strong style="color:#dda15e">Conclusión principal:</strong> Repetir oficio (<strong>45.3 %</strong>) depende ante todo de <strong>qué ocupación exacta se ejerce</strong>; Naive Bayes Híbrido, K-Means++ y nuestro explorador vivo entregan evidencia auditable para tomar decisiones.
+          </div>
+        </div>
+
+        <aside class="notes">
+          BLOQUE 4 · EXPOSITOR 4 · DIAPOSITIVA 12 (13:45 – 15:00 · 75 s)
+          ---
+          GUION:
+          "Para cerrar el proyecto llevamos todo el trabajo fuera de los cuadernos: cargamos el censo completo de 352,093 personas y 1.74 millones de empleos en PostgreSQL sobre Neon ocupando apenas 277 megabytes —un 27 % del plan gratuito—, protegido con acceso exclusivo de solo lectura y conectado a un explorador interactivo en Vercel que responde filtros en alrededor de un segundo.
+          En resumen, demostramos tres ideas concretas: primero, que casi la mitad de los trabajadores repite oficio y que la ocupación específica explica diez veces más que los estudios o el gran sector; segundo, que Naive Bayes Híbrido y K-Means++ logran el mejor equilibrio real entre calidad, claridad y velocidad; y tercero, que los métodos numéricos nos recuerdan no extrapolar tendencias recortadas ni multiplicar grados sin cuidar los nodos.
+          Cerramos declarando con honestidad nuestros límites —patrones descriptivos sin causalidad, competencias de catálogo y alcances muestrales— e invitamos al jurado a probar el explorador en vivo. Muchas gracias; quedamos atentos a sus preguntas."
+          ---
+          TIEMPOS EXACTOS (15 MINUTOS TOTALES):
+          - Expositor 1 (Slides 1–3): 00:00 – 03:45 (3 min 45 s)
+          - Expositor 2 (Slides 4–6): 03:45 – 07:30 (3 min 45 s)
+          - Expositor 3 (Slides 7–9): 07:30 – 11:15 (3 min 45 s)
+          - Expositor 4 (Slides 10–12): 11:15 – 15:00 (3 min 45 s)
+          ---
+          HECHOS VERIFICADOS: F-015 (352,093 personas = 99.10 %, 1,738,738 exp., 3,215 excluidas = 0.90 %), F-023 (45.30 %), F-037/F-040 (NB-H 72.79 %, 0.241 s), F-043 (K-Means 4 perfiles, 1.80 s), NEON_SCHEMA.md (276.68 MiB = 27.02 % de 1 GiB, jobpath_readonly), DASHBOARD.md §5.3 (Preview live 0.35–1.39 s).
+        </aside>
+      </section>
+
+    </div>
+  </div>
+
+  <div class="jp-hud">
+    <kbd>&larr;</kbd> <kbd>&rarr;</kbd> navegar &middot; <kbd>S</kbd> notas del orador (15 min) &middot; <kbd>F</kbd> pantalla completa
+  </div>
+
+  <!-- =========================================================================
+       RECHARTS 2.15.4 + KATEX 0.16.11 + REVEAL.JS 5.1.0 INITIALIZATION
+       (100 % Paleta Verde Retro Vintage: #606C38, #283618, #FEFAE0, #DDA15E, #BC6C25)
+       ========================================================================= -->
+  <script>
+    (function () {
+      function renderAllCharts() {
+        var React = window.React;
+        var ReactDOM = window.ReactDOM;
+        var RC = window.Recharts;
+        if (!React || !ReactDOM || !RC) return;
+
+        var h = React.createElement;
+        var BarChart = RC.BarChart;
+        var Bar = RC.Bar;
+        var Cell = RC.Cell;
+        var ComposedChart = RC.ComposedChart;
+        var LineChart = RC.LineChart;
+        var Line = RC.Line;
+        var XAxis = RC.XAxis;
+        var YAxis = RC.YAxis;
+        var CartesianGrid = RC.CartesianGrid;
+        var Tooltip = RC.Tooltip;
+        var Legend = RC.Legend;
+        var ReferenceLine = RC.ReferenceLine;
+        var LabelList = RC.LabelList;
+
+        var tip = { fontSize: "13px", borderRadius: "8px", borderColor: "#e4ddbe", backgroundColor: "#ffffff", color: "#283618" };
+        var tickY = { fontSize: 14, fill: "#283618", fontWeight: 600 };
+        var tickX = { fontSize: 13, fill: "#4a5539", fontWeight: 500 };
+
+        function rightLabel(props) {
+          var x = Number(props.x || 0), y = Number(props.y || 0), w = Number(props.width || 0), ht = Number(props.height || 0);
+          return h("text", { x: x + w + 10, y: y + ht / 2 + 5, fill: "#283618", fontSize: 14.5, fontWeight: 700, textAnchor: "start" }, props.value);
+        }
+
+        function mount(id, el) {
+          var node = document.getElementById(id);
+          if (!node) return;
+          if (ReactDOM.createRoot) ReactDOM.createRoot(node).render(el);
+          else ReactDOM.render(el, node);
+        }
+
+        // SLIDE 1: Retornos por persona (Arena neutra + Ocre + Cobre foco repetidores)
+        var d1 = [
+          { g: "Sin retornos (oficios distintos)", v: 54.70, c: "#c9c3a8", l: "54.7 %" },
+          { g: "1 retorno al mismo oficio",        v: 23.91, c: "#dda15e", l: "23.9 %" },
+          { g: "2 o más retornos al oficio",       v: 21.38, c: "#bc6c25", l: "21.4 %" }
+        ];
+        mount("chart-s1", h(BarChart, { width: 620, height: 270, data: d1, layout: "vertical", margin: { top: 10, right: 82, left: 6, bottom: 8 } },
+          h(CartesianGrid, { strokeDasharray: "3 3", stroke: "#f0ebd4", horizontal: false }),
+          h(XAxis, { type: "number", domain: [0, 62], ticks: [0, 20, 40, 60], tickFormatter: function (v) { return v + "%"; }, tick: tickX, axisLine: false, tickLine: false }),
+          h(YAxis, { type: "category", dataKey: "g", width: 245, tick: tickY, axisLine: false, tickLine: false }),
+          h(Tooltip, { contentStyle: tip, formatter: function (v) { return [v.toFixed(1) + " %"]; } }),
+          h(Bar, { dataKey: "v", radius: [0, 8, 8, 0], barSize: 44, isAnimationActive: false },
+            d1.map(function (d, i) { return h(Cell, { key: i, fill: d.c }); }),
+            h(LabelList, { dataKey: "l", content: rightLabel })
+          )
+        ));
+
+        // SLIDE 2: Emparejamiento ESCO (Oliva protagonista + arena neutra)
+        var d2 = [
+          { g: "Oficio ESCO completo",       v: 92.93, c: "#606c38", l: "92.9 % (1.74M)" },
+          { g: "Sin oficio identificado",    v: 6.89,  c: "#d4ceb4", l: "6.9 % (129k)" },
+          { g: "Solo gran grupo (rescat.)",  v: 0.18,  c: "#dda15e", l: "0.2 % (3.3k)" }
+        ];
+        mount("chart-s2", h(BarChart, { width: 620, height: 270, data: d2, layout: "vertical", margin: { top: 10, right: 145, left: 6, bottom: 8 } },
+          h(CartesianGrid, { strokeDasharray: "3 3", stroke: "#f0ebd4", horizontal: false }),
+          h(XAxis, { type: "number", domain: [0, 100], ticks: [0, 25, 50, 75, 100], tickFormatter: function (v) { return v + "%"; }, tick: tickX, axisLine: false, tickLine: false }),
+          h(YAxis, { type: "category", dataKey: "g", width: 205, tick: tickY, axisLine: false, tickLine: false }),
+          h(Tooltip, { contentStyle: tip, formatter: function (v) { return [v.toFixed(2) + " %"]; } }),
+          h(Bar, { dataKey: "v", radius: [0, 8, 8, 0], barSize: 44, isAnimationActive: false },
+            d2.map(function (d, i) { return h(Cell, { key: i, fill: d.c }); }),
+            h(LabelList, { dataKey: "l", content: rightLabel })
+          )
+        ));
+
+        // SLIDE 3: Fuga vs Real (Cobre trampa + Oliva real + Arena azar)
+        var d3 = [
+          { g: "Con fuga (trampa prohibida)", v: 1.000, c: "#bc6c25", l: "1.00 (ficticio)" },
+          { g: "Modelo limpio (elegido)",     v: 0.511, c: "#606c38", l: "0.51 (señal real)" },
+          { g: "Referencia al azar",          v: 0.300, c: "#d4ceb4", l: "0.30 (azar)" }
+        ];
+        mount("chart-s3", h(BarChart, { width: 620, height: 270, data: d3, layout: "vertical", margin: { top: 10, right: 145, left: 6, bottom: 8 } },
+          h(CartesianGrid, { strokeDasharray: "3 3", stroke: "#f0ebd4", horizontal: false }),
+          h(XAxis, { type: "number", domain: [0, 1.05], ticks: [0, 0.25, 0.5, 0.75, 1.0], tick: tickX, axisLine: false, tickLine: false }),
+          h(YAxis, { type: "category", dataKey: "g", width: 225, tick: tickY, axisLine: false, tickLine: false }),
+          h(Tooltip, { contentStyle: tip, formatter: function (v) { return [v.toFixed(3), "PR-AUC"]; } }),
+          h(Bar, { dataKey: "v", radius: [0, 8, 8, 0], barSize: 44, isAnimationActive: false },
+            d3.map(function (d, i) { return h(Cell, { key: i, fill: d.c }); }),
+            h(LabelList, { dataKey: "l", content: rightLabel })
+          )
+        ));
+
+        // SLIDE 4: Embudo de limpieza (Arena -> Ocre -> Bosque -> Oliva final)
+        var d4 = [
+          { g: "1. Datos crudos",          v: 1993, c: "#d4ceb4", l: "1.99 M" },
+          { g: "2. Con fechas válidas",    v: 1921, c: "#dda15e", l: "1.92 M" },
+          { g: "3. Sin duplicados",        v: 1871, c: "#283618", l: "1.87 M (limpio)" },
+          { g: "4. Con oficio ESCO",       v: 1739, c: "#606c38", l: "1.74 M (final)" }
+        ];
+        mount("chart-s4", h(BarChart, { width: 620, height: 270, data: d4, layout: "vertical", margin: { top: 10, right: 135, left: 6, bottom: 8 } },
+          h(CartesianGrid, { strokeDasharray: "3 3", stroke: "#f0ebd4", horizontal: false }),
+          h(XAxis, { type: "number", domain: [0, 2100], ticks: [0, 500, 1000, 1500, 2000], tickFormatter: function (v) { return (v / 1000).toFixed(1) + "M"; }, tick: tickX, axisLine: false, tickLine: false }),
+          h(YAxis, { type: "category", dataKey: "g", width: 175, tick: tickY, axisLine: false, tickLine: false }),
+          h(Tooltip, { contentStyle: tip, formatter: function (v) { return [(v / 1000).toFixed(2) + " millones"]; } }),
+          h(Bar, { dataKey: "v", radius: [0, 8, 8, 0], barSize: 38, isAnimationActive: false },
+            d4.map(function (d, i) { return h(Cell, { key: i, fill: d.c }); }),
+            h(LabelList, { dataKey: "l", content: rightLabel })
+          )
+        ));
+
+        // SLIDE 5: Ablación por bloques (Oliva base, arena menor, cobre caída crítica)
+        var d5 = [
+          { g: "Modelo completo (todo)",    v: 0.498, c: "#606c38", l: "0.498 (base)" },
+          { g: "Sin habilidades resumidas", v: 0.502, c: "#c9c3a8", l: "0.502 (+0.004)" },
+          { g: "Sin duración ni etapa",     v: 0.487, c: "#dda15e", l: "0.487 (-0.011)" },
+          { g: "Sin los 2,967 oficios",     v: 0.374, c: "#bc6c25", l: "0.374 (-0.125!)" }
+        ];
+        mount("chart-s5", h(BarChart, { width: 620, height: 270, data: d5, layout: "vertical", margin: { top: 10, right: 145, left: 6, bottom: 8 } },
+          h(CartesianGrid, { strokeDasharray: "3 3", stroke: "#f0ebd4", horizontal: false }),
+          h(XAxis, { type: "number", domain: [0.25, 0.56], ticks: [0.25, 0.35, 0.45, 0.55], tick: tickX, axisLine: false, tickLine: false }),
+          h(YAxis, { type: "category", dataKey: "g", width: 215, tick: tickY, axisLine: false, tickLine: false }),
+          h(ReferenceLine, { x: 0.498, stroke: "#283618", strokeDasharray: "4 4", strokeWidth: 1.5 }),
+          h(Tooltip, { contentStyle: tip, formatter: function (v) { return [v.toFixed(3), "PR-AUC"]; } }),
+          h(Bar, { dataKey: "v", radius: [0, 8, 8, 0], barSize: 38, isAnimationActive: false },
+            d5.map(function (d, i) { return h(Cell, { key: i, fill: d.c }); }),
+            h(LabelList, { dataKey: "l", content: rightLabel })
+          )
+        ));
+
+        // SLIDE 6: PCA (Bosque + Oliva + Arena suave, ejes explícitos de 4.1)
+        var d6 = [
+          { pc: "PC1 · Duración", ind: 32.9, a: 32.9, b: 39.7 },
+          { pc: "PC2 · Hab./Época", ind: 22.4, a: 55.4, b: 65.9 },
+          { pc: "PC3 · Época/Hab.", ind: 21.2, a: 76.6, b: 80.6 },
+          { pc: "PC4 · Residual",   ind: 11.2, a: 87.8, b: 89.1 },
+          { pc: "PC5",              ind: 6.3,  a: 94.1, b: 95.4 }
+        ];
+        mount("chart-s6", h(ComposedChart, { width: 620, height: 270, data: d6, margin: { top: 14, right: 24, left: 0, bottom: 4 } },
+          h(CartesianGrid, { strokeDasharray: "3 3", stroke: "#f0ebd4" }),
+          h(XAxis, { dataKey: "pc", tick: { fontSize: 12.2, fill: "#283618", fontWeight: 700 }, axisLine: false, tickLine: false }),
+          h(YAxis, { domain: [0, 100], ticks: [0, 25, 50, 75, 100], tickFormatter: function (v) { return v + "%"; }, tick: tickX, axisLine: false, tickLine: false }),
+          h(Tooltip, { contentStyle: tip, formatter: function (v) { return [v.toFixed(1) + " %"]; } }),
+          h(Legend, { wrapperStyle: { fontSize: "13px", fontWeight: 600 }, formatter: function (val) { return h("span", { style: { color: "#283618" } }, val); } }),
+          h(ReferenceLine, { y: 80, stroke: "#bc6c25", strokeDasharray: "5 4", strokeWidth: 1.8, label: { value: "Meta 80 %", position: "insideTopRight", fill: "#bc6c25", fontSize: 13, fontWeight: 700 } }),
+          h(Bar, { dataKey: "ind", name: "Aporte individual (A)", fill: "#d9d1ab", radius: [6, 6, 0, 0], barSize: 40, isAnimationActive: false }),
+          h(Line, { type: "monotone", dataKey: "a", name: "Acumulado Versión A", stroke: "#283618", strokeWidth: 3.5, dot: { r: 5, fill: "#283618" }, isAnimationActive: false }),
+          h(Line, { type: "monotone", dataKey: "b", name: "Acumulado Versión B", stroke: "#606c38", strokeWidth: 3.5, dot: { r: 5, fill: "#606c38" }, isAnimationActive: false })
+        ));
+
+        // SLIDE 7: Brecha Sectorial ISCO — los 10 grandes grupos ISCO-08 completos en Test (F-038)
+        var d7 = [
+          { g: "Servicios y ventas (5)",    v: 33.9, c: "#bc6c25", l: "33.9%" },
+          { g: "Técnicos nivel medio (3)",  v: 33.4, c: "#bc6c25", l: "33.4%" },
+          { g: "Oficios elementales (9)",   v: 33.1, c: "#bc6c25", l: "33.1%" },
+          { g: "Profesionales (2)",         v: 30.1, c: "#dda15e", l: "30.1%" },
+          { g: "Operadores de máq. (8)",    v: 24.7, c: "#606c38", l: "24.7%" },
+          { g: "Artesanos y oper. (7)",     v: 23.1, c: "#606c38", l: "23.1%" },
+          { g: "Apoyo administrativo (4)",  v: 22.6, c: "#8a9666", l: "22.6%" },
+          { g: "Agropecuarios (6)",         v: 21.9, c: "#8a9666", l: "21.9%" },
+          { g: "Directores y gerentes (1)", v: 21.4, c: "#283618", l: "21.4%" },
+          { g: "Ocupaciones militares (0)", v: 7.6,  c: "#c9c3a8", l: "7.6%" }
+        ];
+        mount("chart-s7", h(BarChart, { width: 620, height: 276, data: d7, layout: "vertical", margin: { top: 2, right: 64, left: 6, bottom: 2 } },
+          h(CartesianGrid, { strokeDasharray: "3 3", stroke: "#f0ebd4", horizontal: false }),
+          h(XAxis, { type: "number", domain: [0, 40], ticks: [0, 10, 20, 30, 40], tickFormatter: function (v) { return v + "%"; }, tick: tickX, axisLine: false, tickLine: false }),
+          h(YAxis, { type: "category", dataKey: "g", width: 188, tick: { fontSize: 12.6, fill: "#283618", fontWeight: 600 }, axisLine: false, tickLine: false }),
+          h(ReferenceLine, { x: 30.0, stroke: "#283618", strokeOpacity: 0.45, strokeDasharray: "4 3", strokeWidth: 1.4 }),
+          h(Tooltip, { contentStyle: tip, formatter: function (v) { return [v.toFixed(1) + " %"]; } }),
+          h(Bar, { dataKey: "v", radius: [0, 5, 5, 0], barSize: 17, isAnimationActive: false },
+            d7.map(function (d, i) { return h(Cell, { key: i, fill: d.c }); }),
+            h(LabelList, { dataKey: "l", content: function (props) {
+              var x = Number(props.x || 0), y = Number(props.y || 0), w = Number(props.width || 0), ht = Number(props.height || 0);
+              return h("text", { x: x + w + 6, y: y + ht / 2 + 4.5, fill: "#283618", fontSize: 13.2, fontWeight: 700, textAnchor: "start" }, props.value);
+            } })
+          )
+        ));
+
+        // =====================================================================
+        // SLIDE 10 INTERACTIVE SIMULATOR: CASO 1 (MCO) SOBRE DATOS REALES JOBPATH
+        // Fuente exacta: rl04_annual_macro_series.csv (24 años 2000–2023, 1.51M empleos)
+        // =====================================================================
+        var RL04_RAW = [
+          { yr: 2000, n: 31880,  dur: 18.34497026, durAct: 20.90282309, skills: 22.27437265, reinc: 28.21831870 },
+          { yr: 2001, n: 30386,  dur: 16.56692592, durAct: 19.17814125, skills: 22.49371421, reinc: 28.78628316 },
+          { yr: 2002, n: 31374,  dur: 15.00817618, durAct: 17.72113852, skills: 22.76678141, reinc: 29.18658762 },
+          { yr: 2003, n: 35136,  dur: 14.04781919, durAct: 16.53568989, skills: 22.78335610, reinc: 29.10689891 },
+          { yr: 2004, n: 41799,  dur: 13.16483516, durAct: 15.68611689, skills: 22.68728917, reinc: 29.16098471 },
+          { yr: 2005, n: 50988,  dur: 12.08918206, durAct: 14.53485134, skills: 22.67466855, reinc: 29.28924453 },
+          { yr: 2006, n: 63814,  dur: 11.26051990, durAct: 13.72156580, skills: 22.60886326, reinc: 29.61732535 },
+          { yr: 2007, n: 77251,  dur: 10.34295635, durAct: 12.87386571, skills: 22.68069022, reinc: 30.22873490 },
+          { yr: 2008, n: 88927,  dur: 9.45683677,  durAct: 12.08753247, skills: 22.83634892, reinc: 30.16294264 },
+          { yr: 2009, n: 91758,  dur: 8.46456504,  durAct: 11.11767911, skills: 23.35964167, reinc: 30.78532662 },
+          { yr: 2010, n: 112621, dur: 7.78137196,  durAct: 10.43160689, skills: 23.38505252, reinc: 31.18601327 },
+          { yr: 2011, n: 131312, dur: 6.66558353,  durAct: 9.40464695,  skills: 23.47282807, reinc: 31.00782868 },
+          { yr: 2012, n: 133578, dur: 6.09012622,  durAct: 9.26179461,  skills: 23.87212715, reinc: 30.95270179 },
+          { yr: 2013, n: 125822, dur: 5.59071515,  durAct: 8.63608908,  skills: 24.00542036, reinc: 31.73928248 },
+          { yr: 2014, n: 121633, dur: 5.16366281,  durAct: 8.33162053,  skills: 24.10664047, reinc: 31.33113546 },
+          { yr: 2015, n: 112332, dur: 4.72162045,  durAct: 7.78600043,  skills: 24.27012784, reinc: 31.55734786 },
+          { yr: 2016, n: 96083,  dur: 4.29015368,  durAct: 7.24765047,  skills: 24.27020389, reinc: 31.59664040 },
+          { yr: 2017, n: 74454,  dur: 3.77690184,  durAct: 6.72466221,  skills: 24.07246085, reinc: 30.54637763 },
+          { yr: 2018, n: 47467,  dur: 3.14202414,  durAct: 6.60524154,  skills: 23.78608296, reinc: 29.61636505 },
+          { yr: 2019, n: 11382,  dur: 2.27118063,  durAct: 8.31242312,  skills: 23.31655245, reinc: 29.45879459 },
+          { yr: 2020, n: 59,     dur: 2.33333333,  durAct: 6.45762712,  skills: 23.96610169, reinc: 18.64406780 },
+          { yr: 2021, n: 3,      dur: 2.00000000,  durAct: 8.33333333,  skills: 23.33333333, reinc: 0.00000000 },
+          { yr: 2022, n: 3,      dur: 3.00000000,  durAct: 3.00000000,  skills: 15.66666667, reinc: 33.33333333 },
+          { yr: 2023, n: 1,      dur: 2.00000000,  durAct: 2.00000000,  skills: 14.00000000, reinc: 0.00000000 }
+        ];
+
+        var RL04_VARS = {
+          dur: {
+            label: "Duración cerrados",
+            unit: "trim.",
+            yFmt: function (v) { return v.toFixed(0) + " t"; },
+            valFmt: function (v) { return v.toFixed(2) + " trim."; },
+            domain: [-6, 20],
+            ticks: [-5, 0, 5, 10, 15, 20],
+            checkNeg: true,
+            title: "Duración en empleos cerrados (~es_vigente)",
+            bullets: [
+              "Excluimos los 95,136 empleos vigentes: la caída lineal refleja el cierre de calendario, no que los empleos se vuelvan negativos.",
+              "Centrar t = año − 2000 hace el cálculo 4,672× más preciso (err 3.55e-15), pero tras 2020 la recta cruza cero (2027 = −4.96 trim.)."
+            ]
+          },
+          skills: {
+            label: "Habilidades ESCO",
+            unit: "hab.",
+            yFmt: function (v) { return v.toFixed(0); },
+            valFmt: function (v) { return v.toFixed(2) + " hab."; },
+            domain: [12, 26],
+            ticks: [12, 16, 20, 24],
+            checkNeg: false,
+            title: "Habilidades esenciales ESCO promedio por año de inicio",
+            bullets: [
+              "En 2000–2019 (1.51M empleos) crece +0.097 hab./año con R² = 74.8 % (oficios cada vez más exigentes).",
+              "Al activar la cola censurada 2020–2023 (solo 66 empleos), la pendiente se invierte a −0.101/año y R² se desploma a 8.3 %."
+            ]
+          },
+          reinc: {
+            label: "Reincidencia (%)",
+            unit: "%",
+            yFmt: function (v) { return v.toFixed(0) + "%"; },
+            valFmt: function (v) { return v.toFixed(1) + " %"; },
+            domain: [0, 36],
+            ticks: [0, 10, 20, 30],
+            checkNeg: false,
+            title: "Tasa anual de reincidencia ocupacional (%)",
+            bullets: [
+              "En 2000–2019 se mantiene estable entre 28.2 % y 31.7 % (+0.12 pp/año, R² = 43.1 %) y train/test/val comparten pendiente (+0.18 %/año).",
+              "Incluir los 66 casos censurados de 2020–2023 introduce saltos de 0 % a 33.3 % y destruye el ajuste lineal (R² = 18.7 %)."
+            ]
+          },
+          durAct: {
+            label: "Duración (+vig.)",
+            unit: "trim.",
+            yFmt: function (v) { return v.toFixed(0) + " t"; },
+            valFmt: function (v) { return v.toFixed(2) + " trim."; },
+            domain: [-4, 22],
+            ticks: [-4, 0, 5, 10, 15, 20],
+            checkNeg: true,
+            title: "Duración incluyendo los 95,136 empleos vigentes (censurados a 2026-Q1)",
+            bullets: [
+              "Al mezclar empleos vigentes, en 2019 la media salta de 2.27 a 8.31 trimestres porque los contratos abiertos siguen acumulando tiempo.",
+              "Esto demuestra por qué la bandera es_vigente creada en limpieza (Slide 4) fue esencial para no mezclar poblaciones."
+            ]
+          }
+        };
+
+        function fitOLS(rows, key) {
+          var n = rows.length, sx = 0, sy = 0, sxx = 0, sxy = 0;
+          for (var i = 0; i < n; i++) {
+            var x = rows[i].yr - 2000;
+            var y = rows[i][key];
+            sx += x; sy += y; sxx += x * x; sxy += x * y;
+          }
+          var xm = sx / n, ym = sy / n;
+          var a1 = (n * sxy - sx * sy) / (n * sxx - sx * sx);
+          var a0 = ym - a1 * xm;
+          var st = 0, sr = 0;
+          for (var j = 0; j < n; j++) {
+            var xj = rows[j].yr - 2000;
+            var yj = rows[j][key];
+            st += (yj - ym) * (yj - ym);
+            var r = yj - (a0 + a1 * xj);
+            sr += r * r;
+          }
+          return { a0: a0, a1: a1, r2: st > 0 ? 1 - sr / st : 0, n: n };
+        }
+
+        function stopRevealKeys(e) {
+          if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", " ", "PageUp", "PageDown"].indexOf(e.key) !== -1) {
+            e.stopPropagation();
+          }
+        }
+        function stopSwipe(e) { e.stopPropagation(); }
+        function getQueryParam(name) {
+          try { return new URLSearchParams(window.location.search).get(name); } catch (e) { return null; }
+        }
+
+        function Case1InteractiveOLS() {
+          var init10 = (getQueryParam("s10") || "").split(",");
+          var _v = React.useState(RL04_VARS[init10[0]] ? init10[0] : "dur"), varKey = _v[0], setVarKey = _v[1];
+          var _t = React.useState(init10[1] === "1"), includeTail = _t[0], setIncludeTail = _t[1];
+          var _y = React.useState(init10[2] ? Math.max(2000, Math.min(2027, Number(init10[2]) || 2027)) : 2027), queryYr = _y[0], setQueryYr = _y[1];
+
+          var meta = RL04_VARS[varKey];
+          var fitRows = includeTail ? RL04_RAW : RL04_RAW.slice(0, 20);
+          var maxFitYr = includeTail ? 2023 : 2019;
+          var ols = fitOLS(fitRows, varKey);
+
+          var chartData = [];
+          var realByYr = {};
+          for (var i = 0; i < RL04_RAW.length; i++) realByYr[RL04_RAW[i].yr] = RL04_RAW[i];
+
+          for (var yr = 2000; yr <= 2027; yr++) {
+            var pred = ols.a0 + ols.a1 * (yr - 2000);
+            var rec = realByYr[yr];
+            var isValid = yr <= 2019;
+            var isTail = yr >= 2020 && yr <= 2023;
+            chartData.push({
+              yr: yr,
+              obsValid: isValid && rec ? rec[varKey] : null,
+              obsTail: isTail && rec && (includeTail || yr === queryYr) ? rec[varKey] : null,
+              fitLine: yr <= maxFitYr ? pred : null,
+              extLine: yr >= maxFitYr ? pred : null
+            });
+          }
+
+          var predAtQ = ols.a0 + ols.a1 * (queryYr - 2000);
+          var realRec = realByYr[queryYr] || null;
+          var realAtQ = realRec ? realRec[varKey] : null;
+          var errAtQ = realAtQ !== null ? Math.abs(predAtQ - realAtQ) : null;
+          var isExtrap = queryYr > maxFitYr;
+          var isImpossible = meta.checkNeg && predAtQ < 0;
+
+          var verdictLabel = isImpossible ? "Fallo físico (< 0)" : (ols.r2 >= 0.70 ? "Ajuste fuerte" : (ols.r2 >= 0.30 ? "Ajuste moderado" : "Rechazado (R²<30%)"));
+          var verdictCopper = isImpossible || ols.r2 < 0.30 || isExtrap;
+          var signA1 = ols.a1 >= 0 ? " + " : " − ";
+
+          return h("div", {
+            className: "grid grid-cols-12 gap-5 items-stretch flex-1 min-h-0",
+            onKeyDown: stopRevealKeys, onTouchStart: stopSwipe, onTouchMove: stopSwipe
+          },
+            // Left: Controls + Recharts
+            h("div", { className: "col-span-7 jp-visual", style: { padding: "12px 16px", gap: "6px" } },
+              h("div", { className: "jp-ctrl-bar" },
+                h("div", { className: "jp-ctrl-group" },
+                  Object.keys(RL04_VARS).map(function (k) {
+                    return h("button", {
+                      key: k, type: "button",
+                      className: "jp-pill-btn" + (varKey === k ? " active" : ""),
+                      onClick: function () { setVarKey(k); }
+                    }, RL04_VARS[k].label);
+                  })
+                ),
+                h("div", { className: "jp-ctrl-group" },
+                  h("button", {
+                    type: "button",
+                    className: "jp-pill-btn" + (includeTail ? " active-copper" : ""),
+                    title: "Incluir los 66 empleos censurados de 2020–2023 en el ajuste MCO",
+                    onClick: function () { setIncludeTail(!includeTail); }
+                  }, includeTail ? "Cola 2020–23: SÍ (n=24)" : "+ Cola 2020–23 (n=66)"),
+                  h("button", {
+                    type: "button", className: "jp-pill-btn", title: "Reiniciar al caso base",
+                    onClick: function () { setVarKey("dur"); setIncludeTail(false); setQueryYr(2027); }
+                  }, "↺")
+                )
+              ),
+              h("div", { className: "flex items-baseline justify-between gap-2" },
+                h("div", { className: "jp-visual-head", style: { fontSize: "15px" } }, meta.title),
+                h("span", {
+                  className: "font-mono text-xs font-bold",
+                  style: { color: verdictCopper ? "#bc6c25" : "#606c38" }
+                }, "R² = " + (ols.r2 * 100).toFixed(1) + " % (" + (includeTail ? "2000–2023" : "2000–2019") + ")")
+              ),
+              h("div", { className: "jp-chart-mount" },
+                h(LineChart, { width: 615, height: 224, data: chartData, margin: { top: 8, right: 16, left: 0, bottom: 2 } },
+                  h(CartesianGrid, { strokeDasharray: "3 3", stroke: "#f0ebd4" }),
+                  h(XAxis, { dataKey: "yr", ticks: [2000, 2003, 2006, 2009, 2012, 2015, 2018, 2021, 2024, 2027], tick: { fontSize: 12, fill: "#283618", fontWeight: 600 }, axisLine: false, tickLine: false }),
+                  h(YAxis, { domain: meta.domain, ticks: meta.ticks, tickFormatter: meta.yFmt, tick: tickX, axisLine: false, tickLine: false, width: 42 }),
+                  h(Tooltip, { contentStyle: tip, formatter: function (v) { return [v !== null ? meta.valFmt(v) : "—"]; } }),
+                  h(Legend, { wrapperStyle: { fontSize: "12px", fontWeight: 600 }, formatter: function (val) { return h("span", { style: { color: "#283618" } }, val); } }),
+                  meta.checkNeg ? h(ReferenceLine, { y: 0, stroke: "#bc6c25", strokeWidth: 1.8, label: { value: "Cero (límite físico)", position: "insideTopLeft", fill: "#bc6c25", fontSize: 11.5, fontWeight: 700 } }) : null,
+                  h(ReferenceLine, { x: maxFitYr, stroke: "#dda15e", strokeDasharray: "4 4", strokeWidth: 1.6 }),
+                  h(ReferenceLine, { x: queryYr, stroke: verdictCopper ? "#bc6c25" : "#606c38", strokeWidth: 2, strokeDasharray: "2 2" }),
+                  h(Line, { type: "monotone", dataKey: "obsValid", name: "Real JobPath (00–19)", stroke: "#283618", strokeWidth: 2.8, dot: { r: 3.2, fill: "#283618" }, connectNulls: false, isAnimationActive: false }),
+                  h(Line, { type: "monotone", dataKey: "obsTail", name: "Cola censurada (20–23)", stroke: "#dda15e", strokeWidth: 2, dot: { r: 4.5, fill: "#bc6c25", stroke: "#ffffff", strokeWidth: 1 }, connectNulls: false, isAnimationActive: false }),
+                  h(Line, { type: "linear", dataKey: "fitLine", name: "Recta MCO ajuste", stroke: "#606c38", strokeWidth: 2.6, strokeDasharray: "6 3", dot: false, connectNulls: false, isAnimationActive: false }),
+                  h(Line, { type: "linear", dataKey: "extLine", name: "Extrapolación", stroke: "#bc6c25", strokeWidth: 3, dot: false, connectNulls: true, isAnimationActive: false })
+                )
+              )
+            ),
+
+            // Right: Live Slider Readout + Dynamic Equation & Insights
+            h("div", { className: "col-span-5 flex flex-col justify-between gap-2.5" },
+              h("div", { className: "jp-visual", style: { padding: "11px 15px", gap: "8px" } },
+                h("div", { className: "flex items-center justify-between gap-2" },
+                  h("div", { className: "jp-visual-head", style: { fontSize: "14.5px" } }, "Consultar año: " + queryYr),
+                  h("div", { className: "jp-ctrl-group" },
+                    [2010, 2019, 2023, 2027].map(function (y) {
+                      return h("button", {
+                        key: y, type: "button",
+                        className: "jp-pill-btn" + (queryYr === y ? (y > maxFitYr ? " active-copper" : " active-olive") : ""),
+                        style: { padding: "2px 7px", fontSize: "11px" },
+                        onClick: function () { setQueryYr(y); }
+                      }, String(y));
+                    })
+                  )
+                ),
+                h("input", {
+                  type: "range", min: 2000, max: 2027, step: 1, value: queryYr,
+                  className: "jp-slider" + (verdictCopper ? " copper" : ""),
+                  onChange: function (e) { setQueryYr(Number(e.target.value)); }
+                }),
+                h("div", { className: "grid grid-cols-3 gap-2" },
+                  h("div", { className: "jp-live-cell" + (isImpossible ? " copper" : (isExtrap ? " copper" : " olive")) },
+                    h("div", { className: "text-[10.8px] font-bold uppercase", style: { color: "#6c7559" } }, "Predicho MCO"),
+                    h("div", { className: "font-mono text-[15px] font-extrabold", style: { color: isImpossible || isExtrap ? "#bc6c25" : "#283618" } }, meta.valFmt(predAtQ))
+                  ),
+                  h("div", { className: "jp-live-cell" },
+                    h("div", { className: "text-[10.8px] font-bold uppercase", style: { color: "#6c7559" } }, "Real JobPath"),
+                    h("div", { className: "font-mono text-[15px] font-extrabold", style: { color: "#283618" } }, realAtQ !== null ? meta.valFmt(realAtQ) : "Sin dato"),
+                    realRec ? h("div", { className: "text-[10px]", style: { color: "#6c7559" } }, "n=" + realRec.n.toLocaleString("en-US")) : h("div", { className: "text-[10px]", style: { color: "#bc6c25" } }, "Extrapolación")
+                  ),
+                  h("div", { className: "jp-live-cell" + (isImpossible ? " copper" : "") },
+                    h("div", { className: "text-[10.8px] font-bold uppercase", style: { color: "#6c7559" } }, isImpossible ? "Estado" : "Error |ŷ−y|"),
+                    h("div", { className: "font-mono text-[14.5px] font-extrabold", style: { color: isImpossible ? "#bc6c25" : "#283618" } },
+                      isImpossible ? "IMPOSIBLE" : (errAtQ !== null ? errAtQ.toFixed(2) + " " + meta.unit : "Fuera rango")
+                    )
+                  )
+                )
+              ),
+
+              h("div", { className: "jp-visual flex-1 justify-center", style: { padding: "11px 15px", gap: "8px" } },
+                h("div", { className: "flex items-center justify-between gap-2" },
+                  h("div", { className: "jp-visual-head", style: { fontSize: "14.2px" } }, "Recta MCO centrada (t = año − 2000)"),
+                  h("span", { className: verdictCopper ? "pill-warn" : "pill-chosen", style: { fontSize: "10.5px", padding: "1.5px 8px" } }, verdictLabel)
+                ),
+                h("div", {
+                  className: "jp-math " + (verdictCopper ? "copper" : "olive"),
+                  style: { fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", fontSize: "13px", fontWeight: 700, padding: "6px 10px" }
+                },
+                  "ŷ(t) = " + ols.a0.toFixed(2) + signA1 + Math.abs(ols.a1).toFixed(3) + "·t   |   R² = " + (ols.r2 * 100).toFixed(1) + " %"
+                ),
+                h("ul", { className: "jp-list", style: { gap: "6px" } },
+                  meta.bullets.map(function (b, idx) {
+                    return h("li", { key: idx, className: "jp-li", style: { fontSize: "12.4px" } },
+                      h("span", { className: "jp-dot" + (idx === 1 && verdictCopper ? " copper" : "") }),
+                      h("span", null, b)
+                    );
+                  })
+                )
+              )
+            )
+          );
+        }
+
+        mount("interactive-s10", h(Case1InteractiveOLS, null));
+
+        // =====================================================================
+        // SLIDE 11 INTERACTIVE SIMULATOR: CASO 2 (LAGRANGE Y SUPERVIVENCIA S(q))
+        // Fuente exacta: lg01_survival_curve_S_q.csv (40 trimestres + q=48 en 1.64M empleos)
+        // Paridad verificada a 1e-16 con lg01_runge_phenomenon_benchmark.csv
+        // =====================================================================
+        var LG01_S = {
+          1: 1.0, 2: 1.0, 3: 0.6879603740664764, 4: 0.6608799760550733, 5: 0.6406588018289641,
+          6: 0.39286774564842325, 7: 0.38085999761524103, 8: 0.3705386148443945, 9: 0.36227652010132794, 10: 0.26362111047030856,
+          11: 0.2577145735539965, 12: 0.25194917543308926, 13: 0.24715836502872662, 14: 0.18931335976035607, 15: 0.18574108818011256,
+          16: 0.18189627271908757, 17: 0.1788769975398048, 18: 0.14085773452765957, 19: 0.1383707716155282, 20: 0.13578342981873398,
+          21: 0.13365965596201906, 22: 0.10662245128886488, 23: 0.10492087710461062, 24: 0.1029996860878516, 25: 0.10145932647593461,
+          26: 0.08311554157145881, 27: 0.08186780161725592, 28: 0.08042112896435759, 29: 0.079332170154985, 30: 0.0660194966211859,
+          31: 0.0651124365179599, 32: 0.0640654543330827, 33: 0.06324782269073813, 34: 0.053468485897070886, 35: 0.052738457644977525,
+          36: 0.051978619905923694, 37: 0.051342278612848985, 38: 0.04405233815882008, 39: 0.043520634248545416, 40: 0.04298284676950331,
+          48: 0.02922424764505053
+        };
+
+        var LG01_Q_STEPS = [];
+        for (var qq = 1; qq <= 40; qq++) LG01_Q_STEPS.push(qq);
+        LG01_Q_STEPS.push(48);
+
+        function pyRound(x) {
+          var f = Math.floor(x);
+          if (Math.abs((x - f) - 0.5) < 1e-12) return (f % 2 === 0) ? f : f + 1;
+          return Math.round(x);
+        }
+        function uniqueSorted(arr) {
+          var seen = {}, out = [];
+          for (var i = 0; i < arr.length; i++) { if (!seen[arr[i]]) { seen[arr[i]] = true; out.push(arr[i]); } }
+          return out.sort(function (a, b) { return a - b; });
+        }
+        function getEquispacedNodes(deg) {
+          var arr = [];
+          for (var i = 0; i <= deg; i++) arr.push(1 + pyRound(39 * i / deg));
+          return uniqueSorted(arr);
+        }
+        function getChebyshevNodes(deg) {
+          var arr = [];
+          for (var k = 0; k <= deg; k++) arr.push(pyRound(20.5 + 19.5 * Math.cos(Math.PI * k / deg)));
+          return uniqueSorted(arr);
+        }
+        function lagrangeEval(xs, ys, q) {
+          var s = 0;
+          for (var i = 0; i < xs.length; i++) {
+            var L = 1;
+            for (var j = 0; j < xs.length; j++) {
+              if (i !== j) L *= (q - xs[j]) / (xs[i] - xs[j]);
+            }
+            s += ys[i] * L;
+          }
+          return s;
+        }
+        function localP2Eval(xs, ys, q) {
+          var n = xs.length, k = 0;
+          for (var i = 0; i < n; i++) { if (xs[i] <= q) k = i; }
+          k = Math.max(0, Math.min(n - 3, k));
+          return lagrangeEval([xs[k], xs[k + 1], xs[k + 2]], [ys[k], ys[k + 1], ys[k + 2]], q);
+        }
+
+        function Case2InteractiveLagrange() {
+          var init11 = (getQueryParam("s11") || "").split(",");
+          var initMethod = ["hitos4", "eq", "cheb", "p2"].indexOf(init11[0]) !== -1 ? init11[0] : "hitos4";
+          var initDeg = [3, 5, 8, 12, 16].indexOf(Number(init11[1])) !== -1 ? Number(init11[1]) : 16;
+          var initQIdx = init11[2] !== undefined && init11[2] !== "" ? Math.max(0, Math.min(LG01_Q_STEPS.length - 1, Number(init11[2]) || 0)) : 11;
+          var _m = React.useState(initMethod), method = _m[0], setMethod = _m[1];
+          var _d = React.useState(initDeg), degree = _d[0], setDegree = _d[1];
+          var _qi = React.useState(initQIdx), qIdx = _qi[0], setQIdx = _qi[1]; // index 11 -> q=12 (3 años)
+
+          var queryQ = LG01_Q_STEPS[qIdx];
+          var showExtrap = (method === "hitos4") || (queryQ === 48);
+
+          var nodes = method === "hitos4" ? [4, 8, 20, 40]
+                    : method === "cheb"   ? getChebyshevNodes(degree)
+                    : getEquispacedNodes(degree);
+          var nodeYs = nodes.map(function (q) { return LG01_S[q]; });
+          var nodeSet = {};
+          for (var ni = 0; ni < nodes.length; ni++) nodeSet[nodes[ni]] = true;
+
+          function evalAt(q) {
+            return method === "p2" ? localP2Eval(nodes, nodeYs, q) : lagrangeEval(nodes, nodeYs, q);
+          }
+
+          // Exact global metrics on [1, 40] matching lg01_runge_phenomenon_benchmark.csv
+          var maxErr = 0, sse = 0, viol = 0, minPred = Infinity, maxPred = -Infinity, worstQ = 1;
+          for (var q = 1; q <= 40; q++) {
+            var p = evalAt(q), e = Math.abs(LG01_S[q] - p);
+            sse += e * e;
+            if (e > maxErr) { maxErr = e; worstQ = q; }
+            if (p < 0 || p > 1) viol++;
+            if (p < minPred) minPred = p;
+            if (p > maxPred) maxPred = p;
+          }
+          var rmse = Math.sqrt(sse / 40);
+
+          // Chart series (clipped visually only when extreme Runge < -115% so real 0..100% curve stays legible)
+          var qsToPlot = showExtrap ? LG01_Q_STEPS : LG01_Q_STEPS.slice(0, 40);
+          var hasSevereRunge = minPred < -1.15;
+          var chartData = qsToPlot.map(function (qv) {
+            var pred = evalAt(qv);
+            var predPct = pred * 100;
+            var clippedPct = hasSevereRunge ? Math.max(-115, Math.min(125, predPct)) : predPct;
+            return {
+              q: qv,
+              realPct: LG01_S[qv] * 100,
+              predPct: clippedPct,
+              rawPredPct: predPct,
+              nodePct: nodeSet[qv] ? LG01_S[qv] * 100 : null
+            };
+          });
+
+          var realQ = LG01_S[queryQ];
+          var predQ = evalAt(queryQ);
+          var errQ = Math.abs(realQ - predQ);
+          var qInvalid = predQ < 0 || predQ > 1;
+          var anyInvalid = viol > 0 || (showExtrap && evalAt(48) < 0);
+
+          var yDomain = hasSevereRunge ? [-120, 125] : (showExtrap && evalAt(48) < -0.05 ? [-70, 115] : (maxPred > 1.05 ? [-5, 130] : [-5, 105]));
+          var yTicks = hasSevereRunge ? [-100, -50, 0, 50, 100] : (yDomain[0] < -20 ? [-60, -30, 0, 50, 100] : [0, 25, 50, 75, 100]);
+
+          var methodTitle = method === "hitos4" ? "4 hitos reales P₃ (1, 2, 5 y 10 años)"
+                          : method === "eq"     ? "Equiespaciado Global · Grado " + degree + " (" + nodes.length + " nodos)"
+                          : method === "cheb"   ? "Chebyshev-Lobatto · Grado " + degree + " (" + nodes.length + " nodos)"
+                          :                       "Tramos Locales P₂ · Grado " + degree + " (" + nodes.length + " nodos)";
+
+          var insightText = method === "hitos4"
+            ? "Solo 4 hitos estiman 3 años en 20.7 % (real 25.2 %), rebotan en 7 años (20.6 % vs 8.0 %) y fuera de rango (12 años) caen a −59.8 %."
+            : (method === "eq" && viol > 0)
+              ? "¡Fenómeno de Runge! Con nodos iguales el polinomio oscila en los extremos (mín " + (minPred * 100).toFixed(1) + " % en q=" + worstQ + "). Pulse Chebyshev para ver cómo se estabiliza 19.4×."
+              : method === "cheb"
+                ? "Chebyshev-Lobatto concentra nodos en los bordes y logra 0 probabilidades imposibles en todos los grados (en g=16 reduce el error 19.4×: 2.53 → 0.130)."
+                : "Los tramos locales cuadráticos P₂ evitan oscilaciones globales (0 violaciones; en g=12 logra el menor error E∞ = 0.120).";
+
+          return h("div", {
+            className: "grid grid-cols-12 gap-5 items-stretch flex-1 min-h-0",
+            onKeyDown: stopRevealKeys, onTouchStart: stopSwipe, onTouchMove: stopSwipe
+          },
+            // Left: Controls + Real vs Polynomial Curve
+            h("div", { className: "col-span-7 jp-visual", style: { padding: "12px 16px", gap: "6px" } },
+              h("div", { className: "jp-ctrl-bar" },
+                h("div", { className: "jp-ctrl-group" },
+                  [
+                    { id: "hitos4", lbl: "4 hitos (P₃)" },
+                    { id: "eq",     lbl: "Equiespaciado" },
+                    { id: "cheb",   lbl: "Chebyshev" },
+                    { id: "p2",     lbl: "Local P₂" }
+                  ].map(function (opt) {
+                    var cls = "jp-pill-btn";
+                    if (method === opt.id) cls += (opt.id === "eq" && viol > 0 ? " active-copper" : (opt.id === "cheb" ? " active-olive" : " active"));
+                    return h("button", {
+                      key: opt.id, type: "button", className: cls,
+                      onClick: function () {
+                        setMethod(opt.id);
+                        if (opt.id !== "hitos4" && qIdx === 40) setQIdx(38); // q=39 where Runge peaks
+                      }
+                    }, opt.lbl);
+                  })
+                ),
+                h("div", { className: "jp-ctrl-group" },
+                  h("span", { className: "text-[11px] font-bold", style: { color: "#6c7559" } }, "Grado:"),
+                  [3, 5, 8, 12, 16].map(function (g) {
+                    var isAct = method !== "hitos4" && degree === g;
+                    return h("button", {
+                      key: g, type: "button",
+                      className: "jp-pill-btn" + (isAct ? " active-olive" : (method === "hitos4" ? " subtle" : "")),
+                      style: { padding: "3px 6.5px", fontSize: "11px" },
+                      onClick: function () {
+                        setDegree(g);
+                        if (method === "hitos4") setMethod("eq");
+                      }
+                    }, String(g));
+                  }),
+                  h("button", {
+                    type: "button", className: "jp-pill-btn", title: "Reiniciar a 4 hitos (3 años)",
+                    onClick: function () { setMethod("hitos4"); setDegree(16); setQIdx(11); }
+                  }, "↺")
+                )
+              ),
+              h("div", { className: "flex items-baseline justify-between gap-2" },
+                h("div", { className: "jp-visual-head", style: { fontSize: "14.8px" } }, methodTitle),
+                hasSevereRunge
+                  ? h("span", { className: "pill-warn", style: { fontSize: "10.8px", padding: "1px 8px" } }, "Pico real Runge: " + (minPred * 100).toFixed(1) + " % en q=" + worstQ)
+                  : h("span", { className: "font-mono text-xs font-bold", style: { color: viol > 0 ? "#bc6c25" : "#606c38" } }, "E∞ = " + maxErr.toFixed(3) + " · Viol. [0,1]: " + viol)
+              ),
+              h("div", { className: "jp-chart-mount" },
+                h(ComposedChart, { width: 615, height: 224, data: chartData, margin: { top: 8, right: 16, left: 0, bottom: 2 } },
+                  h(CartesianGrid, { strokeDasharray: "3 3", stroke: "#f0ebd4" }),
+                  h(XAxis, { dataKey: "q", type: "number", domain: [1, showExtrap ? 48 : 40], ticks: showExtrap ? [4, 8, 12, 20, 28, 40, 48] : [4, 8, 12, 20, 28, 36, 40], tickFormatter: function (q) { return (q / 4) + "a"; }, tick: { fontSize: 12, fill: "#283618", fontWeight: 600 }, axisLine: false, tickLine: false }),
+                  h(YAxis, { domain: yDomain, ticks: yTicks, tickFormatter: function (v) { return v + "%"; }, tick: tickX, axisLine: false, tickLine: false, width: 46 }),
+                  h(Tooltip, {
+                    contentStyle: tip,
+                    labelFormatter: function (q) { return "q = " + q + " trim. (" + (q / 4).toFixed(2) + " años)"; },
+                    formatter: function (v, name, props) {
+                      if (name === "Polinomio Ŝ(q)" && props && props.payload) return [props.payload.rawPredPct.toFixed(1) + " %", name];
+                      return [v !== null ? v.toFixed(1) + " %" : "—", name];
+                    }
+                  }),
+                  h(Legend, { wrapperStyle: { fontSize: "12px", fontWeight: 600 }, formatter: function (val) { return h("span", { style: { color: "#283618" } }, val); } }),
+                  h(ReferenceLine, { y: 0, stroke: "#bc6c25", strokeWidth: 1.6, strokeDasharray: "4 3" }),
+                  h(ReferenceLine, { y: 100, stroke: "#6c7559", strokeWidth: 1, strokeDasharray: "3 3" }),
+                  h(ReferenceLine, { x: queryQ, stroke: qInvalid ? "#bc6c25" : "#606c38", strokeWidth: 2, strokeDasharray: "2 2" }),
+                  h(Line, { type: "monotone", dataKey: "realPct", name: "Real JobPath S(q)", stroke: "#283618", strokeWidth: 2.8, dot: false, isAnimationActive: false }),
+                  h(Line, { type: "monotone", dataKey: "predPct", name: "Polinomio Ŝ(q)", stroke: anyInvalid ? "#bc6c25" : "#606c38", strokeWidth: 2.6, strokeDasharray: "5 3", dot: false, isAnimationActive: false }),
+                  h(Line, { type: "linear", dataKey: "nodePct", name: "Nodos usados", stroke: "#dda15e", strokeWidth: 0, dot: { r: 4.5, fill: "#dda15e", stroke: "#283618", strokeWidth: 1.4 }, activeDot: false, isAnimationActive: false })
+                )
+              )
+            ),
+
+            // Right: Live Horizon Query + Global Error Readout + Link
+            h("div", { className: "col-span-5 flex flex-col justify-between gap-2" },
+              h("div", { className: "jp-visual", style: { padding: "10px 14px", gap: "7px" } },
+                h("div", { className: "flex items-center justify-between gap-1.5" },
+                  h("div", { className: "jp-visual-head", style: { fontSize: "14px" } }, "Horizonte: " + (queryQ / 4).toFixed(2).replace(/\.00$/, "") + " años (q=" + queryQ + ")"),
+                  h("div", { className: "jp-ctrl-group" },
+                    [{ i: 11, l: "3a" }, { i: 27, l: "7a" }, { i: 38, l: "q39" }, { i: 40, l: "12a" }].map(function (p) {
+                      return h("button", {
+                        key: p.l, type: "button",
+                        className: "jp-pill-btn" + (qIdx === p.i ? (p.i === 40 || qInvalid ? " active-copper" : " active-olive") : ""),
+                        style: { padding: "2px 6px", fontSize: "10.8px" },
+                        onClick: function () { setQIdx(p.i); }
+                      }, p.l);
+                    })
+                  )
+                ),
+                h("input", {
+                  type: "range", min: 0, max: LG01_Q_STEPS.length - 1, step: 1, value: qIdx,
+                  className: "jp-slider" + (qInvalid ? " copper" : ""),
+                  onChange: function (e) { setQIdx(Number(e.target.value)); }
+                }),
+                h("div", { className: "grid grid-cols-3 gap-2" },
+                  h("div", { className: "jp-live-cell" },
+                    h("div", { className: "text-[10.5px] font-bold uppercase", style: { color: "#6c7559" } }, "Real JobPath"),
+                    h("div", { className: "font-mono text-[15px] font-extrabold", style: { color: "#283618" } }, (realQ * 100).toFixed(1) + " %")
+                  ),
+                  h("div", { className: "jp-live-cell" + (qInvalid ? " copper" : " olive") },
+                    h("div", { className: "text-[10.5px] font-bold uppercase", style: { color: "#6c7559" } }, "Polinomio Ŝ(q)"),
+                    h("div", { className: "font-mono text-[15px] font-extrabold", style: { color: qInvalid ? "#bc6c25" : "#283618" } }, (predQ * 100).toFixed(1) + " %")
+                  ),
+                  h("div", { className: "jp-live-cell" + (qInvalid ? " copper" : "") },
+                    h("div", { className: "text-[10.5px] font-bold uppercase", style: { color: "#6c7559" } }, qInvalid ? "Físico" : "Error puntual"),
+                    h("div", { className: "font-mono text-[14.5px] font-extrabold", style: { color: qInvalid ? "#bc6c25" : "#283618" } }, qInvalid ? "IMPOSIBLE" : (errQ * 100).toFixed(1) + " pp")
+                  )
+                )
+              ),
+
+              h("div", { className: "jp-visual flex-1 justify-center", style: { padding: "10px 14px", gap: "7px" } },
+                h("div", { className: "flex items-center justify-between gap-2" },
+                  h("div", { className: "jp-visual-head", style: { fontSize: "13.8px" } }, "Desempeño global en 1–10 años (q = 1..40)"),
+                  h("span", { className: viol > 0 ? "pill-warn" : "pill-chosen", style: { fontSize: "10.5px", padding: "1.5px 8px" } }, viol > 0 ? viol + " viol. [0,1]" : "0 violaciones")
+                ),
+                h("div", { className: "grid grid-cols-3 gap-2 font-mono text-center" },
+                  h("div", { className: "jp-live-cell" + (maxErr > 0.25 ? " copper" : " olive"), style: { padding: "4px 6px" } },
+                    h("div", { className: "text-[10px] font-sans font-bold", style: { color: "#6c7559" } }, "Peor error E∞"),
+                    h("div", { className: "text-[13.5px] font-extrabold", style: { color: maxErr > 0.25 ? "#bc6c25" : "#283618" } }, maxErr.toFixed(3))
+                  ),
+                  h("div", { className: "jp-live-cell", style: { padding: "4px 6px" } },
+                    h("div", { className: "text-[10px] font-sans font-bold", style: { color: "#6c7559" } }, "RMSE"),
+                    h("div", { className: "text-[13.5px] font-extrabold", style: { color: "#283618" } }, rmse.toFixed(4))
+                  ),
+                  h("div", { className: "jp-live-cell", style: { padding: "4px 6px" } },
+                    h("div", { className: "text-[10px] font-sans font-bold", style: { color: "#6c7559" } }, "Nodos"),
+                    h("div", { className: "text-[13.5px] font-extrabold", style: { color: "#283618" } }, String(nodes.length))
+                  )
+                ),
+                h("p", { className: "text-[12.3px] leading-snug", style: { color: "#4a5539" } }, insightText)
+              ),
+
+              h("div", { className: "flex justify-end" },
+                h("a", {
+                  href: "../numerical_methods_presentation/index.html",
+                  target: "_blank", rel: "noopener noreferrer",
+                  className: "jp-appendix-link"
+                }, "Abrir casos completos y simuladores de Métodos Numéricos ↗")
+              )
+            )
+          );
+        }
+
+        mount("interactive-s11", h(Case2InteractiveLagrange, null));
+
+        // SLIDE 12: Síntesis 4 perfiles del censo (Cobre + Oliva + Bosque + Ocre)
+        var d12 = [
+          { g: "Operativos tempranos",    v: 43.9, c: "#bc6c25", l: "43.9 % (47.8 % rep.)" },
+          { g: "Profesionales cognit.",   v: 28.0, c: "#606c38", l: "28.0 % (42.8 % rep.)" },
+          { g: "Carreras consolidadas",   v: 16.4, c: "#283618", l: "16.4 % (45.6 % rep.)" },
+          { g: "Educación no reportada",  v: 11.7, c: "#dda15e", l: "11.7 % (45.0 % rep.)" }
+        ];
+        mount("chart-s12", h(BarChart, { width: 525, height: 270, data: d12, layout: "vertical", margin: { top: 10, right: 165, left: 4, bottom: 8 } },
+          h(CartesianGrid, { strokeDasharray: "3 3", stroke: "#f0ebd4", horizontal: false }),
+          h(XAxis, { type: "number", domain: [0, 50], ticks: [0, 15, 30, 45], tickFormatter: function (v) { return v + "%"; }, tick: tickX, axisLine: false, tickLine: false }),
+          h(YAxis, { type: "category", dataKey: "g", width: 175, tick: { fontSize: 13.2, fill: "#283618", fontWeight: 600 }, axisLine: false, tickLine: false }),
+          h(Tooltip, { contentStyle: tip, formatter: function (v) { return [v.toFixed(1) + " % del censo"]; } }),
+          h(Bar, { dataKey: "v", radius: [0, 8, 8, 0], barSize: 36, isAnimationActive: false },
+            d12.map(function (d, i) { return h(Cell, { key: i, fill: d.c }); }),
+            h(LabelList, { dataKey: "l", content: rightLabel })
+          )
+        ));
+      }
+
+      function renderKaTeX() {
+        if (typeof window.renderMathInElement === "function") {
+          window.renderMathInElement(document.body, {
+            delimiters: [
+              { left: "$$", right: "$$", display: true },
+              { left: "$", right: "$", display: false }
+            ],
+            throwOnError: false
+          });
+        }
+      }
+
+      async function bootDeck() {
+        try { await window.__jobpathBootReady; } catch (e) { console.error(e); }
+        renderKaTeX();
+        renderAllCharts();
+        if (window.Reveal) {
+          window.Reveal.initialize({
+            width: 1280, height: 720, margin: 0.02, minScale: 0.2, maxScale: 2.0,
+            center: false, hash: true, controls: true, progress: true,
+            slideNumber: false, transition: "slide", transitionSpeed: "fast",
+            plugins: window.RevealNotes ? [window.RevealNotes] : []
+          });
+        }
+      }
+
+      if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", bootDeck);
+      else bootDeck();
+    })();
+  </script>
+</body>
+</html>
